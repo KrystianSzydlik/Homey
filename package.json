@@ -10,11 +10,21 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@prisma/client": "5.19.1",
+    "bcryptjs": "^3.0.3",
+    "classnames": "^2.5.1",
+    "cloudinary": "^2.8.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.23.24",
     "next": "16.0.3",
+    "next-auth": "^5.0.0-beta.30",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "sass": "^1.94.2",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -22,6 +32,13 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
     "prettier": "^3.6.2",
+    "prisma": "5.19.1",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
     "typescript": "^5"
-  }
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "packageManager": "pnpm@10.18.0"
 }

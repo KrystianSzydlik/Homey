@@ -1,0 +1,20 @@
+:root {
+  --primary: #764ba2;
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --background: #f9fafb;
+  --text: #374151;
+  --accent: #3b82f6;
+  --white: #ffffff;
+  --error: #ef4444;
+  --success: #10b981;
+  
+  --font-sans: system-ui, -apple-system, sans-serif;
+}
+
+$mobile-breakpoint: 768px;
+
+@mixin mobile {
+  @media (max-width: $mobile-breakpoint) {
+    @content;
+  }
+}

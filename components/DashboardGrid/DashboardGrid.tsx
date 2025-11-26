@@ -2,7 +2,14 @@
 import styles from './DashboardGrid.module.css';
 import DashboardCard from '../DashboardCard/DashboardCard';
 
-const cards = [
+type Card = {
+  id: string;
+  title: string;
+  href: string;
+  icon: string;
+};
+
+const cards: Card[] = [
   {
     id: 'shopping',
     title: 'Shopping List',
@@ -38,3 +45,5 @@ export function DashboardGrid() {
     </div>
   );
 }
+
+//TODO: 1. Generowanie hashowanych haseł
