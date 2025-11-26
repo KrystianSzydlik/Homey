@@ -1,14 +1,16 @@
 :root {
-  --primary: #764ba2;
-  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --background: #f9fafb;
-  --text: #374151;
-  --accent: #3b82f6;
+  --primary: #3b82f6; // Blue 500
+  --primary-gradient: linear-gradient(135deg, #38bdf8 0%, #3b82f6 100%); // Sky to Blue
+  --background: #0f172a; // Slate 900
+  --surface: #1e293b; // Slate 800
+  --text: #f8fafc; // Slate 50
+  --text-secondary: #94a3b8; // Slate 400
+  --accent: #38bdf8; // Sky 400
   --white: #ffffff;
   --error: #ef4444;
   --success: #10b981;
   
-  --font-sans: system-ui, -apple-system, sans-serif;
+  --font-sans: 'Cartograph CF', system-ui, -apple-system, sans-serif;
 }
 
 $mobile-breakpoint: 768px;
