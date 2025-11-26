@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState, useRef } from 'react';
 import { authenticate } from '@/app/lib/actions';
 import styles from './login.module.scss';
 
@@ -9,11 +9,24 @@ export default function LoginPage() {
     authenticate,
     undefined,
   );
+  const [isAnimating, setIsAnimating] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const triggerAnimation = () => {
+    setIsAnimating(false); // Reset first
+    // Force reflow to restart animation
+    void buttonRef.current?.offsetWidth;
+    setIsAnimating(true);
+  };
+
+  const handleAnimationEnd = () => {
+    setIsAnimating(false);
+  };
 
   return (
     <main className={styles.main}>
       <div className={styles.container}>
-        <h1 className={styles.title}>Welcome back</h1>
+        <h1 className={styles.title}>Welcome home</h1>
         <form action={formAction} className={styles.form}>
           <div className={styles.inputGroup}>
             <label htmlFor="email">Email</label>
@@ -38,7 +51,14 @@ export default function LoginPage() {
               minLength={6}
             />
           </div>
-          <button className={styles.button} aria-disabled={isPending}>
+          <button 
+            ref={buttonRef}
+            className={`${styles.button} ${isAnimating ? styles.animating : ''}`}
+            aria-disabled={isPending}
+            onMouseDown={triggerAnimation}
+            onTouchStart={triggerAnimation}
+            onAnimationEnd={handleAnimationEnd}
+          >
             {isPending ? 'Logging in...' : 'Log in'}
           </button>
           <div
