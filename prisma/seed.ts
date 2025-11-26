@@ -25,7 +25,7 @@ async function main() {
 
   const users = [
     { email: 'krystian@homey.app', name: 'Krystian' },
-    { email: 'partner@homey.app', name: 'Partner' }
+    { email: 'partner@homey.app', name: 'Sarka' }
   ]
 
   for (const userData of users) {
