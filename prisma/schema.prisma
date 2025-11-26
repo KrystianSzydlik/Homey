@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Household {
+  id    String  @id @default(cuid())
+  name  String
+  users User[]
+
+  recipes        Recipe[]
+  todos          Todo[]
+  shoppingItems  ShoppingItem[]
+}
+
+model User {
+  id          String     @id @default(cuid())
+  email       String     @unique
+  name        String
+  password    String
+  householdId String
+  household   Household  @relation(fields: [householdId], references: [id])
+
+  recipes          Recipe[]
+  todos            Todo[]
+  shoppingItems    ShoppingItem[]
+  habits           Habit[]
+  habitCompletions HabitCompletion[]
+}
+
+model Recipe {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  ingredients String[]
+  steps       String[]
+  imageUrl    String?
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id])
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+model Todo {
+  id          String    @id @default(cuid())
+  title       String
+  completed   Boolean   @default(false)
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id])
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+model ShoppingItem {
+  id          String    @id @default(cuid())
+  name        String
+  quantity    String?
+  checked     Boolean   @default(false)
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id])
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+model Habit {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  frequency   String
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  createdAt   DateTime      @default(now())
+  completions HabitCompletion[]
+}
+
+model HabitCompletion {
+  id      String   @id @default(cuid())
+  habitId String
+  habit   Habit    @relation(fields: [habitId], references: [id])
+  date    DateTime @default(now())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id])
+}
