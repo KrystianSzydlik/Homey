@@ -66,24 +66,48 @@ function Character({ position, color, scale = 1, hasGlasses = false, rotation = 
   );
 }
 
+function Table() {
+  return (
+    <group position={[0, -0.5, 2]}>
+      {/* Table Top */}
+      <RoundedBox args={[2, 0.1, 1.2]} radius={0.05} position={[0, 0.5, 0]}>
+        <meshStandardMaterial color="#8D6E63" roughness={0.6} />
+      </RoundedBox>
+      {/* Legs */}
+      <Cylinder args={[0.05, 0.05, 0.5]} position={[-0.8, 0.25, -0.4]}>
+        <meshStandardMaterial color="#5D4037" />
+      </Cylinder>
+      <Cylinder args={[0.05, 0.05, 0.5]} position={[0.8, 0.25, -0.4]}>
+        <meshStandardMaterial color="#5D4037" />
+      </Cylinder>
+      <Cylinder args={[0.05, 0.05, 0.5]} position={[-0.8, 0.25, 0.4]}>
+        <meshStandardMaterial color="#5D4037" />
+      </Cylinder>
+      <Cylinder args={[0.05, 0.05, 0.5]} position={[0.8, 0.25, 0.4]}>
+        <meshStandardMaterial color="#5D4037" />
+      </Cylinder>
+    </group>
+  );
+}
+
 function ProjectorBeam() {
   return (
-    <group position={[0, 2, 3]} rotation={[0.4, 0, 0]}>
-       {/* The Projector Unit */}
-       <RoundedBox args={[0.6, 0.2, 0.6]} radius={0.05}>
-         <meshStandardMaterial color="#333" />
+    <group position={[0, 0.15, 2]} rotation={[0, 0, 0]}>
+       {/* The Projector Unit (Square on table) */}
+       <RoundedBox args={[0.4, 0.2, 0.4]} radius={0.02} position={[0, 0, 0]}>
+         <meshStandardMaterial color="#212121" roughness={0.5} />
        </RoundedBox>
        
-       {/* The Beam Cone */}
-       <mesh position={[0, 0, -2]} rotation={[Math.PI / 2, 0, 0]}>
-         <coneGeometry args={[1.5, 4, 32, 1, true]} />
-         <meshBasicMaterial color="#A7F3D0" transparent opacity={0.1} side={THREE.DoubleSide} depthWrite={false} />
+       {/* The Beam Cone - projecting forward (negative Z) */}
+       <mesh position={[0, 0, -2.5]} rotation={[Math.PI / 2, 0, 0]}>
+         <coneGeometry args={[1.8, 5, 32, 1, true]} />
+         <meshBasicMaterial color="#E0F7FA" transparent opacity={0.05} side={THREE.DoubleSide} depthWrite={false} />
        </mesh>
 
        {/* The Screen (Projected Image) */}
-       <mesh position={[0, 0, -4.5]} rotation={[0, 0, 0]}>
-         <planeGeometry args={[3, 2]} />
-         <meshBasicMaterial color="#A7F3D0" toneMapped={false} />
+       <mesh position={[0, 0, -5]}>
+         <planeGeometry args={[3.2, 1.8]} />
+         <meshBasicMaterial color="#4DD0E1" transparent opacity={0.3} toneMapped={false} />
        </mesh>
     </group>
   );
@@ -92,43 +116,46 @@ function ProjectorBeam() {
 function SceneContent() {
   return (
     <>
-      <ambientLight intensity={0.2} />
-      <pointLight position={[2, 3, 2]} intensity={0.5} color="#FFD54F" />
-      <pointLight position={[-2, 2, 2]} intensity={0.3} color="#FF7043" />
+      {/* Dimmed ambient light */}
+      <ambientLight intensity={0.15} />
       
-      {/* Screen Light */}
+      {/* Warm light from behind/side (not directly above) */}
+      <pointLight position={[3, 2, 3]} intensity={0.4} color="#FFD54F" distance={10} />
+      
+      {/* Screen Glow Light (from the screen towards the couple) */}
       <SpotLight
-        position={[0, 2, 3]}
-        target-position={[0, 0, -5]}
-        color="#A7F3D0"
-        intensity={2}
-        angle={0.6}
+        position={[0, 0, -4.5]}
+        target-position={[0, 0, 2]}
+        color="#4DD0E1"
+        intensity={1.5}
+        angle={1}
         penumbra={0.5}
-        castShadow
+        distance={8}
       />
 
-      <group rotation={[0, Math.PI + 0.7, 0]} position={[0, -1, 0]}>
+      <group rotation={[0, Math.PI, 0]} position={[0, -1, 0]}>
         <Couch />
-        {/* Couple - Backs turned to camera, angled */}
+        {/* Couple - Backs turned to camera (facing -Z), looking at screen */}
         <group position={[0, 0.2, 0]}>
             {/* Male with glasses */}
             <Character 
-                position={[-0.4, 0, 0.2]} 
+                position={[-0.45, 0, 0.2]} 
                 color="#64B5F6" 
                 scale={1.1} 
                 hasGlasses={true} 
-                rotation={[0, 0, -0.1]} // Leaning right
+                rotation={[0, 0, -0.15]} 
             />
             {/* Female */}
             <Character 
-                position={[0.4, 0, 0.2]} 
+                position={[0.45, 0, 0.2]} 
                 color="#F06292" 
                 scale={1.0} 
-                rotation={[0, 0, 0.1]} // Leaning left (cuddling)
+                rotation={[0, 0, 0.15]} 
             />
         </group>
       </group>
 
+      <Table />
       <ProjectorBeam />
     </>
   );
