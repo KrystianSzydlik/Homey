@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@prisma/client": "5.19.1",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.4.0",
+    "@types/three": "^0.181.0",
     "bcryptjs": "^3.0.3",
     "classnames": "^2.5.1",
     "cloudinary": "^2.8.0",
@@ -21,6 +24,7 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "sass": "^1.94.2",
+    "three": "^0.181.2",
     "zod": "^4.1.13"
   },
   "devDependencies": {

@@ -3,6 +3,7 @@
 import { useActionState, useState, useRef } from 'react';
 import { authenticate } from '@/app/lib/actions';
 import styles from './login.module.scss';
+import LoginScene from '@/components/LoginScene';
 
 export default function LoginPage() {
   const [errorMessage, formAction, isPending] = useActionState(
@@ -25,6 +26,7 @@ export default function LoginPage() {
 
   return (
     <main className={styles.main}>
+      <LoginScene />
       <div className={styles.container}>
         <h1 className={styles.title}>Welcome home</h1>
         <form action={formAction} className={styles.form}>
