@@ -27,13 +27,39 @@ function Couch() {
   );
 }
 
-function Character({ position, color, scale = 1, hasGlasses = false, rotation = [0, 0, 0] }: { position: [number, number, number], color: string, scale?: number, hasGlasses?: boolean, rotation?: [number, number, number] }) {
+function Hair({ isFemale }: { isFemale: boolean }) {
+  return isFemale ? (
+    <group position={[0, 1.3, -0.1]}>
+      {/* Female Hair - Long */}
+      <Sphere args={[0.38, 32, 32]} position={[0, 0, 0]}>
+        <meshStandardMaterial color="#3E2723" roughness={0.8} />
+      </Sphere>
+      <RoundedBox args={[0.7, 0.8, 0.4]} radius={0.2} position={[0, -0.3, -0.15]}>
+        <meshStandardMaterial color="#3E2723" roughness={0.8} />
+      </RoundedBox>
+    </group>
+  ) : (
+    <group position={[0, 1.35, 0]}>
+      {/* Male Hair - Short */}
+      <Sphere args={[0.36, 32, 32]} position={[0, 0, 0]}>
+        <meshStandardMaterial color="#4E342E" roughness={0.9} />
+      </Sphere>
+      <RoundedBox args={[0.7, 0.3, 0.5]} radius={0.1} position={[0, 0.1, 0]}>
+        <meshStandardMaterial color="#4E342E" roughness={0.9} />
+      </RoundedBox>
+    </group>
+  );
+}
+
+function Character({ position, color, scale = 1, hasGlasses = false, rotation = [0, 0, 0], isFemale = false }: { position: [number, number, number], color: string, scale?: number, hasGlasses?: boolean, rotation?: [number, number, number], isFemale?: boolean }) {
   const group = useRef<THREE.Group>(null);
 
   useFrame((state) => {
     if (group.current) {
       // Subtle breathing animation
-      group.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.02;
+      group.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.01;
+      // Subtle head sway
+      group.current.rotation.z = (rotation[2] || 0) + Math.sin(state.clock.elapsedTime * 1.5) * 0.02;
     }
   });
 
@@ -48,6 +74,8 @@ function Character({ position, color, scale = 1, hasGlasses = false, rotation = 
         <meshStandardMaterial color="#FFCCBC" roughness={0.5} />
       </Sphere>
       
+      <Hair isFemale={isFemale} />
+
       {/* Glasses for Male */}
       {hasGlasses && (
         <group position={[0, 1.25, 0.3]} rotation={[0, 0, 0]}>
@@ -91,21 +119,40 @@ function Table() {
 }
 
 function ProjectorBeam() {
+  const beamRef = useRef<THREE.Mesh>(null);
+  const screenRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (beamRef.current && screenRef.current) {
+        // Flicker effect
+        const flicker = 0.8 + Math.sin(state.clock.elapsedTime * 10) * 0.1 + Math.random() * 0.1;
+        (beamRef.current.material as THREE.MeshBasicMaterial).opacity = 0.05 * flicker;
+        (screenRef.current.material as THREE.MeshBasicMaterial).opacity = 0.3 * flicker;
+        
+        // Color shift effect (subtle movie colors)
+        const time = state.clock.elapsedTime;
+        const r = 0.5 + Math.sin(time * 0.5) * 0.2;
+        const g = 0.5 + Math.cos(time * 0.7) * 0.2;
+        const b = 0.8;
+        (screenRef.current.material as THREE.MeshBasicMaterial).color.setRGB(r, g, b);
+    }
+  });
+
   return (
     <group position={[0, 0.15, 2]} rotation={[0, 0, 0]}>
-       {/* The Projector Unit (Square on table) */}
-       <RoundedBox args={[0.4, 0.2, 0.4]} radius={0.02} position={[0, 0, 0]}>
+       {/* The Projector Unit (Hidden/Subtle) */}
+       {/* <RoundedBox args={[0.4, 0.2, 0.4]} radius={0.02} position={[0, 0, 0]}>
          <meshStandardMaterial color="#212121" roughness={0.5} />
-       </RoundedBox>
+       </RoundedBox> */}
        
        {/* The Beam Cone - projecting forward (negative Z) */}
-       <mesh position={[0, 0, -2.5]} rotation={[Math.PI / 2, 0, 0]}>
+       <mesh ref={beamRef} position={[0, 0, -2.5]} rotation={[Math.PI / 2, 0, 0]}>
          <coneGeometry args={[1.8, 5, 32, 1, true]} />
          <meshBasicMaterial color="#E0F7FA" transparent opacity={0.05} side={THREE.DoubleSide} depthWrite={false} />
        </mesh>
 
        {/* The Screen (Projected Image) */}
-       <mesh position={[0, 0, -5]}>
+       <mesh ref={screenRef} position={[0, 0, -5]}>
          <planeGeometry args={[3.2, 1.8]} />
          <meshBasicMaterial color="#4DD0E1" transparent opacity={0.3} toneMapped={false} />
        </mesh>
@@ -114,6 +161,21 @@ function ProjectorBeam() {
 }
 
 function SceneContent() {
+  const spotLightRef = useRef<THREE.SpotLight>(null);
+
+  useFrame((state) => {
+      if (spotLightRef.current) {
+          // Sync light intensity/color with movie flicker
+          const time = state.clock.elapsedTime;
+          const flicker = 1.5 + Math.sin(time * 10) * 0.5;
+          spotLightRef.current.intensity = flicker;
+          
+          const r = 0.5 + Math.sin(time * 0.5) * 0.2;
+          const g = 0.5 + Math.cos(time * 0.7) * 0.2;
+          spotLightRef.current.color.setRGB(r, g, 0.8);
+      }
+  });
+
   return (
     <>
       {/* Dimmed ambient light */}
@@ -124,6 +186,7 @@ function SceneContent() {
       
       {/* Screen Glow Light (from the screen towards the couple) */}
       <SpotLight
+        ref={spotLightRef}
         position={[0, 0, -4.5]}
         target-position={[0, 0, 2]}
         color="#4DD0E1"
@@ -133,7 +196,8 @@ function SceneContent() {
         distance={8}
       />
 
-      <group rotation={[0, Math.PI, 0]} position={[0, -1, 0]}>
+      {/* Rotated Group for 45 degree angle view */}
+      <group rotation={[0, Math.PI + 0.5, 0]} position={[0, -1, 0]}>
         <Couch />
         {/* Couple - Backs turned to camera (facing -Z), looking at screen */}
         <group position={[0, 0.2, 0]}>
@@ -150,7 +214,8 @@ function SceneContent() {
                 position={[0.45, 0, 0.2]} 
                 color="#F06292" 
                 scale={1.0} 
-                rotation={[0, 0, 0.15]} 
+                rotation={[0, 0, 0.15]}
+                isFemale={true} 
             />
         </group>
       </group>
