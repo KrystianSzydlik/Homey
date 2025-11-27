@@ -32,10 +32,10 @@ function Hair({ isFemale }: { isFemale: boolean }) {
     <group position={[0, 1.3, -0.1]}>
       {/* Female Hair - Long */}
       <Sphere args={[0.38, 32, 32]} position={[0, 0, 0]}>
-        <meshStandardMaterial color="#3E2723" roughness={0.8} />
+        <meshStandardMaterial color="#AF8F2C" roughness={0.8} />
       </Sphere>
       <RoundedBox args={[0.7, 0.8, 0.4]} radius={0.2} position={[0, -0.3, -0.15]}>
-        <meshStandardMaterial color="#3E2723" roughness={0.8} />
+        <meshStandardMaterial color="#AF8F2C" roughness={0.8} />
       </RoundedBox>
     </group>
   ) : (
