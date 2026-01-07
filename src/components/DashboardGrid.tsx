@@ -30,18 +30,20 @@ const features = [
 
 export default function DashboardGrid() {
   return (
-    <div className={styles.grid}>
-      {features.map((feature) => (
-        <Link
-          key={feature.href}
-          href={feature.href}
-          className={styles.card}
-          style={{ '--card-color': feature.color } as React.CSSProperties}
-        >
-          <h2 className={styles.title}>{feature.title}</h2>
-          <p className={styles.description}>{feature.description}</p>
-        </Link>
-      ))}
+    <div className={styles.container}>
+      <div className={styles.grid}>
+        {features.map((feature) => (
+          <Link
+            key={feature.href}
+            href={feature.href}
+            className={styles.card}
+            style={{ '--card-color': feature.color } as React.CSSProperties}
+          >
+            <h2 className={styles.title}>{feature.title}</h2>
+            <p className={styles.description}>{feature.description}</p>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
