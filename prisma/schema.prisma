@@ -60,13 +60,40 @@ model Todo {
 model ShoppingItem {
   id          String    @id @default(cuid())
   name        String
-  quantity    String?
+  quantity    String    @default("1")
+  unit        String?   // "kg", "szt", "opak", "l"
+  category    ShoppingCategory @default(OTHER)
   checked     Boolean   @default(false)
+  position    Int       @default(0)
+  emoji       String?
+
+  // Statystyki dla smart suggestions
+  purchaseCount              Int       @default(0)
+  lastPurchasedAt            DateTime?
+  averageDaysBetweenPurchases Float?
+
   householdId String
   household   Household @relation(fields: [householdId], references: [id])
   createdById String
   createdBy   User      @relation(fields: [createdById], references: [id])
   createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([householdId, position])
+  @@index([householdId, checked])
+}
+
+enum ShoppingCategory {
+  VEGETABLES    // Warzywa
+  DAIRY         // Mleko, ser, jogurt
+  MEAT          // Mięso, drób, ryba
+  BAKERY        // Chleb, bułki
+  FRUITS        // Owoce
+  FROZEN        // Produkty mrożone
+  DRINKS        // Napoje
+  CONDIMENTS    // Przyprawa, olej, sól
+  SWEETS        // Słodycze, desserty
+  OTHER         // Inne
 }
 
 model Habit {

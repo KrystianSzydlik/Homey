@@ -1,0 +1,241 @@
+@import '@/styles/variables';
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  transition: background-color 0.2s;
+
+  &:active {
+    background-color: #f5f5f5;
+  }
+
+  &.completed {
+    opacity: 0.6;
+
+    .name {
+      text-decoration: line-through;
+      color: #999;
+    }
+  }
+
+  &.editing {
+    padding: 0.75rem;
+    background-color: #fafafa;
+  }
+
+  &.dragging {
+    background-color: #f0f0f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-radius: 4px;
+  }
+}
+
+.content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.checkbox {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.25rem;
+  cursor: pointer;
+  accent-color: #4caf50;
+
+  @media (max-width: 640px) {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+}
+
+.itemDetails {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+}
+
+.emoji {
+  flex-shrink: 0;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  word-break: break-word;
+  transition: all 0.2s;
+}
+
+.quantity {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
+.editButton,
+.deleteButton {
+  padding: 0.4rem;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+
+  &:hover:not(:disabled) {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+}
+
+.editForm {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  align-items: center;
+}
+
+.editInput,
+.editQuantityInput {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: #4caf50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  }
+}
+
+.editInput {
+  flex: 1;
+}
+
+.editQuantityInput {
+  width: 70px;
+}
+
+.editActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.saveButton,
+.cancelButton {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.saveButton {
+  background-color: #4caf50;
+  color: white;
+
+  &:hover:not(:disabled) {
+    background-color: #45a049;
+  }
+}
+
+.cancelButton {
+  background-color: #e0e0e0;
+  color: #333;
+
+  &:hover:not(:disabled) {
+    background-color: #d0d0d0;
+  }
+}
+
+// Mobile-first responsive design
+@media (max-width: 640px) {
+  .item {
+    padding: 0.875rem;
+  }
+
+  .itemDetails {
+    gap: 0.5rem;
+  }
+
+  .emoji {
+    font-size: 1.25rem;
+  }
+
+  .name {
+    font-size: 0.95rem;
+  }
+
+  .quantity {
+    font-size: 0.75rem;
+  }
+
+  .actions {
+    gap: 0.25rem;
+  }
+
+  .editButton,
+  .deleteButton {
+    width: 1.8rem;
+    height: 1.8rem;
+    font-size: 0.9rem;
+  }
+
+  .editQuantityInput {
+    width: 60px;
+    font-size: 0.85rem;
+  }
+}

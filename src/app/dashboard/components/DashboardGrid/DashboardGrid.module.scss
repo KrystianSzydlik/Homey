@@ -1,4 +1,11 @@
-@import '../styles/variables';
+@import '@/styles/variables';
+
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
 .grid {
   display: grid;
@@ -6,7 +13,7 @@
   gap: 2rem;
   padding: 2rem;
   max-width: 1200px;
-  margin: 0 auto;
+  margin: auto;
 }
 
 .card {
