@@ -23,4 +23,18 @@ export const { auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.householdId = (user as any).householdId;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.householdId = token.householdId as string;
+      }
+      return session;
+    },
+  },
 });

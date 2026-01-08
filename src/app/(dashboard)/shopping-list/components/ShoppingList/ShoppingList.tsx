@@ -1,30 +1,195 @@
-import styles from './ShoppingList.module.scss';
+'use client';
 
-export default function ShoppingList() {
+import {
+  DndContext,
+  DragEndEvent,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { ShoppingItem as ShoppingItemType } from '@prisma/client';
+import { useCallback, useMemo, useState, useTransition } from 'react';
+import { clearCheckedItems, reorderShoppingItems } from '@/app/lib/shopping-actions';
+import ShoppingItem from '../ShoppingItem/ShoppingItem';
+import AddItemForm from '../AddItemForm/AddItemForm';
+import CategoryFilter from '../CategoryFilter/CategoryFilter';
+import styles from './ShoppingList.module.scss';
+import { ShoppingCategory } from '@prisma/client';
+
+interface ShoppingListProps {
+  initialItems: (ShoppingItemType & {
+    createdBy: { name: string };
+  })[];
+}
+
+export default function ShoppingList({ initialItems }: ShoppingListProps) {
+  const [items, setItems] = useState(initialItems);
+  const [selectedCategory, setSelectedCategory] = useState<ShoppingCategory | 'ALL'>('ALL');
+  const [isPending, startTransition] = useTransition();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+  );
+
+  const filteredItems = useMemo(() => {
+    if (selectedCategory === 'ALL') {
+      return items;
+    }
+    return items.filter((item) => item.category === selectedCategory);
+  }, [items, selectedCategory]);
+
+  const handleAddItem = useCallback(
+    (newItem: ShoppingItemType & { createdBy: { name: string } }) => {
+      setItems((prev) => [...prev, newItem]);
+    },
+    [],
+  );
+
+  const handleDeleteItem = useCallback((itemId: string) => {
+    setItems((prev) => prev.filter((item) => item.id !== itemId));
+  }, []);
+
+  const handleToggleItem = useCallback(
+    (itemId: string, updatedItem: ShoppingItemType & { createdBy: { name: string } }) => {
+      setItems((prev) =>
+        prev.map((item) => (item.id === itemId ? updatedItem : item)),
+      );
+    },
+    [],
+  );
+
+  const handleUpdateItem = useCallback(
+    (itemId: string, updatedItem: ShoppingItemType & { createdBy: { name: string } }) => {
+      setItems((prev) =>
+        prev.map((item) => (item.id === itemId ? updatedItem : item)),
+      );
+    },
+    [],
+  );
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      if (over && active.id !== over.id) {
+        // Reorder unchecked items only (checked items stay in separate section)
+        const uncheckedItems = items.filter((item) => !item.checked);
+        const checkedItems = items.filter((item) => item.checked);
+
+        const oldIndex = uncheckedItems.findIndex((item) => item.id === active.id);
+        const newIndex = uncheckedItems.findIndex((item) => item.id === over.id);
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const reorderedUnchecked = [...uncheckedItems];
+          const [movedItem] = reorderedUnchecked.splice(oldIndex, 1);
+          reorderedUnchecked.splice(newIndex, 0, movedItem);
+
+          const newItems = [...reorderedUnchecked, ...checkedItems];
+          setItems(newItems);
+
+          // Persist to database
+          const itemIds = reorderedUnchecked.map((item) => item.id);
+          startTransition(async () => {
+            await reorderShoppingItems(itemIds);
+          });
+        }
+      }
+    },
+    [items],
+  );
+
+  const handleClearCompleted = useCallback(() => {
+    startTransition(async () => {
+      await clearCheckedItems();
+      setItems((prev) => prev.filter((item) => !item.checked));
+    });
+  }, []);
+
+  const uncheckedItems = filteredItems.filter((item) => !item.checked);
+  const checkedItems = filteredItems.filter((item) => item.checked);
+
+  const isEmpty = uncheckedItems.length === 0 && checkedItems.length === 0;
+
   return (
     <div className={styles.container}>
-      <ul>
-        <li>chlepy</li>
-        <li>ziemniaki</li>
-        <li>ziemniaki</li>
-        <li>ziemniaki</li>
-        <li>ziemniaki</li>
-        <li>ziemniaki</li>
-      </ul>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Shopping List</h1>
+      </header>
+
+      <AddItemForm onAddItem={handleAddItem} />
+
+      <CategoryFilter
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+      />
+
+      {isEmpty ? (
+        <div className={styles.emptyState}>
+          <p>No items in your list</p>
+          <p className={styles.emptyStateHint}>Add one to get started!</p>
+        </div>
+      ) : (
+        <>
+          {uncheckedItems.length > 0 && (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={uncheckedItems.map((item) => item.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <ul className={styles.list}>
+                  {uncheckedItems.map((item) => (
+                    <ShoppingItem
+                      key={item.id}
+                      item={item}
+                      onDelete={handleDeleteItem}
+                      onToggle={handleToggleItem}
+                      onUpdate={handleUpdateItem}
+                    />
+                  ))}
+                </ul>
+              </SortableContext>
+            </DndContext>
+          )}
+
+          {checkedItems.length > 0 && (
+            <div className={styles.completedSection}>
+              <div className={styles.completedHeader}>
+                <h2 className={styles.completedTitle}>
+                  Completed ({checkedItems.length})
+                </h2>
+                <button
+                  className={styles.clearButton}
+                  onClick={handleClearCompleted}
+                  disabled={isPending}
+                  type="button"
+                >
+                  {isPending ? 'Clearing...' : 'Clear'}
+                </button>
+              </div>
+              <ul className={styles.completedList}>
+                {checkedItems.map((item) => (
+                  <ShoppingItem
+                    key={item.id}
+                    item={item}
+                    onDelete={handleDeleteItem}
+                    onToggle={handleToggleItem}
+                    onUpdate={handleUpdateItem}
+                  />
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
-
-// TODO: logika + button pod tworzenie nowej listy typu: warzywniak, nabiał, zakupy w merkusie itp.
-
-// TODO: zmiana pozycji elementów listy poprzez drag and drop
-
-// TODO: Zapisywanie listy do bazy danych
-
-// TODO: Zapisywanie nowych produktów oraz ich kolejności do bazy danych
-
-// TODO: Zapisywanie globalnych statystyk produktów jak ilość zakupionych produktów w bazie danych
-
-//TODO: Algorytm propozycji produktów do zakupu na bazie statystyki zakupionych produktów np. częstotliwość kupowania i odległość od daty ostatniego zakupu
-
-//TODO:
