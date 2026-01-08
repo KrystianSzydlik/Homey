@@ -12,19 +12,17 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { ShoppingItem as ShoppingItemType } from '@prisma/client';
+import { ShoppingCategory } from '@prisma/client';
 import { useCallback, useMemo, useState, useTransition } from 'react';
 import { clearCheckedItems, reorderShoppingItems } from '@/app/lib/shopping-actions';
+import { ShoppingItemWithCreator } from '@/types/shopping';
 import ShoppingItem from '../ShoppingItem/ShoppingItem';
 import AddItemForm from '../AddItemForm/AddItemForm';
 import CategoryFilter from '../CategoryFilter/CategoryFilter';
 import styles from './ShoppingList.module.scss';
-import { ShoppingCategory } from '@prisma/client';
 
 interface ShoppingListProps {
-  initialItems: (ShoppingItemType & {
-    createdBy: { name: string };
-  })[];
+  initialItems: ShoppingItemWithCreator[];
 }
 
 export default function ShoppingList({ initialItems }: ShoppingListProps) {
@@ -43,19 +41,16 @@ export default function ShoppingList({ initialItems }: ShoppingListProps) {
     return items.filter((item) => item.category === selectedCategory);
   }, [items, selectedCategory]);
 
-  const handleAddItem = useCallback(
-    (newItem: ShoppingItemType & { createdBy: { name: string } }) => {
-      setItems((prev) => [...prev, newItem]);
-    },
-    [],
-  );
+  const handleAddItem = useCallback((newItem: ShoppingItemWithCreator) => {
+    setItems((prev) => [...prev, newItem]);
+  }, []);
 
   const handleDeleteItem = useCallback((itemId: string) => {
     setItems((prev) => prev.filter((item) => item.id !== itemId));
   }, []);
 
   const handleToggleItem = useCallback(
-    (itemId: string, updatedItem: ShoppingItemType & { createdBy: { name: string } }) => {
+    (itemId: string, updatedItem: ShoppingItemWithCreator) => {
       setItems((prev) =>
         prev.map((item) => (item.id === itemId ? updatedItem : item)),
       );
@@ -64,7 +59,7 @@ export default function ShoppingList({ initialItems }: ShoppingListProps) {
   );
 
   const handleUpdateItem = useCallback(
-    (itemId: string, updatedItem: ShoppingItemType & { createdBy: { name: string } }) => {
+    (itemId: string, updatedItem: ShoppingItemWithCreator) => {
       setItems((prev) =>
         prev.map((item) => (item.id === itemId ? updatedItem : item)),
       );
@@ -77,30 +72,38 @@ export default function ShoppingList({ initialItems }: ShoppingListProps) {
       const { active, over } = event;
 
       if (over && active.id !== over.id) {
-        // Reorder unchecked items only (checked items stay in separate section)
-        const uncheckedItems = items.filter((item) => !item.checked);
-        const checkedItems = items.filter((item) => item.checked);
+        setItems((currentItems) => {
+          // Reorder unchecked items only (checked items stay in separate section)
+          const uncheckedItems = currentItems.filter((item) => !item.checked);
+          const checkedItems = currentItems.filter((item) => item.checked);
 
-        const oldIndex = uncheckedItems.findIndex((item) => item.id === active.id);
-        const newIndex = uncheckedItems.findIndex((item) => item.id === over.id);
+          const oldIndex = uncheckedItems.findIndex((item) => item.id === active.id);
+          const newIndex = uncheckedItems.findIndex((item) => item.id === over.id);
 
-        if (oldIndex !== -1 && newIndex !== -1) {
-          const reorderedUnchecked = [...uncheckedItems];
-          const [movedItem] = reorderedUnchecked.splice(oldIndex, 1);
-          reorderedUnchecked.splice(newIndex, 0, movedItem);
+          if (oldIndex !== -1 && newIndex !== -1) {
+            const reorderedUnchecked = [...uncheckedItems];
+            const [movedItem] = reorderedUnchecked.splice(oldIndex, 1);
+            reorderedUnchecked.splice(newIndex, 0, movedItem);
 
-          const newItems = [...reorderedUnchecked, ...checkedItems];
-          setItems(newItems);
+            const newItems = [...reorderedUnchecked, ...checkedItems];
 
-          // Persist to database
-          const itemIds = reorderedUnchecked.map((item) => item.id);
-          startTransition(async () => {
-            await reorderShoppingItems(itemIds);
-          });
-        }
+            // Persist to database
+            const itemIds = reorderedUnchecked.map((item) => item.id);
+            startTransition(async () => {
+              const result = await reorderShoppingItems(itemIds);
+              if (!result.success) {
+                // Rollback will be handled by re-fetching or manual rollback
+                console.error('Failed to reorder:', result.error);
+              }
+            });
+
+            return newItems;
+          }
+          return currentItems;
+        });
       }
     },
-    [items],
+    [],
   );
 
   const handleClearCompleted = useCallback(() => {

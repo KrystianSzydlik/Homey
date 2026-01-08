@@ -2,22 +2,20 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ShoppingItem as ShoppingItemType } from '@prisma/client';
 import { useCallback, useState, useTransition } from 'react';
 import {
   deleteShoppingItem,
   toggleShoppingItemChecked,
   updateShoppingItem,
 } from '@/app/lib/shopping-actions';
+import { ShoppingItemWithCreator, ShoppingItemActionResult } from '@/types/shopping';
 import styles from './ShoppingItem.module.scss';
 
 interface ShoppingItemProps {
-  item: ShoppingItemType & {
-    createdBy: { name: string };
-  };
+  item: ShoppingItemWithCreator;
   onDelete: (itemId: string) => void;
-  onToggle: (itemId: string, updatedItem: ShoppingItemType & { createdBy: { name: string } }) => void;
-  onUpdate: (itemId: string, updatedItem: ShoppingItemType & { createdBy: { name: string } }) => void;
+  onToggle: (itemId: string, updatedItem: ShoppingItemWithCreator) => void;
+  onUpdate: (itemId: string, updatedItem: ShoppingItemWithCreator) => void;
 }
 
 export default function ShoppingItem({
@@ -38,7 +36,7 @@ export default function ShoppingItem({
     startTransition(async () => {
       const result = await toggleShoppingItemChecked(item.id);
       if (result.success && result.item) {
-        onToggle(item.id, result.item as any);
+        onToggle(item.id, result.item);
       }
     });
   }, [item.id, onToggle]);
@@ -62,7 +60,7 @@ export default function ShoppingItem({
           quantity: editQuantity,
         });
         if (result.success && result.item) {
-          onUpdate(item.id, result.item as any);
+          onUpdate(item.id, result.item);
           setIsEditing(false);
         }
       });

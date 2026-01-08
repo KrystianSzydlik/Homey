@@ -1,12 +1,13 @@
 'use client';
 
-import { ShoppingItem as ShoppingItemType, ShoppingCategory } from '@prisma/client';
+import { ShoppingCategory } from '@prisma/client';
 import { useCallback, useRef, useState, useTransition } from 'react';
 import { createShoppingItem } from '@/app/lib/shopping-actions';
+import { ShoppingItemWithCreator } from '@/types/shopping';
 import styles from './AddItemForm.module.scss';
 
 interface AddItemFormProps {
-  onAddItem: (item: ShoppingItemType & { createdBy: { name: string } }) => void;
+  onAddItem: (item: ShoppingItemWithCreator) => void;
 }
 
 const CATEGORIES: { value: ShoppingCategory; label: string }[] = [
@@ -49,7 +50,7 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
         });
 
         if (result.success && result.item) {
-          onAddItem(result.item as any);
+          onAddItem(result.item);
           setName('');
           setQuantity('1');
           setUnit('');

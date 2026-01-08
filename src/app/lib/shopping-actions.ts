@@ -4,6 +4,8 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { ShoppingCategory } from '@prisma/client';
 import { redirect } from 'next/navigation';
+import { ShoppingItemActionResult } from '@/types/shopping';
+import { z } from 'zod';
 
 interface CreateShoppingItemInput {
   name: string;
@@ -22,6 +24,23 @@ interface UpdateShoppingItemInput {
   checked?: boolean;
 }
 
+const createItemSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
+  quantity: z.string().max(20).optional(),
+  unit: z.string().max(20).optional(),
+  category: z.nativeEnum(ShoppingCategory).optional(),
+  emoji: z.string().max(10).optional(),
+});
+
+const updateItemSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  quantity: z.string().max(20).optional(),
+  unit: z.string().max(20).optional(),
+  category: z.nativeEnum(ShoppingCategory).optional(),
+  emoji: z.string().max(10).optional(),
+  checked: z.boolean().optional(),
+});
+
 async function getHouseholdId() {
   const session = await auth();
   if (!session?.user?.householdId) {
@@ -30,11 +49,16 @@ async function getHouseholdId() {
   return session.user.householdId;
 }
 
-export async function createShoppingItem(input: CreateShoppingItemInput) {
+export async function createShoppingItem(
+  input: CreateShoppingItemInput,
+): Promise<ShoppingItemActionResult> {
   try {
     const householdId = await getHouseholdId();
     const session = await auth();
     if (!session?.user?.id) throw new Error('Unauthorized');
+
+    // Validate input
+    const validatedInput = createItemSchema.parse(input);
 
     // Get max position for ordering
     const maxPosition = await prisma.shoppingItem.findFirst({
@@ -47,11 +71,11 @@ export async function createShoppingItem(input: CreateShoppingItemInput) {
 
     const item = await prisma.shoppingItem.create({
       data: {
-        name: input.name,
-        quantity: input.quantity || '1',
-        unit: input.unit,
-        category: input.category || 'OTHER',
-        emoji: input.emoji,
+        name: validatedInput.name,
+        quantity: validatedInput.quantity || '1',
+        unit: validatedInput.unit,
+        category: validatedInput.category || 'OTHER',
+        emoji: validatedInput.emoji,
         position: nextPosition,
         householdId,
         createdById: session.user.id,
@@ -65,6 +89,9 @@ export async function createShoppingItem(input: CreateShoppingItemInput) {
 
     return { success: true, item };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error: error.issues[0]?.message || 'Validation failed' };
+    }
     console.error('Error creating shopping item:', error);
     return { success: false, error: 'Failed to create item' };
   }
@@ -73,9 +100,12 @@ export async function createShoppingItem(input: CreateShoppingItemInput) {
 export async function updateShoppingItem(
   itemId: string,
   input: UpdateShoppingItemInput,
-) {
+): Promise<ShoppingItemActionResult> {
   try {
     const householdId = await getHouseholdId();
+
+    // Validate input
+    const validatedInput = updateItemSchema.parse(input);
 
     // Verify item belongs to household
     const item = await prisma.shoppingItem.findFirst({
@@ -86,16 +116,19 @@ export async function updateShoppingItem(
       return { success: false, error: 'Item not found' };
     }
 
+    // Build update data - use !== undefined to allow empty string/falsy values
+    const updateData: Record<string, any> = {};
+
+    if (validatedInput.name !== undefined) updateData.name = validatedInput.name;
+    if (validatedInput.quantity !== undefined) updateData.quantity = validatedInput.quantity;
+    if (validatedInput.unit !== undefined) updateData.unit = validatedInput.unit;
+    if (validatedInput.category !== undefined) updateData.category = validatedInput.category;
+    if (validatedInput.emoji !== undefined) updateData.emoji = validatedInput.emoji;
+    if (validatedInput.checked !== undefined) updateData.checked = validatedInput.checked;
+
     const updatedItem = await prisma.shoppingItem.update({
       where: { id: itemId },
-      data: {
-        ...(input.name && { name: input.name }),
-        ...(input.quantity && { quantity: input.quantity }),
-        ...(input.unit !== undefined && { unit: input.unit }),
-        ...(input.category && { category: input.category }),
-        ...(input.emoji !== undefined && { emoji: input.emoji }),
-        ...(input.checked !== undefined && { checked: input.checked }),
-      },
+      data: updateData,
       include: {
         createdBy: {
           select: { name: true },
@@ -105,12 +138,17 @@ export async function updateShoppingItem(
 
     return { success: true, item: updatedItem };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error: error.issues[0]?.message || 'Validation failed' };
+    }
     console.error('Error updating shopping item:', error);
     return { success: false, error: 'Failed to update item' };
   }
 }
 
-export async function deleteShoppingItem(itemId: string) {
+export async function deleteShoppingItem(
+  itemId: string,
+): Promise<ShoppingItemActionResult> {
   try {
     const householdId = await getHouseholdId();
 
@@ -134,7 +172,9 @@ export async function deleteShoppingItem(itemId: string) {
   }
 }
 
-export async function toggleShoppingItemChecked(itemId: string) {
+export async function toggleShoppingItemChecked(
+  itemId: string,
+): Promise<ShoppingItemActionResult> {
   try {
     const householdId = await getHouseholdId();
 
@@ -197,7 +237,7 @@ export async function toggleShoppingItemChecked(itemId: string) {
   }
 }
 
-export async function clearCheckedItems() {
+export async function clearCheckedItems(): Promise<ShoppingItemActionResult> {
   try {
     const householdId = await getHouseholdId();
 
@@ -215,7 +255,9 @@ export async function clearCheckedItems() {
   }
 }
 
-export async function reorderShoppingItems(itemIds: string[]) {
+export async function reorderShoppingItems(
+  itemIds: string[],
+): Promise<ShoppingItemActionResult> {
   try {
     const householdId = await getHouseholdId();
 
