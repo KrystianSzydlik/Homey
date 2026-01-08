@@ -1,4 +1,4 @@
-import DashboardGrid from '@/components/DashboardGrid';
+import DashboardGrid from '@/app/dashboard/components/DashboardGrid/DashboardGrid';
 
 export default function Dashboard() {
   return (

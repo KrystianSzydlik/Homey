@@ -5,25 +5,25 @@ const features = [
   {
     title: '🛒 Shopping List',
     description: 'Manage your grocery shopping together',
-    href: '/dashboard/shopping',
+    href: '/shopping-list',
     color: 'var(--primary)',
   },
   {
     title: '✅ Todo List',
     description: 'Track tasks and get things done',
-    href: '/dashboard/todo',
+    href: '/todo',
     color: 'var(--accent)',
   },
   {
     title: '📖 Cookbook',
     description: 'Store and share your favorite recipes',
-    href: '/dashboard/cookbook',
+    href: '/cookbook',
     color: '#F59E0B',
   },
   {
     title: '🌟 Habit Tracker',
     description: 'Build better habits together',
-    href: '/dashboard/habits',
+    href: '/habits',
     color: '#10B981',
   },
 ];
