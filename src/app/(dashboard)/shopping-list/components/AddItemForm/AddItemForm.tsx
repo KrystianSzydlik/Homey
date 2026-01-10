@@ -1,77 +1,46 @@
 'use client';
 
-import { ShoppingCategory } from '@prisma/client';
-import { useCallback, useRef, useState, useTransition } from 'react';
+import { useState, useTransition, useCallback } from 'react';
 import { createShoppingItem } from '@/app/lib/shopping-actions';
-import { ShoppingItemWithCreator } from '@/types/shopping';
+import { ShoppingItemWithCreator, ProductSuggestion } from '@/types/shopping';
+import ProductAutocomplete from '../ProductAutocomplete/ProductAutocomplete';
 import styles from './AddItemForm.module.scss';
 
 interface AddItemFormProps {
+  shoppingListId: string;
   onAddItem: (item: ShoppingItemWithCreator) => void;
 }
 
-const CATEGORIES: { value: ShoppingCategory; label: string }[] = [
-  { value: 'VEGETABLES', label: '🥬 Vegetables' },
-  { value: 'DAIRY', label: '🥛 Dairy' },
-  { value: 'MEAT', label: '🍖 Meat' },
-  { value: 'BAKERY', label: '🍞 Bakery' },
-  { value: 'FRUITS', label: '🍎 Fruits' },
-  { value: 'FROZEN', label: '❄️ Frozen' },
-  { value: 'DRINKS', label: '🥤 Drinks' },
-  { value: 'CONDIMENTS', label: '🧂 Condiments' },
-  { value: 'SWEETS', label: '🍫 Sweets' },
-  { value: 'OTHER', label: '📦 Other' },
-];
-
-export default function AddItemForm({ onAddItem }: AddItemFormProps) {
-  const [name, setName] = useState('');
-  const [quantity, setQuantity] = useState('1');
-  const [unit, setUnit] = useState('');
-  const [category, setCategory] = useState<ShoppingCategory>('OTHER');
+export default function AddItemForm({ shoppingListId, onAddItem }: AddItemFormProps) {
   const [showForm, setShowForm] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const nameInputRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-
-      if (!name.trim()) {
-        nameInputRef.current?.focus();
-        return;
-      }
+  const handleProductSelect = useCallback(
+    (suggestion: ProductSuggestion) => {
+      setError(null);
 
       startTransition(async () => {
+        const productId = suggestion.source === 'catalog' ? suggestion.id : undefined;
+
         const result = await createShoppingItem({
-          name: name.trim(),
-          quantity: quantity || '1',
-          unit: unit || undefined,
-          category,
+          name: suggestion.name,
+          shoppingListId,
+          productId,
+          category: suggestion.category,
+          unit: suggestion.defaultUnit || undefined,
+          emoji: suggestion.emoji || undefined,
         });
 
         if (result.success && result.item) {
           onAddItem(result.item);
-          setName('');
-          setQuantity('1');
-          setUnit('');
-          setCategory('OTHER');
           setShowForm(false);
+        } else {
+          setError(result.error || 'Failed to add item');
         }
       });
     },
-    [name, quantity, unit, category, onAddItem]
-  );
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleSubmit(e as any);
-      } else if (e.key === 'Escape') {
-        setShowForm(false);
-      }
-    },
-    [handleSubmit]
+    [shoppingListId, onAddItem]
   );
 
   return (
@@ -79,87 +48,39 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
       {!showForm ? (
         <button
           className={styles.toggleButton}
-          onClick={() => {
-            setShowForm(true);
-            setTimeout(() => nameInputRef.current?.focus(), 0);
-          }}
+          onClick={() => setShowForm(true)}
           type="button"
         >
           Dodaj Produkt
         </button>
       ) : (
-        <form className={styles.form} onSubmit={handleSubmit}>
-          <div className={styles.fieldRow}>
-            <input
-              ref={nameInputRef}
-              type="text"
-              placeholder="Item name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className={styles.nameInput}
-              disabled={isPending}
-              autoFocus
-            />
-            <input
-              type="text"
-              placeholder="Qty"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className={styles.quantityInput}
-              disabled={isPending}
-            />
-            <input
-              type="text"
-              placeholder="Unit"
-              value={unit}
-              onChange={(e) => setUnit(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className={styles.unitInput}
-              disabled={isPending}
-            />
-          </div>
+        <div className={styles.form}>
+          <ProductAutocomplete
+            onSelect={handleProductSelect}
+            placeholder="Search or type product name..."
+            autoFocus
+          />
 
-          <div className={styles.categoryRow}>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as ShoppingCategory)}
-              className={styles.categorySelect}
-              disabled={isPending}
-            >
-              {CATEGORIES.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          {error && <div className={styles.error}>{error}</div>}
 
-          <div className={styles.actions}>
-            <button
-              type="submit"
-              className={styles.submitButton}
-              disabled={isPending || !name.trim()}
-            >
-              {isPending ? 'Adding...' : 'Add'}
-            </button>
-            <button
-              type="button"
-              className={styles.cancelButton}
-              onClick={() => {
-                setShowForm(false);
-                setName('');
-                setQuantity('1');
-                setUnit('');
-                setCategory('OTHER');
-              }}
-              disabled={isPending}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+          {isPending && (
+            <div className={styles.loadingOverlay}>
+              <span className={styles.spinner} />
+            </div>
+          )}
+
+          <button
+            type="button"
+            className={styles.cancelButton}
+            onClick={() => {
+              setShowForm(false);
+              setError(null);
+            }}
+            disabled={isPending}
+          >
+            Cancel
+          </button>
+        </div>
       )}
     </div>
   );

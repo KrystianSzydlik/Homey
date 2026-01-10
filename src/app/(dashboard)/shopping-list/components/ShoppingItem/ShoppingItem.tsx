@@ -8,7 +8,8 @@ import {
   toggleShoppingItemChecked,
   updateShoppingItem,
 } from '@/app/lib/shopping-actions';
-import { ShoppingItemWithCreator, ShoppingItemActionResult } from '@/types/shopping';
+import { ShoppingItemWithCreator } from '@/types/shopping';
+import InlineQuantityEdit from '../InlineQuantityEdit/InlineQuantityEdit';
 import styles from './ShoppingItem.module.scss';
 
 interface ShoppingItemProps {
@@ -24,9 +25,8 @@ export default function ShoppingItem({
   onToggle,
   onUpdate,
 }: ShoppingItemProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(item.name);
-  const [editQuantity, setEditQuantity] = useState(item.quantity);
   const [isPending, startTransition] = useTransition();
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -52,28 +52,33 @@ export default function ShoppingItem({
     }
   }, [item.id, item.name, onDelete]);
 
-  const handleSaveEdit = useCallback(() => {
+  const handleSaveNameEdit = useCallback(() => {
     if (editName.trim()) {
       startTransition(async () => {
         const result = await updateShoppingItem(item.id, {
           name: editName.trim(),
-          quantity: editQuantity,
         });
         if (result.success && result.item) {
           onUpdate(item.id, result.item);
-          setIsEditing(false);
+          setIsEditingName(false);
         }
       });
     }
-  }, [item.id, editName, editQuantity, onUpdate]);
+  }, [item.id, editName, onUpdate]);
 
-  const handleCancelEdit = useCallback(() => {
+  const handleCancelNameEdit = useCallback(() => {
     setEditName(item.name);
-    setEditQuantity(item.quantity);
-    setIsEditing(false);
-  }, [item.name, item.quantity]);
+    setIsEditingName(false);
+  }, [item.name]);
 
-  if (isEditing) {
+  const handleQuantityUpdate = useCallback(
+    (updatedItem: ShoppingItemWithCreator) => {
+      onUpdate(item.id, updatedItem);
+    },
+    [item.id, onUpdate]
+  );
+
+  if (isEditingName) {
     return (
       <li className={`${styles.item} ${styles.editing}`}>
         <div className={styles.editForm}>
@@ -81,20 +86,17 @@ export default function ShoppingItem({
             type="text"
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSaveNameEdit();
+              if (e.key === 'Escape') handleCancelNameEdit();
+            }}
             className={styles.editInput}
             autoFocus
-          />
-          <input
-            type="text"
-            value={editQuantity}
-            onChange={(e) => setEditQuantity(e.target.value)}
-            className={styles.editQuantityInput}
-            placeholder="Qty"
           />
           <div className={styles.editActions}>
             <button
               className={styles.saveButton}
-              onClick={handleSaveEdit}
+              onClick={handleSaveNameEdit}
               disabled={isPending}
               type="button"
             >
@@ -102,7 +104,7 @@ export default function ShoppingItem({
             </button>
             <button
               className={styles.cancelButton}
-              onClick={handleCancelEdit}
+              onClick={handleCancelNameEdit}
               disabled={isPending}
               type="button"
             >
@@ -137,26 +139,27 @@ export default function ShoppingItem({
           className={styles.checkbox}
           aria-label={`Mark "${item.name}" as ${item.checked ? 'unchecked' : 'checked'}`}
         />
-        <div className={styles.itemDetails} onDoubleClick={() => setIsEditing(true)}>
+        <div className={styles.itemDetails} onDoubleClick={() => setIsEditingName(true)}>
           {item.emoji && <span className={styles.emoji}>{item.emoji}</span>}
           <div className={styles.text}>
             <div className={styles.name}>{item.name}</div>
-            {item.quantity && (
-              <div className={styles.quantity}>
-                {item.quantity} {item.unit ? item.unit : 'pcs'}
-              </div>
-            )}
           </div>
         </div>
+        <InlineQuantityEdit
+          itemId={item.id}
+          initialQuantity={item.quantity}
+          initialUnit={item.unit}
+          onUpdate={handleQuantityUpdate}
+        />
       </div>
       <div className={styles.actions}>
         <button
           className={styles.editButton}
-          onClick={() => setIsEditing(true)}
+          onClick={() => setIsEditingName(true)}
           disabled={isPending}
           type="button"
           aria-label={`Edit "${item.name}"`}
-          title="Double-click to edit"
+          title="Double-click to edit name"
         >
           ✏️
         </button>

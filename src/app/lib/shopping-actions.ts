@@ -13,6 +13,8 @@ interface CreateShoppingItemInput {
   unit?: string;
   category?: ShoppingCategory;
   emoji?: string;
+  shoppingListId: string;
+  productId?: string;
 }
 
 interface UpdateShoppingItemInput {
@@ -30,6 +32,8 @@ const createItemSchema = z.object({
   unit: z.string().max(20).optional(),
   category: z.nativeEnum(ShoppingCategory).optional(),
   emoji: z.string().max(10).optional(),
+  shoppingListId: z.string().min(1, 'Shopping list ID is required'),
+  productId: z.string().optional(),
 });
 
 const updateItemSchema = z.object({
@@ -60,9 +64,18 @@ export async function createShoppingItem(
     // Validate input
     const validatedInput = createItemSchema.parse(input);
 
-    // Get max position for ordering
+    // Verify shopping list belongs to household
+    const shoppingList = await prisma.shoppingList.findFirst({
+      where: { id: validatedInput.shoppingListId, householdId },
+    });
+
+    if (!shoppingList) {
+      return { success: false, error: 'Shopping list not found' };
+    }
+
+    // Get max position for ordering within this list
     const maxPosition = await prisma.shoppingItem.findFirst({
-      where: { householdId },
+      where: { shoppingListId: validatedInput.shoppingListId },
       orderBy: { position: 'desc' },
       select: { position: true },
     });
@@ -77,11 +90,19 @@ export async function createShoppingItem(
         category: validatedInput.category || 'OTHER',
         emoji: validatedInput.emoji,
         position: nextPosition,
+        shoppingListId: validatedInput.shoppingListId,
+        productId: validatedInput.productId,
         householdId,
         createdById: session.user.id,
       },
       include: {
         createdBy: {
+          select: { name: true },
+        },
+        shoppingList: {
+          select: { name: true, emoji: true },
+        },
+        product: {
           select: { name: true },
         },
       },
@@ -117,7 +138,14 @@ export async function updateShoppingItem(
     }
 
     // Build update data - use !== undefined to allow empty string/falsy values
-    const updateData: Record<string, any> = {};
+    const updateData: Partial<{
+      name: string;
+      quantity: string;
+      unit: string | null;
+      category: ShoppingCategory;
+      emoji: string | null;
+      checked: boolean;
+    }> = {};
 
     if (validatedInput.name !== undefined) updateData.name = validatedInput.name;
     if (validatedInput.quantity !== undefined) updateData.quantity = validatedInput.quantity;
@@ -190,7 +218,12 @@ export async function toggleShoppingItemChecked(
     const newCheckedState = !item.checked;
 
     // Update statistics if marking as purchased
-    let updateData: any = { checked: newCheckedState };
+    let updateData: {
+      checked: boolean;
+      purchaseCount?: number;
+      lastPurchasedAt?: Date;
+      averageDaysBetweenPurchases?: number;
+    } = { checked: newCheckedState };
 
     if (newCheckedState && item.lastPurchasedAt) {
       const daysSinceLastPurchase =
@@ -256,14 +289,15 @@ export async function clearCheckedItems(): Promise<ShoppingItemActionResult> {
 }
 
 export async function reorderShoppingItems(
+  shoppingListId: string,
   itemIds: string[],
 ): Promise<ShoppingItemActionResult> {
   try {
     const householdId = await getHouseholdId();
 
-    // Verify all items belong to household
+    // Verify all items belong to household and shopping list
     const items = await prisma.shoppingItem.findMany({
-      where: { householdId, id: { in: itemIds } },
+      where: { householdId, shoppingListId, id: { in: itemIds } },
     });
 
     if (items.length !== itemIds.length) {
@@ -284,6 +318,33 @@ export async function reorderShoppingItems(
   } catch (error) {
     console.error('Error reordering shopping items:', error);
     return { success: false, error: 'Failed to reorder items' };
+  }
+}
+
+export async function deleteAllShoppingItems(
+  shoppingListId: string,
+): Promise<ShoppingItemActionResult> {
+  try {
+    const householdId = await getHouseholdId();
+
+    // Verify shopping list belongs to household
+    const shoppingList = await prisma.shoppingList.findFirst({
+      where: { id: shoppingListId, householdId },
+    });
+
+    if (!shoppingList) {
+      return { success: false, error: 'Shopping list not found' };
+    }
+
+    // Delete all items in the list
+    const result = await prisma.shoppingItem.deleteMany({
+      where: { shoppingListId },
+    });
+
+    return { success: true, deletedCount: result.count };
+  } catch (error) {
+    console.error('Error deleting all shopping items:', error);
+    return { success: false, error: 'Failed to delete items' };
   }
 }
 

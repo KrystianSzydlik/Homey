@@ -119,6 +119,59 @@
   opacity: 0.7;
 }
 
+.listSection {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  border-bottom: 1px solid rgba(244, 63, 94, 0.1);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.listHeader {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(30, 27, 75, 0.6);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.listHeaderContent {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.listEmoji {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.listTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  flex: 1;
+}
+
+.listCount {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 // Mobile-first responsive design
 @media (max-width: 640px) {
   .container {
