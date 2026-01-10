@@ -59,7 +59,7 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
         }
       });
     },
-    [name, quantity, unit, category, onAddItem],
+    [name, quantity, unit, category, onAddItem]
   );
 
   const handleKeyDown = useCallback(
@@ -71,7 +71,7 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
         setShowForm(false);
       }
     },
-    [handleSubmit],
+    [handleSubmit]
   );
 
   return (
@@ -85,7 +85,7 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
           }}
           type="button"
         >
-          + Add Item
+          Dodaj Produkt
         </button>
       ) : (
         <form className={styles.form} onSubmit={handleSubmit}>

@@ -3,9 +3,10 @@
 .container {
   flex-shrink: 0;
   padding: 0.75rem 1rem;
-  background-color: #fff;
-  border-bottom: 1px solid #e5e5e5;
+  background: rgba(30, 41, 59, 0.4);
+  border-bottom: 1px solid rgba(244, 63, 94, 0.2);
   overflow: hidden;
+  backdrop-filter: blur(10px);
 }
 
 .filterScroll {
@@ -16,7 +17,6 @@
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 
-  // Hide scrollbar but keep functionality
   &::-webkit-scrollbar {
     height: 4px;
   }
@@ -26,11 +26,11 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #ddd;
+    background: rgba(244, 63, 94, 0.3);
     border-radius: 2px;
 
     &:hover {
-      background: #999;
+      background: rgba(244, 63, 94, 0.5);
     }
   }
 }
@@ -40,26 +40,29 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 1rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(244, 63, 94, 0.3);
   border-radius: 20px;
-  background-color: #fff;
-  color: #666;
+  background: rgba(30, 41, 59, 0.6);
+  color: var(--text);
   font-size: 0.85rem;
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
   flex-shrink: 0;
+  backdrop-filter: blur(5px);
 
   &:hover {
-    background-color: #f5f5f5;
-    border-color: #ddd;
+    background: rgba(30, 41, 59, 0.8);
+    border-color: var(--rose);
+    box-shadow: 0 0 10px rgba(244, 63, 94, 0.2);
   }
 
   &.active {
-    background-color: #4caf50;
+    background: var(--gradient-warm-violet);
     color: white;
-    border-color: #4caf50;
+    border-color: transparent;
+    box-shadow: var(--glow-violet);
 
     .emoji {
       transform: scale(1.1);

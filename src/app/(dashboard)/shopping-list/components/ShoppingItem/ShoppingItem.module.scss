@@ -5,30 +5,39 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem;
-  transition: background-color 0.2s;
+  background: var(--item-bg);
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
 
   &:active {
-    background-color: #f5f5f5;
+    background: var(--item-bg-hover);
+  }
+
+  &:hover {
+    background: var(--item-bg-hover);
+    box-shadow: 0 0 10px rgba(244, 63, 94, 0.15);
   }
 
   &.completed {
-    opacity: 0.6;
+    background: var(--item-checked-bg);
+    opacity: 0.5;
 
     .name {
       text-decoration: line-through;
-      color: #999;
+      color: var(--text-secondary);
     }
   }
 
   &.editing {
     padding: 0.75rem;
-    background-color: #fafafa;
+    background: rgba(30, 41, 59, 0.7);
+    box-shadow: var(--glow-violet);
   }
 
   &.dragging {
-    background-color: #f0f0f0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border-radius: 4px;
+    background: var(--item-bg-hover);
+    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3), var(--glow-rose);
+    border-radius: 8px;
   }
 }
 
@@ -46,7 +55,8 @@
   height: 1.25rem;
   margin-top: 0.25rem;
   cursor: pointer;
-  accent-color: #4caf50;
+  accent-color: var(--rose);
+  filter: drop-shadow(0 0 3px rgba(244, 63, 94, 0.3));
 
   @media (max-width: 640px) {
     width: 1.1rem;
@@ -62,11 +72,11 @@
   min-width: 0;
   cursor: pointer;
   padding: 0.25rem;
-  border-radius: 4px;
-  transition: background-color 0.15s;
+  border-radius: 8px;
+  transition: all 0.2s;
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.02);
+    background-color: rgba(244, 63, 94, 0.1);
   }
 }
 
@@ -87,7 +97,7 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 500;
-  color: #1a1a1a;
+  color: var(--text);
   word-break: break-word;
   transition: all 0.2s;
 }
@@ -95,7 +105,7 @@
 .quantity {
   margin: 0.25rem 0 0;
   font-size: 0.8rem;
-  color: #999;
+  color: var(--text-secondary);
 }
 
 .actions {
@@ -113,22 +123,31 @@
   font-size: 1rem;
   cursor: pointer;
   opacity: 0.6;
-  transition: opacity 0.2s;
-  border-radius: 4px;
+  transition: all 0.3s;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 2rem;
   height: 2rem;
+  color: var(--text);
 
   &:hover:not(:disabled) {
     opacity: 1;
-    background-color: rgba(0, 0, 0, 0.05);
+    background: rgba(244, 63, 94, 0.15);
+    box-shadow: var(--glow-rose);
   }
 
   &:disabled {
     cursor: not-allowed;
     opacity: 0.4;
+  }
+}
+
+.deleteButton {
+  &:hover:not(:disabled) {
+    background: var(--gradient-warm-rose);
+    color: white;
   }
 }
 
@@ -142,15 +161,18 @@
 .editInput,
 .editQuantityInput {
   padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  border-radius: 8px;
   font-size: 0.95rem;
   font-family: inherit;
+  background: rgba(30, 41, 59, 0.6);
+  color: var(--text);
+  transition: all 0.2s;
 
   &:focus {
     outline: none;
-    border-color: #4caf50;
-    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    border-color: var(--rose);
+    box-shadow: var(--glow-rose);
   }
 }
 
@@ -171,11 +193,11 @@
 .cancelButton {
   padding: 0.4rem 0.8rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s;
 
   &:disabled {
     opacity: 0.6;
@@ -184,20 +206,24 @@
 }
 
 .saveButton {
-  background-color: #4caf50;
+  background: var(--gradient-warm-rose);
   color: white;
+  box-shadow: var(--glow-rose);
 
   &:hover:not(:disabled) {
-    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
   }
 }
 
 .cancelButton {
-  background-color: #e0e0e0;
-  color: #333;
+  background: rgba(30, 41, 59, 0.6);
+  color: var(--text);
+  border: 1px solid rgba(244, 63, 94, 0.3);
 
   &:hover:not(:disabled) {
-    background-color: #d0d0d0;
+    background: rgba(30, 41, 59, 0.8);
+    border-color: var(--rose);
   }
 }
 

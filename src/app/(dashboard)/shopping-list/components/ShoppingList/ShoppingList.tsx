@@ -14,7 +14,10 @@ import {
 } from '@dnd-kit/sortable';
 import { ShoppingCategory } from '@prisma/client';
 import { useCallback, useMemo, useState, useTransition } from 'react';
-import { clearCheckedItems, reorderShoppingItems } from '@/app/lib/shopping-actions';
+import {
+  clearCheckedItems,
+  reorderShoppingItems,
+} from '@/app/lib/shopping-actions';
 import { ShoppingItemWithCreator } from '@/types/shopping';
 import ShoppingItem from '../ShoppingItem/ShoppingItem';
 import AddItemForm from '../AddItemForm/AddItemForm';
@@ -27,12 +30,12 @@ interface ShoppingListProps {
 
 export default function ShoppingList({ initialItems }: ShoppingListProps) {
   const [items, setItems] = useState(initialItems);
-  const [selectedCategory, setSelectedCategory] = useState<ShoppingCategory | 'ALL'>('ALL');
+  const [selectedCategory, setSelectedCategory] = useState<
+    ShoppingCategory | 'ALL'
+  >('ALL');
   const [isPending, startTransition] = useTransition();
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-  );
+  const sensors = useSensors(useSensor(PointerSensor));
 
   const filteredItems = useMemo(() => {
     if (selectedCategory === 'ALL') {
@@ -52,59 +55,60 @@ export default function ShoppingList({ initialItems }: ShoppingListProps) {
   const handleToggleItem = useCallback(
     (itemId: string, updatedItem: ShoppingItemWithCreator) => {
       setItems((prev) =>
-        prev.map((item) => (item.id === itemId ? updatedItem : item)),
+        prev.map((item) => (item.id === itemId ? updatedItem : item))
       );
     },
-    [],
+    []
   );
 
   const handleUpdateItem = useCallback(
     (itemId: string, updatedItem: ShoppingItemWithCreator) => {
       setItems((prev) =>
-        prev.map((item) => (item.id === itemId ? updatedItem : item)),
+        prev.map((item) => (item.id === itemId ? updatedItem : item))
       );
     },
-    [],
+    []
   );
 
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      const { active, over } = event;
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
 
-      if (over && active.id !== over.id) {
-        setItems((currentItems) => {
-          // Reorder unchecked items only (checked items stay in separate section)
-          const uncheckedItems = currentItems.filter((item) => !item.checked);
-          const checkedItems = currentItems.filter((item) => item.checked);
+    if (over && active.id !== over.id) {
+      setItems((currentItems) => {
+        // Reorder unchecked items only (checked items stay in separate section)
+        const uncheckedItems = currentItems.filter((item) => !item.checked);
+        const checkedItems = currentItems.filter((item) => item.checked);
 
-          const oldIndex = uncheckedItems.findIndex((item) => item.id === active.id);
-          const newIndex = uncheckedItems.findIndex((item) => item.id === over.id);
+        const oldIndex = uncheckedItems.findIndex(
+          (item) => item.id === active.id
+        );
+        const newIndex = uncheckedItems.findIndex(
+          (item) => item.id === over.id
+        );
 
-          if (oldIndex !== -1 && newIndex !== -1) {
-            const reorderedUnchecked = [...uncheckedItems];
-            const [movedItem] = reorderedUnchecked.splice(oldIndex, 1);
-            reorderedUnchecked.splice(newIndex, 0, movedItem);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const reorderedUnchecked = [...uncheckedItems];
+          const [movedItem] = reorderedUnchecked.splice(oldIndex, 1);
+          reorderedUnchecked.splice(newIndex, 0, movedItem);
 
-            const newItems = [...reorderedUnchecked, ...checkedItems];
+          const newItems = [...reorderedUnchecked, ...checkedItems];
 
-            // Persist to database
-            const itemIds = reorderedUnchecked.map((item) => item.id);
-            startTransition(async () => {
-              const result = await reorderShoppingItems(itemIds);
-              if (!result.success) {
-                // Rollback will be handled by re-fetching or manual rollback
-                console.error('Failed to reorder:', result.error);
-              }
-            });
+          // Persist to database
+          const itemIds = reorderedUnchecked.map((item) => item.id);
+          startTransition(async () => {
+            const result = await reorderShoppingItems(itemIds);
+            if (!result.success) {
+              // Rollback will be handled by re-fetching or manual rollback
+              console.error('Failed to reorder:', result.error);
+            }
+          });
 
-            return newItems;
-          }
-          return currentItems;
-        });
-      }
-    },
-    [],
-  );
+          return newItems;
+        }
+        return currentItems;
+      });
+    }
+  }, []);
 
   const handleClearCompleted = useCallback(() => {
     startTransition(async () => {
@@ -121,7 +125,7 @@ export default function ShoppingList({ initialItems }: ShoppingListProps) {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Shopping List</h1>
+        <h1 className={styles.title}>Lista zakupów</h1>
       </header>
 
       <AddItemForm onAddItem={handleAddItem} />
@@ -133,8 +137,8 @@ export default function ShoppingList({ initialItems }: ShoppingListProps) {
 
       {isEmpty ? (
         <div className={styles.emptyState}>
-          <p>No items in your list</p>
-          <p className={styles.emptyStateHint}>Add one to get started!</p>
+          <p>Brak produktów na liście</p>
+          <p className={styles.emptyStateHint}>Dodaj pierwszy produkt</p>
         </div>
       ) : (
         <>
