@@ -47,9 +47,19 @@ export default function ConfirmModal({
           />
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -20 }}
+            initial={{
+              opacity: 0,
+              scale: 0.95,
+              x: '-50%',
+              y: 'calc(-50% + 20px)',
+            }}
+            animate={{ opacity: 1, scale: 1, x: '-50%', y: '-50%' }}
+            exit={{
+              opacity: 0,
+              scale: 0.95,
+              x: '-50%',
+              y: 'calc(-50% + 20px)',
+            }}
             transition={{
               type: 'spring',
               damping: 20,
