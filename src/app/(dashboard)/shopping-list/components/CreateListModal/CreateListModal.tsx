@@ -12,7 +12,18 @@ interface CreateListModalProps {
   onListCreated: (list: ShoppingListWithCreator) => void;
 }
 
-const EMOJI_OPTIONS = ['🛒', '📝', '🍔', '🥗', '🥤', '🍕', '🥩', '🧀', '🏪', '🛍️'];
+const EMOJI_OPTIONS = [
+  '🛒',
+  '📝',
+  '🍔',
+  '🥗',
+  '🥤',
+  '🍕',
+  '🥩',
+  '🧀',
+  '🏪',
+  '🛍️',
+];
 
 const COLOR_PRESETS = [
   { label: 'Purple', value: '#8b5cf6' },
@@ -98,9 +109,19 @@ export default function CreateListModal({
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -20 }}
+            initial={{
+              opacity: 0,
+              scale: 0.95,
+              x: '-50%',
+              y: 'calc(-50% + 20px)',
+            }}
+            animate={{ opacity: 1, scale: 1, x: '-50%', y: '-50%' }}
+            exit={{
+              opacity: 0,
+              scale: 0.95,
+              x: '-50%',
+              y: 'calc(-50% + 20px)',
+            }}
             transition={{
               type: 'spring',
               damping: 20,
@@ -148,9 +169,7 @@ export default function CreateListModal({
                     <motion.button
                       key={emoji}
                       type="button"
-                      onClick={() =>
-                        setFormData({ ...formData, emoji })
-                      }
+                      onClick={() => setFormData({ ...formData, emoji })}
                       className={`${styles.emojiOption} ${
                         formData.emoji === emoji ? styles.selected : ''
                       }`}

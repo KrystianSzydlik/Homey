@@ -17,7 +17,11 @@ import { useCallback, useMemo, useState, useTransition } from 'react';
 import {
   clearCheckedItems,
   reorderShoppingItems,
+  deleteAllShoppingItems,
 } from '@/app/lib/shopping-actions';
+import {
+  deleteShoppingList,
+} from '@/app/lib/shopping-list-actions';
 import {
   ShoppingItemWithCreator,
   ShoppingListWithItems,
@@ -28,6 +32,8 @@ import AddItemForm from '../AddItemForm/AddItemForm';
 import CategoryFilter from '../CategoryFilter/CategoryFilter';
 import ListSelector from '../ListSelector/ListSelector';
 import CreateListModal from '../CreateListModal/CreateListModal';
+import ConfirmModal from '../ConfirmModal/ConfirmModal';
+import ListHeader from '../ListHeader/ListHeader';
 import styles from './ShoppingList.module.scss';
 
 interface ShoppingListProps {
@@ -44,6 +50,8 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   >('ALL');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [deleteListId, setDeleteListId] = useState<string | null>(null);
+  const [deleteAllListId, setDeleteAllListId] = useState<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -183,6 +191,31 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     });
   }, []);
 
+  const handleDeleteList = useCallback((listId: string) => {
+    startTransition(async () => {
+      const result = await deleteShoppingList(listId);
+      if (result.success) {
+        setLists((prev) => prev.filter((list) => list.id !== listId));
+        setSelectedListIds((prev) => prev.filter((id) => id !== listId));
+        setDeleteListId(null);
+      }
+    });
+  }, []);
+
+  const handleDeleteAllItems = useCallback((listId: string) => {
+    startTransition(async () => {
+      const result = await deleteAllShoppingItems(listId);
+      if (result.success) {
+        setLists((prev) =>
+          prev.map((list) =>
+            list.id === listId ? { ...list, items: [] } : list
+          )
+        );
+        setDeleteAllListId(null);
+      }
+    });
+  }, []);
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -219,16 +252,13 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
 
           return (
             <div key={list.id} className={styles.listSection}>
-              <div
-                className={styles.listHeader}
-                style={list.color ? { backgroundColor: list.color } : undefined}
-              >
-                <div className={styles.listHeaderContent}>
-                  {list.emoji && <span className={styles.listEmoji}>{list.emoji}</span>}
-                  <h2 className={styles.listTitle}>{list.name}</h2>
-                  <span className={styles.listCount}>({list.items.length})</span>
-                </div>
-              </div>
+              <ListHeader
+                list={list}
+                itemCount={list.items.length}
+                onDelete={setDeleteListId}
+                onDeleteAll={setDeleteAllListId}
+                isLoading={isPending}
+              />
 
               <AddItemForm
                 shoppingListId={list.id}
@@ -307,6 +337,36 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
           })
         )}
       </div>
+
+      {/* Delete List Confirmation Modal */}
+      {deleteListId && (
+        <ConfirmModal
+          isOpen={true}
+          title="Delete Shopping List"
+          message="Are you sure you want to delete this shopping list? All items will be permanently removed."
+          onConfirm={() => handleDeleteList(deleteListId)}
+          onCancel={() => setDeleteListId(null)}
+          confirmText="Delete List"
+          cancelText="Cancel"
+          variant="danger"
+          isLoading={isPending}
+        />
+      )}
+
+      {/* Delete All Items Confirmation Modal */}
+      {deleteAllListId && (
+        <ConfirmModal
+          isOpen={true}
+          title="Clear All Items"
+          message="Are you sure you want to delete all items from this list? This action cannot be undone."
+          onConfirm={() => handleDeleteAllItems(deleteAllListId)}
+          onCancel={() => setDeleteAllListId(null)}
+          confirmText="Delete All"
+          cancelText="Cancel"
+          variant="warning"
+          isLoading={isPending}
+        />
+      )}
     </div>
   );
 }
