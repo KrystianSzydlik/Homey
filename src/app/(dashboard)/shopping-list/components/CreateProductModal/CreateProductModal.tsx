@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ShoppingCategory } from '@prisma/client';
-import { CATEGORIES } from '@/config/shopping';
-import { createProduct } from '@/app/lib/product-actions';
+import { createProduct, updateProduct } from '@/app/lib/product-actions';
 import { getSmartProductDefaults } from '@/app/lib/product-utils';
 import EmojiPicker from '../EmojiPicker/EmojiPicker';
 import CategoryPicker from '../CategoryPicker/CategoryPicker';
@@ -12,7 +11,11 @@ import styles from './CreateProductModal.module.scss';
 interface CreateProductModalProps {
   isOpen: boolean;
   onClose: () => void;
+  productId?: string;
   initialName?: string;
+  initialCategory?: ShoppingCategory;
+  initialEmoji?: string;
+  initialUnit?: string;
   onProductCreated: (product: {
     id: string;
     name: string;
@@ -25,31 +28,60 @@ interface CreateProductModalProps {
 export default function CreateProductModal({
   isOpen,
   onClose,
+  productId,
   initialName = '',
+  initialCategory,
+  initialEmoji,
+  initialUnit = '',
   onProductCreated,
 }: CreateProductModalProps) {
   const [name, setName] = useState(initialName);
-  const [category, setCategory] = useState<ShoppingCategory>('OTHER');
-  const [emoji, setEmoji] = useState('🛒');
-  const [unit, setUnit] = useState('');
+  const [category, setCategory] = useState<ShoppingCategory>(
+    initialCategory || 'OTHER'
+  );
+  const [emoji, setEmoji] = useState(initialEmoji || '🛒');
+  const [unit, setUnit] = useState(initialUnit);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
+      document.body.style.overflow = 'hidden';
       setName(initialName);
-      const defaults = getSmartProductDefaults(initialName);
+
+      if (productId) {
+        setCategory(initialCategory || 'OTHER');
+        setEmoji(initialEmoji || '🛒');
+        setUnit(initialUnit);
+      } else {
+        const defaults = getSmartProductDefaults(initialName);
+        setCategory(defaults.category);
+        setEmoji(defaults.emoji);
+        setUnit('');
+      }
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [
+    isOpen,
+    initialName,
+    productId,
+    initialCategory,
+    initialEmoji,
+    initialUnit,
+  ]);
+
+  const handleNameChange = (newName: string) => {
+    setName(newName);
+    if (!productId) {
+      const defaults = getSmartProductDefaults(newName);
       setCategory(defaults.category);
       setEmoji(defaults.emoji);
     }
-  }, [isOpen, initialName]);
-
-  // Handle name changes to update suggestions dynamically
-  const handleNameChange = (newName: string) => {
-    setName(newName);
-    const defaults = getSmartProductDefaults(newName);
-    setCategory(defaults.category);
-    setEmoji(defaults.emoji);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,18 +92,28 @@ export default function CreateProductModal({
     setError(null);
 
     try {
-      const result = await createProduct({
-        name: name.trim(),
-        defaultCategory: category,
-        emoji: emoji || undefined,
-        defaultUnit: unit.trim() || undefined,
-      });
+      let result;
+      if (productId) {
+        result = await updateProduct(productId, {
+          name: name.trim(),
+          defaultCategory: category,
+          emoji: emoji || undefined,
+          defaultUnit: unit.trim() || undefined,
+        });
+      } else {
+        result = await createProduct({
+          name: name.trim(),
+          defaultCategory: category,
+          emoji: emoji || undefined,
+          defaultUnit: unit.trim() || undefined,
+        });
+      }
 
       if (result.success && result.product) {
         onProductCreated(result.product as any);
         onClose();
       } else {
-        setError(result.error || 'Failed to create product');
+        setError(result.error || 'Failed to save product');
       }
     } catch (err) {
       setError('Something went wrong');
@@ -89,7 +131,7 @@ export default function CreateProductModal({
     >
       <div className={styles.modal}>
         <div className={styles.header}>
-          <h2>Dodaj nowy produkt</h2>
+          <h2>{productId ? 'Edytuj produkt' : 'Dodaj nowy produkt'}</h2>
           <button onClick={onClose} className={styles.closeButton}>
             ×
           </button>

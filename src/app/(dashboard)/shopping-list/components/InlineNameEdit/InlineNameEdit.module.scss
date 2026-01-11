@@ -125,6 +125,9 @@
   border-radius: 8px;
   transition: all 0.15s ease;
   margin-bottom: 4px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 
   &:last-child {
     margin-bottom: 0;
