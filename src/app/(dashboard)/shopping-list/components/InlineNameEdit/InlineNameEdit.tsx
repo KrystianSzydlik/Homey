@@ -4,6 +4,7 @@ import { useState, useCallback, useTransition, useEffect, useRef } from 'react';
 import { updateShoppingItem } from '@/app/lib/shopping-actions';
 import { ShoppingItemWithCreator, ProductSuggestion, isCatalogSuggestion } from '@/types/shopping';
 import { useProductAutocomplete } from '../../hooks/useProductAutocomplete';
+import { useProductCacheContext } from '../../contexts/ProductCacheContext';
 import CreateProductModal from '../CreateProductModal/CreateProductModal';
 import styles from './InlineNameEdit.module.scss';
 
@@ -27,6 +28,7 @@ export default function InlineNameEdit({
   const [isEditing, setIsEditing] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const { filterProducts, refreshCache } = useProductCacheContext();
 
   useEffect(() => {
     setInputValue(initialName);
@@ -76,6 +78,7 @@ export default function InlineNameEdit({
   } = useProductAutocomplete({
     searchQuery: inputValue,
     onSelect: handleProductSelect,
+    filterProducts, // Use client-side filtering for instant results
   });
 
   const handleCreateNewProduct = useCallback(
@@ -95,10 +98,13 @@ export default function InlineNameEdit({
           setShowCreateProduct(false);
           setIsEditing(false);
           inputRef.current?.blur();
+
+          // Refresh cache to include newly created product
+          refreshCache();
         }
       });
     },
-    [itemId, onUpdate]
+    [itemId, onUpdate, refreshCache]
   );
 
   const handleKeyDown = useCallback(

@@ -1,17 +1,23 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { ProductSuggestion } from '@/types/shopping';
+import { ProductSuggestion, CatalogSuggestion } from '@/types/shopping';
 import { getProductSuggestions } from '@/app/lib/product-actions';
 
 interface UseProductAutocompleteProps {
   searchQuery: string;
   onSelect: (suggestion: ProductSuggestion) => void;
   debounceMs?: number;
+  /**
+   * Optional client-side filter function for instant suggestions
+   * If provided, will use this instead of server-side fetching
+   */
+  filterProducts?: (query: string, maxResults?: number) => CatalogSuggestion[];
 }
 
 export function useProductAutocomplete({
   searchQuery,
   onSelect,
   debounceMs = 300,
+  filterProducts,
 }: UseProductAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<ProductSuggestion[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -31,7 +37,7 @@ export function useProductAutocomplete({
     try {
       const results = await getProductSuggestions(query);
       setSuggestions(results);
-      setIsOpen(results.length > 0);
+      setIsOpen(true);
       setSelectedIndex(-1);
     } catch (error) {
       console.error('Error fetching suggestions:', error);
@@ -42,13 +48,52 @@ export function useProductAutocomplete({
     }
   }, []);
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchSuggestions(searchQuery);
-    }, debounceMs);
+  const filterSuggestionsClientSide = useCallback(
+    (query: string) => {
+      if (!query.trim()) {
+        setSuggestions([]);
+        setIsOpen(false);
+        return;
+      }
 
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, fetchSuggestions, debounceMs]);
+      if (!filterProducts) {
+        // Fallback to server-side if no filter provided
+        fetchSuggestions(query);
+        return;
+      }
+
+      setIsLoading(false); // No loading state for instant client-side filtering
+      const results = filterProducts(query, 10);
+      setSuggestions(results);
+      setIsOpen(true);
+      setSelectedIndex(-1);
+    },
+    [filterProducts, fetchSuggestions]
+  );
+
+  useEffect(() => {
+    // If we have client-side filtering, use it instantly with minimal debounce
+    if (filterProducts) {
+      const timeoutId = setTimeout(() => {
+        filterSuggestionsClientSide(searchQuery);
+      }, 50); // Minimal debounce for smooth typing
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      // Otherwise, use server-side with normal debounce
+      const timeoutId = setTimeout(() => {
+        fetchSuggestions(searchQuery);
+      }, debounceMs);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [
+    searchQuery,
+    fetchSuggestions,
+    filterSuggestionsClientSide,
+    debounceMs,
+    filterProducts,
+  ]);
 
   const handleSelect = useCallback(
     (suggestion: ProductSuggestion) => {
@@ -124,10 +169,8 @@ export function useProductAutocomplete({
   }, [selectedIndex]);
 
   const openDropdown = useCallback(() => {
-    if (suggestions.length > 0) {
-      setIsOpen(true);
-    }
-  }, [suggestions.length]);
+    setIsOpen(true);
+  }, []);
 
   const closeDropdown = useCallback(() => {
     setIsOpen(false);

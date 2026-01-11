@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { ProductSuggestion } from '@/types/shopping';
-import { getProductSuggestions } from '@/app/lib/product-actions';
+import { useProductAutocomplete } from '../../hooks/useProductAutocomplete';
+import { useProductCacheContext } from '../../contexts/ProductCacheContext';
 import styles from './ProductAutocomplete.module.scss';
 
 interface ProductAutocompleteProps {
@@ -17,130 +18,34 @@ export default function ProductAutocomplete({
   autoFocus = false,
 }: ProductAutocompleteProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<ProductSuggestion[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
   const inputRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
 
-  const fetchSuggestions = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      setSuggestions([]);
-      setIsOpen(false);
-      return;
-    }
+  const { filterProducts } = useProductCacheContext();
 
-    setIsLoading(true);
-    try {
-      const results = await getProductSuggestions(query);
-      setSuggestions(results);
-      setIsOpen(results.length > 0);
-      setSelectedIndex(-1);
-    } catch (error) {
-      console.error('Error fetching suggestions:', error);
-      setSuggestions([]);
-      setIsOpen(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchSuggestions(searchQuery);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, fetchSuggestions]);
-
-  const handleSelect = useCallback(
+  const handleSelectWithClear = useCallback(
     (suggestion: ProductSuggestion) => {
       onSelect(suggestion);
       setSearchQuery('');
-      setSuggestions([]);
-      setIsOpen(false);
-      setSelectedIndex(-1);
       inputRef.current?.blur();
     },
     [onSelect]
   );
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (!isOpen) {
-        if (e.key === 'Enter' && searchQuery.trim()) {
-          e.preventDefault();
-          const fallbackSuggestion: ProductSuggestion = {
-            name: searchQuery.trim(),
-            emoji: null,
-            category: 'OTHER',
-            defaultUnit: null,
-            score: 0,
-            source: 'history',
-          };
-          handleSelect(fallbackSuggestion);
-        }
-        return;
-      }
-
-      const hasAddNew =
-        searchQuery.trim() &&
-        !suggestions.find(
-          (s) => s.name.toLowerCase() === searchQuery.trim().toLowerCase()
-        );
-      const maxIndex = hasAddNew ? suggestions.length : suggestions.length - 1;
-
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          setSelectedIndex((prev) => (prev < maxIndex ? prev + 1 : 0));
-          break;
-
-        case 'ArrowUp':
-          e.preventDefault();
-          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
-          break;
-
-        case 'Enter':
-          e.preventDefault();
-          if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
-            handleSelect(suggestions[selectedIndex]);
-          } else if (selectedIndex === suggestions.length && hasAddNew) {
-            handleSelect({
-              name: searchQuery.trim(),
-              emoji: null,
-              category: 'OTHER',
-              score: -1,
-              source: 'history',
-            });
-          }
-          break;
-
-        case 'Escape':
-          e.preventDefault();
-          setIsOpen(false);
-          setSelectedIndex(-1);
-          break;
-      }
-    },
-    [isOpen, selectedIndex, suggestions, searchQuery, handleSelect]
-  );
-
-  useEffect(() => {
-    if (selectedIndex >= 0 && listRef.current) {
-      const selectedElement = listRef.current.children[
-        selectedIndex
-      ] as HTMLElement;
-      if (selectedElement) {
-        selectedElement.scrollIntoView({
-          block: 'nearest',
-          behavior: 'smooth',
-        });
-      }
-    }
-  }, [selectedIndex]);
+  const {
+    suggestions,
+    selectedIndex,
+    isOpen,
+    isLoading,
+    listRef,
+    handleKeyDown,
+    handleSelect,
+    setSelectedIndex,
+    openDropdown,
+  } = useProductAutocomplete({
+    searchQuery,
+    onSelect: handleSelectWithClear,
+    filterProducts, // Use client-side filtering for instant results
+  });
 
   const getSourceBadge = (source: ProductSuggestion['source']) => {
     switch (source) {
@@ -161,11 +66,7 @@ export default function ProductAutocomplete({
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         onKeyDown={handleKeyDown}
-        onFocus={() => {
-          if (suggestions.length > 0) {
-            setIsOpen(true);
-          }
-        }}
+        onFocus={openDropdown}
         placeholder={placeholder}
         className={styles.input}
         autoFocus={autoFocus}
