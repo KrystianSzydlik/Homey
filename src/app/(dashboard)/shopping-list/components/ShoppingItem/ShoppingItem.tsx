@@ -10,24 +10,24 @@ import {
 } from '@/app/lib/shopping-actions';
 import { ShoppingItemWithCreator } from '@/types/shopping';
 import InlineQuantityEdit from '../InlineQuantityEdit/InlineQuantityEdit';
+import ConfirmModal from '../ConfirmModal/ConfirmModal';
 import styles from './ShoppingItem.module.scss';
 
 interface ShoppingItemProps {
   item: ShoppingItemWithCreator;
   onDelete: (itemId: string) => void;
-  onToggle: (itemId: string, updatedItem: ShoppingItemWithCreator) => void;
   onUpdate: (itemId: string, updatedItem: ShoppingItemWithCreator) => void;
 }
 
 export default function ShoppingItem({
   item,
   onDelete,
-  onToggle,
   onUpdate,
 }: ShoppingItemProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(item.name);
   const [isPending, startTransition] = useTransition();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.id });
@@ -36,21 +36,24 @@ export default function ShoppingItem({
     startTransition(async () => {
       const result = await toggleShoppingItemChecked(item.id);
       if (result.success && result.item) {
-        onToggle(item.id, result.item);
+        onUpdate(item.id, result.item);
       }
     });
-  }, [item.id, onToggle]);
+  }, [item.id, onUpdate]);
 
-  const handleDelete = useCallback(() => {
-    if (window.confirm(`Delete "${item.name}"?`)) {
-      startTransition(async () => {
-        const result = await deleteShoppingItem(item.id);
-        if (result.success) {
-          onDelete(item.id);
-        }
-      });
-    }
-  }, [item.id, item.name, onDelete]);
+  const handleDeleteClick = useCallback(() => {
+    setShowDeleteConfirm(true);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    startTransition(async () => {
+      const result = await deleteShoppingItem(item.id);
+      if (result.success) {
+        onDelete(item.id);
+        setShowDeleteConfirm(false);
+      }
+    });
+  }, [item.id, onDelete]);
 
   const handleSaveNameEdit = useCallback(() => {
     if (editName.trim()) {
@@ -165,7 +168,7 @@ export default function ShoppingItem({
         </button>
         <button
           className={styles.deleteButton}
-          onClick={handleDelete}
+          onClick={handleDeleteClick}
           disabled={isPending}
           type="button"
           aria-label={`Delete "${item.name}"`}
@@ -173,6 +176,20 @@ export default function ShoppingItem({
           🗑️
         </button>
       </div>
+
+      {showDeleteConfirm && (
+        <ConfirmModal
+          isOpen={true}
+          title="Delete Item"
+          message={`Are you sure you want to delete "${item.name}"?`}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setShowDeleteConfirm(false)}
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="danger"
+          isLoading={isPending}
+        />
+      )}
     </li>
   );
 }

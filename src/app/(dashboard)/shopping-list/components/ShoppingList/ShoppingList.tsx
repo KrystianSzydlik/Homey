@@ -15,7 +15,7 @@ import {
 import { ShoppingCategory } from '@prisma/client';
 import { useCallback, useMemo, useState, useTransition } from 'react';
 import {
-  clearCheckedItems,
+  clearCheckedItems as clearCheckedItemsAction,
   reorderShoppingItems,
   deleteAllShoppingItems,
 } from '@/app/lib/shopping-actions';
@@ -34,6 +34,7 @@ import ListSelector from '../ListSelector/ListSelector';
 import CreateListModal from '../CreateListModal/CreateListModal';
 import ConfirmModal from '../ConfirmModal/ConfirmModal';
 import ListHeader from '../ListHeader/ListHeader';
+import { useShoppingListState } from '@/app/(dashboard)/shopping-list/hooks/useShoppingListState';
 import styles from './ShoppingList.module.scss';
 
 interface ShoppingListProps {
@@ -41,10 +42,20 @@ interface ShoppingListProps {
 }
 
 export default function ShoppingList({ initialLists }: ShoppingListProps) {
-  const [lists, setLists] = useState(initialLists);
-  const [selectedListIds, setSelectedListIds] = useState<string[]>(
-    lists.length > 0 ? [lists[0].id] : []
-  );
+  const {
+    lists,
+    selectedListIds,
+    addList,
+    deleteList: removeList,
+    toggleListSelection,
+    addItem,
+    deleteItem,
+    updateItem,
+    reorderItems,
+    clearCheckedItems,
+    deleteAllItems,
+  } = useShoppingListState(initialLists);
+
   const [selectedCategory, setSelectedCategory] = useState<
     ShoppingCategory | 'ALL'
   >('ALL');
@@ -60,77 +71,39 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     [lists, selectedListIds]
   );
 
-  const handleSelectList = useCallback((listId: string) => {
-    setSelectedListIds((prev) => {
-      if (prev.includes(listId)) {
-        return prev.filter((id) => id !== listId);
-      } else {
-        return [...prev, listId];
-      }
-    });
-  }, []);
+  const handleSelectList = useCallback(
+    (listId: string) => {
+      toggleListSelection(listId);
+    },
+    [toggleListSelection]
+  );
 
-  const handleListCreated = useCallback((newList: ShoppingListWithCreator) => {
-    setLists((prev) => [...prev, { ...newList, items: [] }]);
-    setSelectedListIds([newList.id]);
-  }, []);
+  const handleListCreated = useCallback(
+    (newList: ShoppingListWithCreator) => {
+      addList(newList);
+    },
+    [addList]
+  );
 
   const handleAddItem = useCallback(
     (newItem: ShoppingItemWithCreator) => {
-      setLists((prev) =>
-        prev.map((list) =>
-          list.id === newItem.shoppingListId
-            ? { ...list, items: [...list.items, newItem] }
-            : list
-        )
-      );
+      addItem(newItem);
     },
-    []
+    [addItem]
   );
 
-  const handleDeleteItem = useCallback((itemId: string) => {
-    setLists((prev) =>
-      prev.map((list) => ({
-        ...list,
-        items: list.items.filter((item) => item.id !== itemId),
-      }))
-    );
-  }, []);
-
-  const handleToggleItem = useCallback(
-    (itemId: string, updatedItem: ShoppingItemWithCreator) => {
-      setLists((prev) =>
-        prev.map((list) =>
-          list.id === updatedItem.shoppingListId
-            ? {
-                ...list,
-                items: list.items.map((item) =>
-                  item.id === itemId ? updatedItem : item
-                ),
-              }
-            : list
-        )
-      );
+  const handleDeleteItem = useCallback(
+    (itemId: string) => {
+      deleteItem(itemId);
     },
-    []
+    [deleteItem]
   );
 
-  const handleUpdateItem = useCallback(
+  const handleItemUpdate = useCallback(
     (itemId: string, updatedItem: ShoppingItemWithCreator) => {
-      setLists((prev) =>
-        prev.map((list) =>
-          list.id === updatedItem.shoppingListId
-            ? {
-                ...list,
-                items: list.items.map((item) =>
-                  item.id === itemId ? updatedItem : item
-                ),
-              }
-            : list
-        )
-      );
+      updateItem(itemId, updatedItem);
     },
-    []
+    [updateItem]
   );
 
   const handleDragEnd = useCallback(
@@ -138,83 +111,74 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       const { active, over } = event;
 
       if (over && active.id !== over.id) {
-        setLists((currentLists) =>
-          currentLists.map((list) => {
-            if (list.id !== listId) return list;
+        const list = lists.find((l) => l.id === listId);
+        if (!list) return;
 
-            const currentItems = list.items;
-            const uncheckedItems = currentItems.filter((item) => !item.checked);
-            const checkedItems = currentItems.filter((item) => item.checked);
+        const currentItems = list.items;
+        const uncheckedItems = currentItems.filter((item) => !item.checked);
+        const checkedItems = currentItems.filter((item) => item.checked);
 
-            const oldIndex = uncheckedItems.findIndex(
-              (item) => item.id === active.id
-            );
-            const newIndex = uncheckedItems.findIndex(
-              (item) => item.id === over.id
-            );
-
-            if (oldIndex !== -1 && newIndex !== -1) {
-              const reorderedUnchecked = [...uncheckedItems];
-              const [movedItem] = reorderedUnchecked.splice(oldIndex, 1);
-              reorderedUnchecked.splice(newIndex, 0, movedItem);
-
-              const newItems = [...reorderedUnchecked, ...checkedItems];
-
-              // Persist to database
-              const itemIds = reorderedUnchecked.map((item) => item.id);
-              startTransition(async () => {
-                const result = await reorderShoppingItems(listId, itemIds);
-                if (!result.success) {
-                  console.error('Failed to reorder:', result.error);
-                }
-              });
-
-              return { ...list, items: newItems };
-            }
-            return list;
-          })
+        const oldIndex = uncheckedItems.findIndex(
+          (item) => item.id === active.id
         );
+        const newIndex = uncheckedItems.findIndex(
+          (item) => item.id === over.id
+        );
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const reorderedUnchecked = [...uncheckedItems];
+          const [movedItem] = reorderedUnchecked.splice(oldIndex, 1);
+          reorderedUnchecked.splice(newIndex, 0, movedItem);
+
+          const newItems = [...reorderedUnchecked, ...checkedItems];
+
+          reorderItems(listId, newItems);
+
+          const itemIds = reorderedUnchecked.map((item) => item.id);
+          startTransition(async () => {
+            const result = await reorderShoppingItems(listId, itemIds);
+            if (!result.success) {
+              console.error('Failed to reorder:', result.error);
+            }
+          });
+        }
       }
     },
-    [startTransition]
+    [lists, reorderItems, startTransition]
   );
 
   const handleClearCompleted = useCallback(() => {
     startTransition(async () => {
-      await clearCheckedItems();
-      setLists((prev) =>
-        prev.map((list) => ({
-          ...list,
-          items: list.items.filter((item) => !item.checked),
-        }))
-      );
+      await clearCheckedItemsAction();
+      clearCheckedItems();
     });
-  }, []);
+  }, [clearCheckedItems]);
 
-  const handleDeleteList = useCallback((listId: string) => {
-    startTransition(async () => {
-      const result = await deleteShoppingList(listId);
-      if (result.success) {
-        setLists((prev) => prev.filter((list) => list.id !== listId));
-        setSelectedListIds((prev) => prev.filter((id) => id !== listId));
-        setDeleteListId(null);
-      }
-    });
-  }, []);
+  const handleDeleteList = useCallback(
+    (listId: string) => {
+      startTransition(async () => {
+        const result = await deleteShoppingList(listId);
+        if (result.success) {
+          removeList(listId);
+          setDeleteListId(null);
+        }
+      });
+    },
+    [removeList]
+  );
 
-  const handleDeleteAllItems = useCallback((listId: string) => {
-    startTransition(async () => {
-      const result = await deleteAllShoppingItems(listId);
-      if (result.success) {
-        setLists((prev) =>
-          prev.map((list) =>
-            list.id === listId ? { ...list, items: [] } : list
-          )
-        );
-        setDeleteAllListId(null);
-      }
-    });
-  }, []);
+  const handleDeleteAllItems = useCallback(
+    (listId: string) => {
+      startTransition(async () => {
+        const result = await deleteAllShoppingItems(listId);
+        if (result.success) {
+          deleteAllItems(listId);
+          setDeleteAllListId(null);
+        }
+      });
+    },
+    [deleteAllItems]
+  );
 
   return (
     <div className={styles.container}>
@@ -293,8 +257,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
                               key={item.id}
                               item={item}
                               onDelete={handleDeleteItem}
-                              onToggle={handleToggleItem}
-                              onUpdate={handleUpdateItem}
+                              onUpdate={handleItemUpdate}
                             />
                           ))}
                         </ul>
@@ -323,8 +286,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
                             key={item.id}
                             item={item}
                             onDelete={handleDeleteItem}
-                            onToggle={handleToggleItem}
-                            onUpdate={handleUpdateItem}
+                            onUpdate={handleItemUpdate}
                           />
                         ))}
                       </ul>

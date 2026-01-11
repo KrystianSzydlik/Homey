@@ -4,6 +4,12 @@ import { useEffect, useState, useTransition } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { createShoppingList } from '@/app/lib/shopping-list-actions';
 import { ShoppingListWithCreator } from '@/types/shopping';
+import {
+  EMOJI_OPTIONS,
+  COLOR_PRESETS,
+  DEFAULT_LIST_EMOJI,
+  DEFAULT_LIST_COLOR,
+} from '@/config/shopping';
 import styles from './CreateListModal.module.scss';
 
 interface CreateListModalProps {
@@ -12,28 +18,6 @@ interface CreateListModalProps {
   onListCreated: (list: ShoppingListWithCreator) => void;
 }
 
-const EMOJI_OPTIONS = [
-  '🛒',
-  '📝',
-  '🍔',
-  '🥗',
-  '🥤',
-  '🍕',
-  '🥩',
-  '🧀',
-  '🏪',
-  '🛍️',
-];
-
-const COLOR_PRESETS = [
-  { label: 'Purple', value: '#8b5cf6' },
-  { label: 'Rose', value: '#f43f5e' },
-  { label: 'Blue', value: '#0ea5e9' },
-  { label: 'Green', value: '#10b981' },
-  { label: 'Cyan', value: '#06b6d4' },
-  { label: 'Amber', value: '#f59e0b' },
-];
-
 export default function CreateListModal({
   isOpen,
   onClose,
@@ -41,8 +25,8 @@ export default function CreateListModal({
 }: CreateListModalProps) {
   const [formData, setFormData] = useState({
     name: '',
-    emoji: '🛒',
-    color: '#8b5cf6',
+    emoji: DEFAULT_LIST_EMOJI,
+    color: DEFAULT_LIST_COLOR,
   });
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);

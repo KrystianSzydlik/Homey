@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef, useCallback, useTransition } from 'react';
-import { updateShoppingItem } from '../../../../lib/shopping-actions';
-import { ShoppingItemWithCreator } from '../../../../../types/shopping';
+import { updateShoppingItem } from '@/src/app/lib/shopping-actions';
+import { ShoppingItemWithCreator } from '@/src/types/shopping';
 import styles from './InlineQuantityEdit.module.scss';
 
 interface InlineQuantityEditProps {

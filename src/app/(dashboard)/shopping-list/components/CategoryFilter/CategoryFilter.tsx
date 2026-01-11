@@ -1,21 +1,8 @@
 'use client';
 
 import { ShoppingCategory } from '@prisma/client';
+import { CATEGORIES } from '@/config/shopping';
 import styles from './CategoryFilter.module.scss';
-
-const CATEGORIES: { value: ShoppingCategory | 'ALL'; label: string; emoji: string }[] = [
-  { value: 'ALL', label: 'All', emoji: '📋' },
-  { value: 'VEGETABLES', label: 'Vegetables', emoji: '🥬' },
-  { value: 'DAIRY', label: 'Dairy', emoji: '🥛' },
-  { value: 'MEAT', label: 'Meat', emoji: '🍖' },
-  { value: 'BAKERY', label: 'Bakery', emoji: '🍞' },
-  { value: 'FRUITS', label: 'Fruits', emoji: '🍎' },
-  { value: 'FROZEN', label: 'Frozen', emoji: '❄️' },
-  { value: 'DRINKS', label: 'Drinks', emoji: '🥤' },
-  { value: 'CONDIMENTS', label: 'Condiments', emoji: '🧂' },
-  { value: 'SWEETS', label: 'Sweets', emoji: '🍫' },
-  { value: 'OTHER', label: 'Other', emoji: '📦' },
-];
 
 interface CategoryFilterProps {
   selectedCategory: ShoppingCategory | 'ALL';

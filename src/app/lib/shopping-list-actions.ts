@@ -1,13 +1,16 @@
 'use server';
 
-import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { redirect } from 'next/navigation';
 import {
   ShoppingListActionResult,
   ShoppingListWithItems,
 } from '@/types/shopping';
 import { z } from 'zod';
+import { getHouseholdId, getSessionData } from './auth-utils';
+import {
+  createShoppingListSchema,
+  updateShoppingListSchema,
+} from './validation/shopping-schemas';
 
 interface CreateShoppingListInput {
   name: string;
@@ -21,35 +24,13 @@ interface UpdateShoppingListInput {
   color?: string;
 }
 
-const createListSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(50, 'Name too long'),
-  emoji: z.string().max(10).optional(),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-});
-
-const updateListSchema = z.object({
-  name: z.string().min(1).max(50).optional(),
-  emoji: z.string().max(10).optional(),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-});
-
-async function getHouseholdId() {
-  const session = await auth();
-  if (!session?.user?.householdId) {
-    redirect('/login');
-  }
-  return session.user.householdId;
-}
-
 export async function createShoppingList(
   input: CreateShoppingListInput,
 ): Promise<ShoppingListActionResult> {
   try {
-    const householdId = await getHouseholdId();
-    const session = await auth();
-    if (!session?.user?.id) throw new Error('Unauthorized');
+    const { householdId, userId } = await getSessionData();
 
-    const validatedInput = createListSchema.parse(input);
+    const validatedInput = createShoppingListSchema.parse(input);
 
     // Get max position for ordering
     const maxPosition = await prisma.shoppingList.findFirst({
@@ -67,7 +48,7 @@ export async function createShoppingList(
         color: validatedInput.color,
         position: nextPosition,
         householdId,
-        createdById: session.user.id,
+        createdById: userId,
       },
       include: {
         createdBy: {
@@ -96,7 +77,7 @@ export async function updateShoppingList(
   try {
     const householdId = await getHouseholdId();
 
-    const validatedInput = updateListSchema.parse(input);
+    const validatedInput = updateShoppingListSchema.parse(input);
 
     // Verify list belongs to household
     const list = await prisma.shoppingList.findFirst({
