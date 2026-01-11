@@ -41,25 +41,37 @@ export interface ProductActionResult {
 }
 
 export type CatalogSuggestion = {
-  id: string;
-  name: string;
-  emoji?: string | null;
-  category: ShoppingCategory;
-  defaultUnit?: string | null;
-  score: number;
-  source: 'catalog';
+  readonly id: string;
+  readonly name: string;
+  readonly emoji?: string | null;
+  readonly category: ShoppingCategory;
+  readonly defaultUnit?: string | null;
+  readonly score: number;
+  readonly source: 'catalog';
 };
 
 export type HistorySuggestion = {
-  name: string;
-  emoji?: string | null;
-  category: ShoppingCategory;
-  defaultUnit?: string | null;
-  score: number;
-  source: 'history' | 'smart';
+  readonly name: string;
+  readonly emoji?: string | null;
+  readonly category: ShoppingCategory;
+  readonly defaultUnit?: string | null;
+  readonly score: number;
+  readonly source: 'history' | 'smart';
 };
 
 export type ProductSuggestion = CatalogSuggestion | HistorySuggestion;
+
+export function isCatalogSuggestion(
+  suggestion: ProductSuggestion
+): suggestion is CatalogSuggestion {
+  return suggestion.source === 'catalog';
+}
+
+export function isHistorySuggestion(
+  suggestion: ProductSuggestion
+): suggestion is HistorySuggestion {
+  return suggestion.source === 'history' || suggestion.source === 'smart';
+}
 
 export interface ShoppingItemInput {
   name: string;

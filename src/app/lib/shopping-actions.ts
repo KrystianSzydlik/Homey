@@ -1,11 +1,14 @@
 'use server';
 
-import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { ShoppingCategory } from '@prisma/client';
-import { redirect } from 'next/navigation';
 import { ShoppingItemActionResult } from '@/types/shopping';
 import { z } from 'zod';
+import { getHouseholdId, getUserId, getSessionData } from './auth-utils';
+import {
+  createShoppingItemSchema,
+  updateShoppingItemSchema,
+} from './validation/shopping-schemas';
 
 interface CreateShoppingItemInput {
   name: string;
@@ -26,43 +29,13 @@ interface UpdateShoppingItemInput {
   checked?: boolean;
 }
 
-const createItemSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
-  quantity: z.string().max(20).optional(),
-  unit: z.string().max(20).optional(),
-  category: z.nativeEnum(ShoppingCategory).optional(),
-  emoji: z.string().max(10).optional(),
-  shoppingListId: z.string().min(1, 'Shopping list ID is required'),
-  productId: z.string().optional(),
-});
-
-const updateItemSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  quantity: z.string().max(20).optional(),
-  unit: z.string().max(20).optional(),
-  category: z.nativeEnum(ShoppingCategory).optional(),
-  emoji: z.string().max(10).optional(),
-  checked: z.boolean().optional(),
-});
-
-async function getHouseholdId() {
-  const session = await auth();
-  if (!session?.user?.householdId) {
-    redirect('/login');
-  }
-  return session.user.householdId;
-}
-
 export async function createShoppingItem(
   input: CreateShoppingItemInput,
 ): Promise<ShoppingItemActionResult> {
   try {
-    const householdId = await getHouseholdId();
-    const session = await auth();
-    if (!session?.user?.id) throw new Error('Unauthorized');
+    const { householdId, userId } = await getSessionData();
 
-    // Validate input
-    const validatedInput = createItemSchema.parse(input);
+    const validatedInput = createShoppingItemSchema.parse(input);
 
     // Verify shopping list belongs to household
     const shoppingList = await prisma.shoppingList.findFirst({
@@ -93,7 +66,7 @@ export async function createShoppingItem(
         shoppingListId: validatedInput.shoppingListId,
         productId: validatedInput.productId,
         householdId,
-        createdById: session.user.id,
+        createdById: userId,
       },
       include: {
         createdBy: {
@@ -125,8 +98,7 @@ export async function updateShoppingItem(
   try {
     const householdId = await getHouseholdId();
 
-    // Validate input
-    const validatedInput = updateItemSchema.parse(input);
+    const validatedInput = updateShoppingItemSchema.parse(input);
 
     // Verify item belongs to household
     const item = await prisma.shoppingItem.findFirst({

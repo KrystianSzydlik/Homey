@@ -1,8 +1,6 @@
 'use server';
 
-import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { redirect } from 'next/navigation';
 import {
   ProductActionResult,
   ProductSuggestion,
@@ -10,6 +8,8 @@ import {
 } from '@/types/shopping';
 import { ShoppingCategory } from '@prisma/client';
 import { z } from 'zod';
+import { getHouseholdId, getSessionData } from './auth-utils';
+import { createProductSchema, searchQuerySchema } from './validation/shopping-schemas';
 
 interface CreateProductInput {
   name: string;
@@ -25,37 +25,11 @@ interface UpdateProductInput {
   defaultUnit?: string;
 }
 
-const createProductSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100),
-  emoji: z.string().max(10).optional(),
-  defaultCategory: z.nativeEnum(ShoppingCategory).optional(),
-  defaultUnit: z.string().max(20).optional(),
-});
-
-const searchQuerySchema = z.string().min(1).max(100);
-
-async function getHouseholdId() {
-  const session = await auth();
-  if (!session?.user?.householdId) {
-    redirect('/login');
-  }
-  return session.user.householdId;
-}
-
-async function getUserId() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect('/login');
-  }
-  return session.user.id;
-}
-
 export async function createProduct(
   input: CreateProductInput,
 ): Promise<ProductActionResult> {
   try {
-    const householdId = await getHouseholdId();
-    const userId = await getUserId();
+    const { householdId, userId } = await getSessionData();
 
     const validatedInput = createProductSchema.parse(input);
 
