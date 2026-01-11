@@ -124,8 +124,8 @@ model ShoppingItem {
   shoppingListId String
   shoppingList   ShoppingList @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
 
-  productId   String?
-  product     Product?     @relation(fields: [productId], references: [id])
+  productId   String
+  product     Product      @relation(fields: [productId], references: [id])
 
   householdId String
   household   Household @relation(fields: [householdId], references: [id])

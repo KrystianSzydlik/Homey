@@ -17,7 +17,7 @@ export const createShoppingItemSchema = z.object({
   category: categoryField.optional(),
   emoji: emojiField.optional(),
   shoppingListId: shoppingListIdField,
-  productId: productIdField.optional(),
+  productId: productIdField,
 });
 
 export const updateShoppingItemSchema = z.object({
@@ -27,6 +27,7 @@ export const updateShoppingItemSchema = z.object({
   category: categoryField.optional(),
   emoji: emojiField.optional(),
   checked: z.boolean().optional(),
+  productId: productIdField.optional(),
 });
 
 export const createShoppingListSchema = z.object({

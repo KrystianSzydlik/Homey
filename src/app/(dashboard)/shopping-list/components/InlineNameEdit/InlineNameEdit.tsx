@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useCallback, useTransition, useEffect } from 'react';
+import { useState, useCallback, useTransition, useEffect, useRef } from 'react';
 import { updateShoppingItem } from '@/app/lib/shopping-actions';
-import { ShoppingItemWithCreator } from '@/types/shopping';
+import { ShoppingItemWithCreator, ProductSuggestion, isCatalogSuggestion } from '@/types/shopping';
+import { useProductAutocomplete } from '../../hooks/useProductAutocomplete';
+import CreateProductModal from '../CreateProductModal/CreateProductModal';
 import styles from './InlineNameEdit.module.scss';
 
 interface InlineNameEditProps {
@@ -20,33 +22,94 @@ export default function InlineNameEdit({
 }: InlineNameEditProps) {
   const [inputValue, setInputValue] = useState(initialName);
   const [isPending, startTransition] = useTransition();
+  const [showCreateProduct, setShowCreateProduct] = useState(false);
+  const [newProductName, setNewProductName] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setInputValue(initialName);
   }, [initialName]);
 
-  const handleSave = useCallback(async () => {
-    const trimmed = inputValue.trim();
-    if (!trimmed || trimmed === initialName) {
-      setInputValue(initialName);
-      return;
-    }
-
-    startTransition(async () => {
-      const result = await updateShoppingItem(itemId, {
-        name: trimmed,
-      });
-
-      if (result.success && result.item) {
-        onUpdate(result.item);
-      } else {
-        setInputValue(initialName);
+  const handleProductSelect = useCallback(
+    (suggestion: ProductSuggestion) => {
+      // If it's a non-catalog product ("+dodaj produkt" option), open modal
+      if (!isCatalogSuggestion(suggestion)) {
+        setNewProductName(suggestion.name);
+        setShowCreateProduct(true);
+        return;
       }
-    });
-  }, [inputValue, itemId, onUpdate, initialName]);
+
+      // Update with catalog product
+      startTransition(async () => {
+        const result = await updateShoppingItem(itemId, {
+          name: suggestion.name,
+          productId: suggestion.id,
+          category: suggestion.category,
+          unit: suggestion.defaultUnit || undefined,
+          emoji: suggestion.emoji || undefined,
+        });
+
+        if (result.success && result.item) {
+          onUpdate(result.item);
+          setInputValue(suggestion.name);
+          setIsEditing(false);
+          inputRef.current?.blur();
+        }
+      });
+    },
+    [itemId, onUpdate]
+  );
+
+  const {
+    suggestions,
+    selectedIndex,
+    isOpen,
+    isLoading,
+    listRef,
+    handleKeyDown: autocompleteKeyDown,
+    handleSelect,
+    setSelectedIndex,
+    openDropdown,
+    closeDropdown,
+  } = useProductAutocomplete({
+    searchQuery: inputValue,
+    onSelect: handleProductSelect,
+  });
+
+  const handleCreateNewProduct = useCallback(
+    (product: any) => {
+      startTransition(async () => {
+        const result = await updateShoppingItem(itemId, {
+          name: product.name,
+          productId: product.id,
+          category: product.defaultCategory,
+          unit: product.defaultUnit || undefined,
+          emoji: product.emoji || undefined,
+        });
+
+        if (result.success && result.item) {
+          onUpdate(result.item);
+          setInputValue(product.name);
+          setShowCreateProduct(false);
+          setIsEditing(false);
+          inputRef.current?.blur();
+        }
+      });
+    },
+    [itemId, onUpdate]
+  );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
+      // Let autocomplete handle navigation when dropdown is open
+      if (isOpen) {
+        autocompleteKeyDown(e);
+        return;
+      }
+
+      // Handle regular keyboard shortcuts when dropdown is closed
       if (e.key === 'Enter') {
         e.currentTarget.blur();
       } else if (e.key === 'Escape') {
@@ -54,22 +117,158 @@ export default function InlineNameEdit({
         e.currentTarget.blur();
       }
     },
-    [initialName]
+    [isOpen, autocompleteKeyDown, initialName]
   );
+
+  const handleBlur = useCallback(() => {
+    // Delay to allow click on dropdown to register
+    setTimeout(() => {
+      if (showCreateProduct) return;
+
+      setIsEditing(false);
+      closeDropdown();
+
+      // Reset to original value if nothing selected
+      if (inputValue !== initialName) {
+        setInputValue(initialName);
+      }
+    }, 200);
+  }, [initialName, inputValue, closeDropdown, showCreateProduct]);
+
+  const handleFocus = useCallback(() => {
+    setIsEditing(true);
+    openDropdown();
+  }, [openDropdown]);
+
+  const getSourceBadge = (source: ProductSuggestion['source']) => {
+    switch (source) {
+      case 'catalog':
+        return { icon: '🏷️', label: 'Catalog' };
+      case 'history':
+        return { icon: '📅', label: 'Recent' };
+      case 'smart':
+        return { icon: '🔔', label: 'Due' };
+    }
+  };
 
   return (
     <div className={styles.container}>
       <input
+        ref={inputRef}
         type="text"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        onBlur={handleSave}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
         disabled={isPending}
         className={`${styles.input} ${isCompleted ? styles.completed : ''}`}
         placeholder="Product name"
+        autoComplete="off"
+        role="combobox"
+        aria-expanded={isOpen && isEditing}
+        aria-controls="suggestions-list"
+        aria-activedescendant={
+          selectedIndex >= 0 ? `suggestion-${selectedIndex}` : undefined
+        }
       />
+
       {isPending && <div className={styles.spinner} />}
+      {isLoading && isEditing && (
+        <div className={styles.loadingIndicator}>
+          <span className={styles.loadingSpinner} />
+        </div>
+      )}
+
+      {isOpen && isEditing && (inputValue.trim() || suggestions.length > 0) && (
+        <ul
+          ref={listRef}
+          id="suggestions-list"
+          className={styles.suggestionsList}
+          role="listbox"
+        >
+          {suggestions.map((suggestion, index) => {
+            const badge = getSourceBadge(suggestion.source);
+            return (
+              <li
+                key={`${suggestion.source}-${suggestion.name}-${index}`}
+                id={`suggestion-${index}`}
+                className={`${styles.suggestionItem} ${
+                  index === selectedIndex ? styles.selected : ''
+                }`}
+                onClick={() => handleSelect(suggestion)}
+                onMouseEnter={() => setSelectedIndex(index)}
+                role="option"
+                aria-selected={index === selectedIndex}
+              >
+                <div className={styles.suggestionContent}>
+                  <div className={styles.mainInfo}>
+                    {suggestion.emoji && (
+                      <span className={styles.emoji}>{suggestion.emoji}</span>
+                    )}
+                    <span className={styles.name}>{suggestion.name}</span>
+                  </div>
+                  <div className={styles.meta}>
+                    <span className={styles.badge} title={badge.label}>
+                      {badge.icon}
+                    </span>
+                    {suggestion.defaultUnit && (
+                      <span className={styles.unit}>
+                        {suggestion.defaultUnit}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+
+          {/* Add New Product Option */}
+          {inputValue.trim() &&
+            !suggestions.find(
+              (s) => s.name.toLowerCase() === inputValue.trim().toLowerCase()
+            ) && (
+              <li
+                id={`suggestion-${suggestions.length}`}
+                className={`${styles.suggestionItem} ${styles.addNewItem} ${
+                  selectedIndex === suggestions.length ? styles.selected : ''
+                }`}
+                onClick={() =>
+                  handleSelect({
+                    name: inputValue.trim(),
+                    emoji: null,
+                    category: 'OTHER',
+                    score: -1,
+                    source: 'history',
+                  })
+                }
+                onMouseEnter={() => setSelectedIndex(suggestions.length)}
+                role="option"
+                aria-selected={selectedIndex === suggestions.length}
+              >
+                <div className={styles.suggestionContent}>
+                  <div className={styles.mainInfo}>
+                    <span className={styles.emoji}>✨</span>
+                    <span className={styles.name}>
+                      + Dodaj produkt: "{inputValue}"
+                    </span>
+                  </div>
+                </div>
+              </li>
+            )}
+        </ul>
+      )}
+
+      <CreateProductModal
+        isOpen={showCreateProduct}
+        onClose={() => {
+          setShowCreateProduct(false);
+          setIsEditing(false);
+          inputRef.current?.blur();
+        }}
+        initialName={newProductName}
+        onProductCreated={handleCreateNewProduct}
+      />
     </div>
   );
 }
