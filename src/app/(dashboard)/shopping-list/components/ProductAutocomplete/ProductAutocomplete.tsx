@@ -55,52 +55,23 @@ export default function ProductAutocomplete({
     return () => clearTimeout(timeoutId);
   }, [searchQuery, fetchSuggestions]);
 
-  const handleSelect = useCallback((suggestion: ProductSuggestion) => {
-    onSelect(suggestion);
-    setSearchQuery('');
-    setSuggestions([]);
-    setIsOpen(false);
-    setSelectedIndex(-1);
-    inputRef.current?.blur();
-  }, [onSelect]);
+  const handleSelect = useCallback(
+    (suggestion: ProductSuggestion) => {
+      onSelect(suggestion);
+      setSearchQuery('');
+      setSuggestions([]);
+      setIsOpen(false);
+      setSelectedIndex(-1);
+      inputRef.current?.blur();
+    },
+    [onSelect]
+  );
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!isOpen) {
-      if (e.key === 'Enter' && searchQuery.trim()) {
-        e.preventDefault();
-        const fallbackSuggestion: ProductSuggestion = {
-          name: searchQuery.trim(),
-          emoji: null,
-          category: 'OTHER',
-          defaultUnit: null,
-          score: 0,
-          source: 'history',
-        };
-        handleSelect(fallbackSuggestion);
-      }
-      return;
-    }
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setSelectedIndex((prev) =>
-          prev < suggestions.length - 1 ? prev + 1 : 0
-        );
-        break;
-
-      case 'ArrowUp':
-        e.preventDefault();
-        setSelectedIndex((prev) =>
-          prev > 0 ? prev - 1 : suggestions.length - 1
-        );
-        break;
-
-      case 'Enter':
-        e.preventDefault();
-        if (selectedIndex >= 0 && suggestions[selectedIndex]) {
-          handleSelect(suggestions[selectedIndex]);
-        } else if (searchQuery.trim()) {
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (!isOpen) {
+        if (e.key === 'Enter' && searchQuery.trim()) {
+          e.preventDefault();
           const fallbackSuggestion: ProductSuggestion = {
             name: searchQuery.trim(),
             emoji: null,
@@ -111,19 +82,57 @@ export default function ProductAutocomplete({
           };
           handleSelect(fallbackSuggestion);
         }
-        break;
+        return;
+      }
 
-      case 'Escape':
-        e.preventDefault();
-        setIsOpen(false);
-        setSelectedIndex(-1);
-        break;
-    }
-  }, [isOpen, selectedIndex, suggestions, searchQuery, handleSelect]);
+      const hasAddNew =
+        searchQuery.trim() &&
+        !suggestions.find(
+          (s) => s.name.toLowerCase() === searchQuery.trim().toLowerCase()
+        );
+      const maxIndex = hasAddNew ? suggestions.length : suggestions.length - 1;
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev < maxIndex ? prev + 1 : 0));
+          break;
+
+        case 'ArrowUp':
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
+          break;
+
+        case 'Enter':
+          e.preventDefault();
+          if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+            handleSelect(suggestions[selectedIndex]);
+          } else if (selectedIndex === suggestions.length && hasAddNew) {
+            handleSelect({
+              name: searchQuery.trim(),
+              emoji: null,
+              category: 'OTHER',
+              score: -1,
+              source: 'history',
+            });
+          }
+          break;
+
+        case 'Escape':
+          e.preventDefault();
+          setIsOpen(false);
+          setSelectedIndex(-1);
+          break;
+      }
+    },
+    [isOpen, selectedIndex, suggestions, searchQuery, handleSelect]
+  );
 
   useEffect(() => {
     if (selectedIndex >= 0 && listRef.current) {
-      const selectedElement = listRef.current.children[selectedIndex] as HTMLElement;
+      const selectedElement = listRef.current.children[
+        selectedIndex
+      ] as HTMLElement;
       if (selectedElement) {
         selectedElement.scrollIntoView({
           block: 'nearest',
@@ -175,7 +184,7 @@ export default function ProductAutocomplete({
         </div>
       )}
 
-      {isOpen && suggestions.length > 0 && (
+      {isOpen && (searchQuery.trim() || suggestions.length > 0) && (
         <ul
           ref={listRef}
           id="suggestions-list"
@@ -208,13 +217,49 @@ export default function ProductAutocomplete({
                       {badge.icon}
                     </span>
                     {suggestion.defaultUnit && (
-                      <span className={styles.unit}>{suggestion.defaultUnit}</span>
+                      <span className={styles.unit}>
+                        {suggestion.defaultUnit}
+                      </span>
                     )}
                   </div>
                 </div>
               </li>
             );
           })}
+
+          {/* Add New Product Option */}
+          {searchQuery.trim() &&
+            !suggestions.find(
+              (s) => s.name.toLowerCase() === searchQuery.trim().toLowerCase()
+            ) && (
+              <li
+                id={`suggestion-${suggestions.length}`}
+                className={`${styles.suggestionItem} ${styles.addNewItem} ${
+                  selectedIndex === suggestions.length ? styles.selected : ''
+                }`}
+                onClick={() =>
+                  handleSelect({
+                    name: searchQuery.trim(),
+                    emoji: null,
+                    category: 'OTHER',
+                    score: -1,
+                    source: 'history',
+                  })
+                }
+                onMouseEnter={() => setSelectedIndex(suggestions.length)}
+                role="option"
+                aria-selected={selectedIndex === suggestions.length}
+              >
+                <div className={styles.suggestionContent}>
+                  <div className={styles.mainInfo}>
+                    <span className={styles.emoji}>✨</span>
+                    <span className={styles.name}>
+                      + Dodaj nowy produkt: "{searchQuery}"
+                    </span>
+                  </div>
+                </div>
+              </li>
+            )}
         </ul>
       )}
     </div>

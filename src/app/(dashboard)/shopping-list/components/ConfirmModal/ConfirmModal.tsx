@@ -1,6 +1,8 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
+import { createPortal } from 'react-dom';
+import { useEffect, useState } from 'react';
 import styles from './ConfirmModal.module.scss';
 
 interface ConfirmModalProps {
@@ -26,16 +28,30 @@ export default function ConfirmModal({
   variant = 'danger',
   isLoading = false,
 }: ConfirmModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget && !isLoading) {
       onCancel();
     }
   };
 
-  return (
+  if (!mounted) return null;
+
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
-        <>
+        <div className={styles.wrapper}>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -108,8 +124,10 @@ export default function ConfirmModal({
               </motion.button>
             </div>
           </motion.div>
-        </>
+        </div>
       )}
     </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 }

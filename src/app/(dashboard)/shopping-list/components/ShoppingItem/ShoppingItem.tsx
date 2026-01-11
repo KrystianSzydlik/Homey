@@ -29,8 +29,14 @@ export default function ShoppingItem({
   const [isPending, startTransition] = useTransition();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: item.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
 
   const handleToggleCheck = useCallback(() => {
     startTransition(async () => {
@@ -130,9 +136,10 @@ export default function ShoppingItem({
       ref={setNodeRef}
       style={style}
       className={`${styles.item} ${item.checked ? styles.completed : ''} ${isDragging ? styles.dragging : ''}`}
-      {...attributes}
-      {...listeners}
     >
+      <div className={styles.dragHandle} {...attributes} {...listeners}>
+        <span className={styles.dragIcon}>⋮⋮</span>
+      </div>
       <div className={styles.content}>
         <input
           type="checkbox"
@@ -142,7 +149,10 @@ export default function ShoppingItem({
           className={styles.checkbox}
           aria-label={`Mark "${item.name}" as ${item.checked ? 'unchecked' : 'checked'}`}
         />
-        <div className={styles.itemDetails} onDoubleClick={() => setIsEditingName(true)}>
+        <div
+          className={styles.itemDetails}
+          onDoubleClick={() => setIsEditingName(true)}
+        >
           {item.emoji && <span className={styles.emoji}>{item.emoji}</span>}
           <div className={styles.text}>
             <div className={styles.name}>{item.name}</div>
@@ -155,7 +165,11 @@ export default function ShoppingItem({
           onUpdate={handleQuantityUpdate}
         />
       </div>
-      <div className={styles.actions}>
+      <div
+        className={styles.actions}
+        onPointerDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+      >
         <button
           className={styles.editButton}
           onClick={() => setIsEditingName(true)}

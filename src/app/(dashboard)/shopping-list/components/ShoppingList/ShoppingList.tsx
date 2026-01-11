@@ -3,7 +3,9 @@
 import {
   DndContext,
   DragEndEvent,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
+  KeyboardSensor,
   closestCenter,
   useSensor,
   useSensors,
@@ -11,6 +13,7 @@ import {
 import {
   SortableContext,
   verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { ShoppingCategory } from '@prisma/client';
 import { useCallback, useMemo, useState, useTransition } from 'react';
@@ -19,9 +22,7 @@ import {
   reorderShoppingItems,
   deleteAllShoppingItems,
 } from '@/app/lib/shopping-actions';
-import {
-  deleteShoppingList,
-} from '@/app/lib/shopping-list-actions';
+import { deleteShoppingList } from '@/app/lib/shopping-list-actions';
 import {
   ShoppingItemWithCreator,
   ShoppingListWithItems,
@@ -64,7 +65,22 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   const [deleteListId, setDeleteListId] = useState<string | null>(null);
   const [deleteAllListId, setDeleteAllListId] = useState<string | null>(null);
 
-  const sensors = useSensors(useSensor(PointerSensor));
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const selectedLists = useMemo(
     () => lists.filter((list) => selectedListIds.includes(list.id)),
@@ -206,53 +222,95 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
           </div>
         ) : (
           selectedLists.map((list) => {
-          const filteredItems = selectedCategory === 'ALL'
-            ? list.items
-            : list.items.filter((item) => item.category === selectedCategory);
+            const filteredItems =
+              selectedCategory === 'ALL'
+                ? list.items
+                : list.items.filter(
+                    (item) => item.category === selectedCategory
+                  );
 
-          const uncheckedItems = filteredItems.filter((item) => !item.checked);
-          const checkedItems = filteredItems.filter((item) => item.checked);
-          const isEmpty = uncheckedItems.length === 0 && checkedItems.length === 0;
+            const uncheckedItems = filteredItems.filter(
+              (item) => !item.checked
+            );
+            const checkedItems = filteredItems.filter((item) => item.checked);
+            const isEmpty =
+              uncheckedItems.length === 0 && checkedItems.length === 0;
 
-          return (
-            <div key={list.id} className={styles.listSection}>
-              <ListHeader
-                list={list}
-                itemCount={list.items.length}
-                onDelete={setDeleteListId}
-                onDeleteAll={setDeleteAllListId}
-                isLoading={isPending}
-              />
+            return (
+              <div key={list.id} className={styles.listSection}>
+                <ListHeader
+                  list={list}
+                  itemCount={list.items.length}
+                  onDelete={setDeleteListId}
+                  onDeleteAll={setDeleteAllListId}
+                  isLoading={isPending}
+                />
 
-              <AddItemForm
-                shoppingListId={list.id}
-                onAddItem={handleAddItem}
-              />
+                <AddItemForm
+                  shoppingListId={list.id}
+                  onAddItem={handleAddItem}
+                />
 
-              <CategoryFilter
-                selectedCategory={selectedCategory}
-                onCategoryChange={setSelectedCategory}
-              />
+                {list.items.length > 0 && (
+                  <CategoryFilter
+                    selectedCategory={selectedCategory}
+                    onCategoryChange={setSelectedCategory}
+                    availableCategories={Array.from(
+                      new Set(list.items.map((item) => item.category))
+                    )}
+                  />
+                )}
 
-              {isEmpty ? (
-                <div className={styles.emptyState}>
-                  <p>Brak produktów na liście</p>
-                  <p className={styles.emptyStateHint}>Dodaj pierwszy produkt</p>
-                </div>
-              ) : (
-                <>
-                  {uncheckedItems.length > 0 && (
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={(event) => handleDragEnd(event, list.id)}
-                    >
-                      <SortableContext
-                        items={uncheckedItems.map((item) => item.id)}
-                        strategy={verticalListSortingStrategy}
+                {isEmpty ? (
+                  <div className={styles.emptyState}>
+                    <p>Brak produktów na liście</p>
+                    <p className={styles.emptyStateHint}>
+                      Dodaj pierwszy produkt
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {uncheckedItems.length > 0 && (
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={(event) => handleDragEnd(event, list.id)}
                       >
-                        <ul className={styles.list}>
-                          {uncheckedItems.map((item) => (
+                        <SortableContext
+                          items={uncheckedItems.map((item) => item.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <ul className={styles.list}>
+                            {uncheckedItems.map((item) => (
+                              <ShoppingItem
+                                key={item.id}
+                                item={item}
+                                onDelete={handleDeleteItem}
+                                onUpdate={handleItemUpdate}
+                              />
+                            ))}
+                          </ul>
+                        </SortableContext>
+                      </DndContext>
+                    )}
+
+                    {checkedItems.length > 0 && (
+                      <div className={styles.completedSection}>
+                        <div className={styles.completedHeader}>
+                          <h2 className={styles.completedTitle}>
+                            Completed ({checkedItems.length})
+                          </h2>
+                          <button
+                            className={styles.clearButton}
+                            onClick={handleClearCompleted}
+                            disabled={isPending}
+                            type="button"
+                          >
+                            {isPending ? 'Clearing...' : 'Clear'}
+                          </button>
+                        </div>
+                        <ul className={styles.completedList}>
+                          {checkedItems.map((item) => (
                             <ShoppingItem
                               key={item.id}
                               item={item}
@@ -261,41 +319,12 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
                             />
                           ))}
                         </ul>
-                      </SortableContext>
-                    </DndContext>
-                  )}
-
-                  {checkedItems.length > 0 && (
-                    <div className={styles.completedSection}>
-                      <div className={styles.completedHeader}>
-                        <h2 className={styles.completedTitle}>
-                          Completed ({checkedItems.length})
-                        </h2>
-                        <button
-                          className={styles.clearButton}
-                          onClick={handleClearCompleted}
-                          disabled={isPending}
-                          type="button"
-                        >
-                          {isPending ? 'Clearing...' : 'Clear'}
-                        </button>
                       </div>
-                      <ul className={styles.completedList}>
-                        {checkedItems.map((item) => (
-                          <ShoppingItem
-                            key={item.id}
-                            item={item}
-                            onDelete={handleDeleteItem}
-                            onUpdate={handleItemUpdate}
-                          />
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          );
+                    )}
+                  </>
+                )}
+              </div>
+            );
           })
         )}
       </div>

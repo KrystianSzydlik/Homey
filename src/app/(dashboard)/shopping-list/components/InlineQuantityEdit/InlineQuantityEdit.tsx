@@ -35,19 +35,14 @@ export default function InlineQuantityEdit({
   initialUnit,
   onUpdate,
 }: InlineQuantityEditProps) {
-  const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(
     initialUnit ? `${initialQuantity} ${initialUnit}` : initialQuantity
   );
   const [isPending, startTransition] = useTransition();
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const displayValue = initialUnit
-    ? `${initialQuantity} ${initialUnit}`
-    : initialQuantity;
 
   const handleSave = useCallback(async () => {
     const { quantity, unit } = parseQuantity(inputValue);
+    if (quantity === initialQuantity && unit === initialUnit) return;
 
     startTransition(async () => {
       const result = await updateShoppingItem(itemId, {
@@ -57,62 +52,37 @@ export default function InlineQuantityEdit({
 
       if (result.success && result.item) {
         onUpdate(result.item);
-        setIsEditing(false);
       }
     });
-  }, [inputValue, itemId, onUpdate]);
-
-  const handleCancel = useCallback(() => {
-    setInputValue(
-      initialUnit ? `${initialQuantity} ${initialUnit}` : initialQuantity
-    );
-    setIsEditing(false);
-  }, [initialQuantity, initialUnit]);
+  }, [inputValue, itemId, onUpdate, initialQuantity, initialUnit]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
-        e.preventDefault();
-        handleSave();
+        e.currentTarget.blur();
       } else if (e.key === 'Escape') {
-        e.preventDefault();
-        handleCancel();
+        setInputValue(
+          initialUnit ? `${initialQuantity} ${initialUnit}` : initialQuantity
+        );
+        e.currentTarget.blur();
       }
     },
-    [handleSave, handleCancel]
+    [initialQuantity, initialUnit]
   );
 
-  if (isEditing) {
-    return (
-      <div className={styles.editContainer}>
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onBlur={handleSave}
-          autoFocus
-          disabled={isPending}
-          className={styles.editInput}
-          placeholder="e.g., 2kg, 3 szt"
-        />
-        {isPending && <div className={styles.miniSpinner} />}
-      </div>
-    );
-  }
-
   return (
-    <button
-      onClick={() => {
-        setIsEditing(true);
-        setTimeout(() => inputRef.current?.focus(), 0);
-      }}
-      className={styles.displayButton}
-      title="Click to edit quantity"
-      type="button"
-    >
-      {displayValue}
-    </button>
+    <div className={styles.editContainer}>
+      <input
+        type="text"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={handleSave}
+        disabled={isPending}
+        className={styles.input}
+        placeholder="1"
+      />
+      {isPending && <div className={styles.spinner} />}
+    </div>
   );
 }

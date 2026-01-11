@@ -1,6 +1,8 @@
 @import '@/styles/variables';
 
 .container {
+  position: relative;
+  z-index: 100;
   flex-shrink: 0;
   padding: 1rem;
   border-bottom: 1px solid rgba(244, 63, 94, 0.2);
