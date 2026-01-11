@@ -21,17 +21,6 @@
   &.completed {
     background: var(--item-checked-bg);
     opacity: 0.5;
-
-    .name {
-      text-decoration: line-through;
-      color: var(--text-secondary);
-    }
-  }
-
-  &.editing {
-    padding: 0.75rem;
-    background: rgba(30, 41, 59, 0.7);
-    box-shadow: var(--glow-violet);
   }
 
   &.dragging {
@@ -123,15 +112,6 @@
   min-width: 0;
 }
 
-.name {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--text);
-  word-break: break-word;
-  transition: all 0.2s;
-}
-
 .quantity {
   margin: 0.25rem 0 0;
   font-size: 0.8rem;
@@ -148,7 +128,6 @@
   z-index: 10;
 }
 
-.editButton,
 .deleteButton {
   padding: 0.4rem;
   background: none;
@@ -167,96 +146,14 @@
 
   &:hover:not(:disabled) {
     opacity: 1;
-    background: rgba(244, 63, 94, 0.15);
+    background: var(--gradient-warm-rose);
+    color: white;
     box-shadow: var(--glow-rose);
   }
 
   &:disabled {
     cursor: not-allowed;
     opacity: 0.4;
-  }
-}
-
-.deleteButton {
-  &:hover:not(:disabled) {
-    background: var(--gradient-warm-rose);
-    color: white;
-  }
-}
-
-.editForm {
-  display: flex;
-  gap: 0.5rem;
-  width: 100%;
-  align-items: center;
-}
-
-.editInput,
-.editQuantityInput {
-  padding: 0.5rem;
-  border: 1px solid rgba(244, 63, 94, 0.3);
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-family: inherit;
-  background: rgba(30, 41, 59, 0.6);
-  color: var(--text);
-  transition: all 0.2s;
-
-  &:focus {
-    outline: none;
-    border-color: var(--rose);
-    box-shadow: var(--glow-rose);
-  }
-}
-
-.editInput {
-  flex: 1;
-}
-
-.editQuantityInput {
-  width: 70px;
-}
-
-.editActions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.saveButton,
-.cancelButton {
-  padding: 0.4rem 0.8rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-.saveButton {
-  background: var(--gradient-warm-rose);
-  color: white;
-  box-shadow: var(--glow-rose);
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
-  }
-}
-
-.cancelButton {
-  background: rgba(30, 41, 59, 0.6);
-  color: var(--text);
-  border: 1px solid rgba(244, 63, 94, 0.3);
-
-  &:hover:not(:disabled) {
-    background: rgba(30, 41, 59, 0.8);
-    border-color: var(--rose);
   }
 }
 
@@ -286,16 +183,10 @@
     gap: 0.25rem;
   }
 
-  .editButton,
   .deleteButton {
     min-width: 2.75rem;
     min-height: 2.75rem;
     font-size: 1rem;
     padding: 0.5rem;
-  }
-
-  .editQuantityInput {
-    width: 60px;
-    font-size: 0.85rem;
   }
 }
