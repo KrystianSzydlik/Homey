@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import ShoppingList from './components/ShoppingList/ShoppingList';
+import { ProductCacheProvider } from './contexts/ProductCacheContext';
 
 export default async function ShoppingListPage() {
   const session = await auth();
@@ -74,7 +75,11 @@ export default async function ShoppingListPage() {
     lists = [defaultList];
   }
 
-  return <ShoppingList initialLists={lists} />;
+  return (
+    <ProductCacheProvider>
+      <ShoppingList initialLists={lists} />
+    </ProductCacheProvider>
+  );
 }
 
 //TODO: Najpierw tworzysz listę, później tworzysz produkt na liście.

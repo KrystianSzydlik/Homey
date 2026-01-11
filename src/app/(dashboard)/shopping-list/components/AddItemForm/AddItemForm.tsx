@@ -3,6 +3,7 @@
 import { useState, useTransition, useCallback } from 'react';
 import { createShoppingItem } from '@/app/lib/shopping-actions';
 import { ShoppingItemWithCreator, ProductSuggestion } from '@/types/shopping';
+import { useProductCacheContext } from '../../contexts/ProductCacheContext';
 import ProductAutocomplete from '../ProductAutocomplete/ProductAutocomplete';
 import CreateProductModal from '../CreateProductModal/CreateProductModal';
 import styles from './AddItemForm.module.scss';
@@ -22,6 +23,8 @@ export default function AddItemForm({
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [newProductName, setNewProductName] = useState('');
 
+  const { refreshCache } = useProductCacheContext();
+
   const handleCreateNewProduct = useCallback(
     (product: any) => {
       setError(null);
@@ -39,12 +42,15 @@ export default function AddItemForm({
           onAddItem(result.item);
           setShowForm(false);
           setShowCreateProduct(false);
+
+          // Refresh cache to include newly created product
+          refreshCache();
         } else {
           setError(result.error || 'Failed to add item');
         }
       });
     },
-    [shoppingListId, onAddItem]
+    [shoppingListId, onAddItem, refreshCache]
   );
 
   const handleProductSelect = useCallback(

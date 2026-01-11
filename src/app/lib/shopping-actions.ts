@@ -17,7 +17,7 @@ interface CreateShoppingItemInput {
   category?: ShoppingCategory;
   emoji?: string;
   shoppingListId: string;
-  productId?: string;
+  productId: string;
 }
 
 interface UpdateShoppingItemInput {
@@ -27,6 +27,7 @@ interface UpdateShoppingItemInput {
   category?: ShoppingCategory;
   emoji?: string;
   checked?: boolean;
+  productId?: string;
 }
 
 export async function createShoppingItem(
@@ -117,6 +118,7 @@ export async function updateShoppingItem(
       category: ShoppingCategory;
       emoji: string | null;
       checked: boolean;
+      productId: string;
     }> = {};
 
     if (validatedInput.name !== undefined) updateData.name = validatedInput.name;
@@ -125,6 +127,7 @@ export async function updateShoppingItem(
     if (validatedInput.category !== undefined) updateData.category = validatedInput.category;
     if (validatedInput.emoji !== undefined) updateData.emoji = validatedInput.emoji;
     if (validatedInput.checked !== undefined) updateData.checked = validatedInput.checked;
+    if (validatedInput.productId !== undefined) updateData.productId = validatedInput.productId;
 
     const updatedItem = await prisma.shoppingItem.update({
       where: { id: itemId },
