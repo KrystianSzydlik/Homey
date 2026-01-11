@@ -27,12 +27,14 @@ export const { auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.householdId = (user as any).householdId;
+        token.id = (user as any).id;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.householdId = token.householdId as string;
+        session.user.id = token.id as string;
       }
       return session;
     },
