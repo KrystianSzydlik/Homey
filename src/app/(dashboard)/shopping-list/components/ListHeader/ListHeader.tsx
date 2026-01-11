@@ -1,6 +1,7 @@
 'use client';
 
 import { ShoppingListWithCreator } from '@/types/shopping';
+import DropdownMenu, { DropdownMenuItem } from '@/components/shared/DropdownMenu';
 import styles from './ListHeader.module.scss';
 
 interface ListHeaderProps {
@@ -18,6 +19,21 @@ export default function ListHeader({
   onDeleteAll,
   isLoading = false,
 }: ListHeaderProps) {
+  const menuItems: DropdownMenuItem[] = [
+    {
+      label: 'Clear All Items',
+      onClick: () => onDeleteAll(list.id),
+      variant: 'warning',
+      disabled: itemCount === 0 || isLoading,
+    },
+    {
+      label: 'Delete List',
+      onClick: () => onDelete(list.id),
+      variant: 'danger',
+      disabled: isLoading,
+    },
+  ];
+
   return (
     <div
       className={styles.listHeader}
@@ -30,27 +46,7 @@ export default function ListHeader({
       </div>
 
       <div className={styles.actions}>
-        {itemCount > 0 && (
-          <button
-            type="button"
-            className={styles.deleteAllButton}
-            onClick={() => onDeleteAll(list.id)}
-            disabled={isLoading}
-            title="Delete all items in this list"
-          >
-            Clear All
-          </button>
-        )}
-
-        <button
-          type="button"
-          className={styles.deleteButton}
-          onClick={() => onDelete(list.id)}
-          disabled={isLoading}
-          title="Delete this list"
-        >
-          Delete List
-        </button>
+        <DropdownMenu items={menuItems} align="right" disabled={isLoading} />
       </div>
     </div>
   );
