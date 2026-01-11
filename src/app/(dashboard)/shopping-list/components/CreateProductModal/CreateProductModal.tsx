@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import { ShoppingCategory } from '@prisma/client';
 import { CATEGORIES } from '@/config/shopping';
 import { createProduct } from '@/app/lib/product-actions';
-import ConfirmModal from '../ConfirmModal/ConfirmModal';
+import { getSmartProductDefaults } from '@/app/lib/product-utils';
+import EmojiPicker from '../EmojiPicker/EmojiPicker';
+import CategoryPicker from '../CategoryPicker/CategoryPicker';
 import styles from './CreateProductModal.module.scss';
 
 interface CreateProductModalProps {
@@ -19,37 +21,6 @@ interface CreateProductModalProps {
     defaultUnit: string | null;
   }) => void;
 }
-
-// Simple keyword mapping for suggestions
-const CATEGORY_KEYWORDS: Record<string, ShoppingCategory> = {
-  pomidor: 'VEGETABLES',
-  ogórek: 'VEGETABLES',
-  ziemniak: 'VEGETABLES',
-  marchew: 'VEGETABLES',
-  sałata: 'VEGETABLES',
-  chleb: 'BAKERY',
-  bułka: 'BAKERY',
-  rogale: 'BAKERY',
-  bułki: 'BAKERY',
-  mleko: 'DAIRY',
-  ser: 'DAIRY',
-  jogurt: 'DAIRY',
-  masło: 'DAIRY',
-  kurczak: 'MEAT',
-  wołowina: 'MEAT',
-  szynka: 'MEAT',
-  ryba: 'MEAT',
-  jabłko: 'FRUITS',
-  banan: 'FRUITS',
-  pomarańcza: 'FRUITS',
-  woda: 'DRINKS',
-  sok: 'DRINKS',
-  piwo: 'DRINKS',
-  cola: 'DRINKS',
-  czekolada: 'SWEETS',
-  ciastka: 'SWEETS',
-  cukierki: 'SWEETS',
-};
 
 export default function CreateProductModal({
   isOpen,
@@ -67,18 +38,19 @@ export default function CreateProductModal({
   useEffect(() => {
     if (isOpen) {
       setName(initialName);
-      // Auto-suggest category
-      const lowerName = initialName.toLowerCase();
-      const suggestedCat = Object.entries(CATEGORY_KEYWORDS).find(([kw]) =>
-        lowerName.includes(kw)
-      )?.[1];
-      if (suggestedCat) {
-        setCategory(suggestedCat);
-      } else {
-        setCategory('OTHER');
-      }
+      const defaults = getSmartProductDefaults(initialName);
+      setCategory(defaults.category);
+      setEmoji(defaults.emoji);
     }
   }, [isOpen, initialName]);
+
+  // Handle name changes to update suggestions dynamically
+  const handleNameChange = (newName: string) => {
+    setName(newName);
+    const defaults = getSmartProductDefaults(newName);
+    setCategory(defaults.category);
+    setEmoji(defaults.emoji);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,39 +101,31 @@ export default function CreateProductModal({
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => handleNameChange(e.target.value)}
               placeholder="np. Pomidory malinowe"
               required
               autoFocus
             />
           </div>
 
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label>Kategoria</label>
-              <select
-                value={category}
-                onChange={(e) =>
-                  setCategory(e.target.value as ShoppingCategory)
-                }
-              >
-                {CATEGORIES.filter((c) => c.value !== 'ALL').map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.emoji} {cat.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className={styles.field}>
+            <label>Ikona (Emoji)</label>
+            <EmojiPicker currentEmoji={emoji} onSelect={setEmoji} />
+          </div>
 
-            <div className={styles.field}>
-              <label>Jednostka (opcjonalnie)</label>
-              <input
-                type="text"
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                placeholder="np. kg, szt"
-              />
-            </div>
+          <div className={styles.field}>
+            <label>Kategoria</label>
+            <CategoryPicker currentCategory={category} onSelect={setCategory} />
+          </div>
+
+          <div className={styles.field}>
+            <label>Jednostka (opcjonalnie)</label>
+            <input
+              type="text"
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+              placeholder="np. kg, szt"
+            />
           </div>
 
           {error && <div className={styles.error}>{error}</div>}
