@@ -22,18 +22,22 @@ export const COLOR_PRESETS = [
   { label: 'Amber', value: '#f59e0b' },
 ] as const;
 
-export const CATEGORIES: { value: ShoppingCategory | 'ALL'; label: string; emoji: string }[] = [
-  { value: 'ALL', label: 'All', emoji: '📋' },
-  { value: 'VEGETABLES', label: 'Vegetables', emoji: '🥬' },
-  { value: 'DAIRY', label: 'Dairy', emoji: '🥛' },
-  { value: 'MEAT', label: 'Meat', emoji: '🍖' },
-  { value: 'BAKERY', label: 'Bakery', emoji: '🍞' },
-  { value: 'FRUITS', label: 'Fruits', emoji: '🍎' },
-  { value: 'FROZEN', label: 'Frozen', emoji: '❄️' },
-  { value: 'DRINKS', label: 'Drinks', emoji: '🥤' },
-  { value: 'CONDIMENTS', label: 'Condiments', emoji: '🧂' },
-  { value: 'SWEETS', label: 'Sweets', emoji: '🍫' },
-  { value: 'OTHER', label: 'Other', emoji: '📦' },
+export const CATEGORIES: {
+  value: ShoppingCategory | 'ALL';
+  label: string;
+  emoji: string;
+}[] = [
+  { value: 'ALL', label: 'Wszystkie', emoji: '📋' },
+  { value: 'VEGETABLES', label: 'Warzywa', emoji: '🥬' },
+  { value: 'DAIRY', label: 'Nabiał', emoji: '🥛' },
+  { value: 'MEAT', label: 'Mięso i Ryby', emoji: '🍖' },
+  { value: 'BAKERY', label: 'Pieczywo', emoji: '🍞' },
+  { value: 'FRUITS', label: 'Owoce', emoji: '🍎' },
+  { value: 'FROZEN', label: 'Mrożonki', emoji: '❄️' },
+  { value: 'DRINKS', label: 'Napoje', emoji: '🥤' },
+  { value: 'CONDIMENTS', label: 'Przyprawy i Spiżarnia', emoji: '🧂' },
+  { value: 'SWEETS', label: 'Słodycze', emoji: '🍫' },
+  { value: 'OTHER', label: 'Inne', emoji: '📦' },
 ] as const;
 
 export const DEFAULT_LIST_EMOJI = '🛒';

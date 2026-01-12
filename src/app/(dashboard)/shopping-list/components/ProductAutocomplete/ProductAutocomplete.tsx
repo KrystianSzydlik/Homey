@@ -1,9 +1,15 @@
 'use client';
 
-import { useRef, useState, useCallback } from 'react';
-import { ProductSuggestion } from '@/types/shopping';
+import { useRef, useState, useCallback, useTransition } from 'react';
+import { ProductSuggestion, isCatalogSuggestion } from '@/types/shopping';
 import { useProductAutocomplete } from '../../hooks/useProductAutocomplete';
 import { useProductCacheContext } from '../../contexts/ProductCacheContext';
+import { deleteProduct } from '@/app/lib/product-actions';
+import DropdownMenu, {
+  DropdownMenuItem,
+} from '@/components/shared/DropdownMenu';
+import CreateProductModal from '../CreateProductModal/CreateProductModal';
+import ConfirmModal from '../ConfirmModal/ConfirmModal';
 import styles from './ProductAutocomplete.module.scss';
 
 interface ProductAutocompleteProps {
@@ -18,9 +24,14 @@ export default function ProductAutocomplete({
   autoFocus = false,
 }: ProductAutocompleteProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingProduct, setEditingProduct] =
+    useState<ProductSuggestion | null>(null);
+  const [deleteConfirmProduct, setDeleteConfirmProduct] =
+    useState<ProductSuggestion | null>(null);
+  const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { filterProducts } = useProductCacheContext();
+  const { filterProducts, refreshCache } = useProductCacheContext();
 
   const handleSelectWithClear = useCallback(
     (suggestion: ProductSuggestion) => {
@@ -41,6 +52,7 @@ export default function ProductAutocomplete({
     handleSelect,
     setSelectedIndex,
     openDropdown,
+    closeDropdown,
   } = useProductAutocomplete({
     searchQuery,
     onSelect: handleSelectWithClear,
@@ -57,6 +69,43 @@ export default function ProductAutocomplete({
         return { icon: '🔔', label: 'Due' };
     }
   };
+
+  const handleEdit = (suggestion: ProductSuggestion) => {
+    setEditingProduct(suggestion);
+  };
+
+  const handleDeleteClick = (suggestion: ProductSuggestion) => {
+    setDeleteConfirmProduct(suggestion);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmProduct || !isCatalogSuggestion(deleteConfirmProduct))
+      return;
+
+    startTransition(async () => {
+      const result = await deleteProduct(deleteConfirmProduct.id);
+      if (result.success) {
+        setDeleteConfirmProduct(null);
+        refreshCache();
+      }
+    });
+  };
+
+  const getDropdownItems = (
+    suggestion: ProductSuggestion
+  ): DropdownMenuItem[] => [
+    {
+      label: 'Edytuj produkt',
+      onClick: () => handleEdit(suggestion),
+      icon: <span>✏️</span>,
+    },
+    {
+      label: 'Usuń z bazy',
+      onClick: () => handleDeleteClick(suggestion),
+      variant: 'danger',
+      icon: <span>🗑️</span>,
+    },
+  ];
 
   return (
     <div className={styles.container}>
@@ -122,6 +171,15 @@ export default function ProductAutocomplete({
                         {suggestion.defaultUnit}
                       </span>
                     )}
+                    {isCatalogSuggestion(suggestion) && (
+                      <div
+                        className={styles.dropdownWrapper}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
+                        <DropdownMenu items={getDropdownItems(suggestion)} />
+                      </div>
+                    )}
                   </div>
                 </div>
               </li>
@@ -162,6 +220,35 @@ export default function ProductAutocomplete({
               </li>
             )}
         </ul>
+      )}
+
+      {editingProduct && isCatalogSuggestion(editingProduct) && (
+        <CreateProductModal
+          isOpen={true}
+          onClose={() => setEditingProduct(null)}
+          productId={editingProduct.id}
+          initialName={editingProduct.name}
+          initialCategory={editingProduct.category}
+          initialEmoji={editingProduct.emoji || undefined}
+          initialUnit={editingProduct.defaultUnit || undefined}
+          onProductCreated={() => {
+            refreshCache();
+            setEditingProduct(null);
+          }}
+        />
+      )}
+
+      {deleteConfirmProduct && isCatalogSuggestion(deleteConfirmProduct) && (
+        <ConfirmModal
+          isOpen={true}
+          title="Usuń produkt z bazy"
+          message={`Czy na pewno chcesz usunąć "${deleteConfirmProduct.name}" z katalogu produktów? Ta operacja jest nieodwracalna.`}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteConfirmProduct(null)}
+          isLoading={isPending}
+          confirmText="Usuń"
+          variant="danger"
+        />
       )}
     </div>
   );

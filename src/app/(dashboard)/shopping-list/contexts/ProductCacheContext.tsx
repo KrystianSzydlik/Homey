@@ -8,6 +8,7 @@ interface ProductCacheContextValue {
   products: CatalogSuggestion[];
   isLoading: boolean;
   refreshCache: () => Promise<void>;
+  refreshIfStale: () => Promise<void> | undefined;
   filterProducts: (query: string, maxResults?: number) => CatalogSuggestion[];
 }
 

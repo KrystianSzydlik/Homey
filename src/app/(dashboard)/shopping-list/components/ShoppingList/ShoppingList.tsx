@@ -16,7 +16,7 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { ShoppingCategory } from '@prisma/client';
-import { useCallback, useMemo, useState, useTransition } from 'react';
+import { useCallback, useMemo, useState, useTransition, useEffect } from 'react';
 import {
   clearCheckedItems as clearCheckedItemsAction,
   reorderShoppingItems,
@@ -36,6 +36,7 @@ import CreateListModal from '../CreateListModal/CreateListModal';
 import ConfirmModal from '../ConfirmModal/ConfirmModal';
 import ListHeader from '../ListHeader/ListHeader';
 import { useShoppingListState } from '@/app/(dashboard)/shopping-list/hooks/useShoppingListState';
+import { useProductCacheContext } from '../../contexts/ProductCacheContext';
 import styles from './ShoppingList.module.scss';
 
 interface ShoppingListProps {
@@ -57,6 +58,8 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     deleteAllItems,
   } = useShoppingListState(initialLists);
 
+  const { refreshIfStale } = useProductCacheContext();
+
   const [selectedCategory, setSelectedCategory] = useState<
     ShoppingCategory | 'ALL'
   >('ALL');
@@ -64,6 +67,11 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   const [isPending, startTransition] = useTransition();
   const [deleteListId, setDeleteListId] = useState<string | null>(null);
   const [deleteAllListId, setDeleteAllListId] = useState<string | null>(null);
+
+  // Refresh product cache when shopping list loads (for multi-user sync)
+  useEffect(() => {
+    refreshIfStale();
+  }, [refreshIfStale]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {

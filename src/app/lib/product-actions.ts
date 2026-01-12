@@ -10,7 +10,10 @@ import {
 import { ShoppingCategory } from '@prisma/client';
 import { z } from 'zod';
 import { getHouseholdId, getSessionData } from './auth-utils';
-import { createProductSchema, searchQuerySchema } from './validation/shopping-schemas';
+import {
+  createProductSchema,
+  searchQuerySchema,
+} from './validation/shopping-schemas';
 
 interface CreateProductInput {
   name: string;
@@ -27,7 +30,7 @@ interface UpdateProductInput {
 }
 
 export async function createProduct(
-  input: CreateProductInput,
+  input: CreateProductInput
 ): Promise<ProductActionResult> {
   try {
     const { householdId, userId } = await getSessionData();
@@ -62,7 +65,10 @@ export async function createProduct(
     return { success: true, product };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.issues[0]?.message || 'Validation failed' };
+      return {
+        success: false,
+        error: error.issues[0]?.message || 'Validation failed',
+      };
     }
     console.error('Error creating product:', error);
     return { success: false, error: 'Failed to create product' };
@@ -71,7 +77,7 @@ export async function createProduct(
 
 export async function updateProduct(
   productId: string,
-  input: UpdateProductInput,
+  input: UpdateProductInput
 ): Promise<ProductActionResult> {
   try {
     const householdId = await getHouseholdId();
@@ -93,8 +99,10 @@ export async function updateProduct(
     }> = {};
     if (input.name !== undefined) updateData.name = input.name;
     if (input.emoji !== undefined) updateData.emoji = input.emoji;
-    if (input.defaultCategory !== undefined) updateData.defaultCategory = input.defaultCategory;
-    if (input.defaultUnit !== undefined) updateData.defaultUnit = input.defaultUnit;
+    if (input.defaultCategory !== undefined)
+      updateData.defaultCategory = input.defaultCategory;
+    if (input.defaultUnit !== undefined)
+      updateData.defaultUnit = input.defaultUnit;
 
     const updatedProduct = await prisma.product.update({
       where: { id: productId },
@@ -108,7 +116,9 @@ export async function updateProduct(
   }
 }
 
-export async function deleteProduct(productId: string): Promise<ProductActionResult> {
+export async function deleteProduct(
+  productId: string
+): Promise<ProductActionResult> {
   try {
     const householdId = await getHouseholdId();
 
@@ -191,7 +201,9 @@ export async function getAllProducts(): Promise<CatalogSuggestion[]> {
   }
 }
 
-export async function getProductSuggestions(query: string): Promise<ProductSuggestion[]> {
+export async function getProductSuggestions(
+  query: string
+): Promise<ProductSuggestion[]> {
   try {
     const householdId = await getHouseholdId();
 
@@ -209,15 +221,17 @@ export async function getProductSuggestions(query: string): Promise<ProductSugge
       take: 5,
     });
 
-    const catalogSuggestions: ProductSuggestion[] = catalogProducts.map((product, index) => ({
-      id: product.id,
-      name: product.name,
-      emoji: product.emoji,
-      category: product.defaultCategory,
-      defaultUnit: product.defaultUnit,
-      score: 1 - index * 0.1, // Prefer earlier results
-      source: 'catalog',
-    }));
+    const catalogSuggestions: ProductSuggestion[] = catalogProducts.map(
+      (product, index) => ({
+        id: product.id,
+        name: product.name,
+        emoji: product.emoji,
+        category: product.defaultCategory,
+        defaultUnit: product.defaultUnit,
+        score: 1 - index * 0.1, // Prefer earlier results
+        source: 'catalog',
+      })
+    );
 
     // Search recent items from purchase history
     const recentItems = await prisma.shoppingItem.findMany({
@@ -234,14 +248,16 @@ export async function getProductSuggestions(query: string): Promise<ProductSugge
       orderBy: { lastPurchasedAt: 'desc' },
     });
 
-    const recentSuggestions: ProductSuggestion[] = recentItems.map((item, index) => ({
-      name: item.name,
-      emoji: item.emoji,
-      category: item.category,
-      defaultUnit: item.unit,
-      score: 0.8 - index * 0.1,
-      source: 'history',
-    }));
+    const recentSuggestions: ProductSuggestion[] = recentItems.map(
+      (item, index) => ({
+        name: item.name,
+        emoji: item.emoji,
+        category: item.category,
+        defaultUnit: item.unit,
+        score: 0.8 - index * 0.1,
+        source: 'history',
+      })
+    );
 
     // Get smart suggestions (items due for repurchase)
     const smartSuggestions = await prisma.shoppingItem.findMany({
@@ -260,7 +276,8 @@ export async function getProductSuggestions(query: string): Promise<ProductSugge
 
     const smartSuggestionsFormatted: ProductSuggestion[] = smartSuggestions
       .map((item) => {
-        if (!item.lastPurchasedAt || !item.averageDaysBetweenPurchases) return null;
+        if (!item.lastPurchasedAt || !item.averageDaysBetweenPurchases)
+          return null;
 
         const daysSinceLastPurchase =
           (Date.now() - item.lastPurchasedAt.getTime()) / (1000 * 60 * 60 * 24);
@@ -279,7 +296,11 @@ export async function getProductSuggestions(query: string): Promise<ProductSugge
       .filter(Boolean) as ProductSuggestion[];
 
     // Combine and deduplicate by name, keeping highest score
-    const allSuggestions = [...catalogSuggestions, ...recentSuggestions, ...smartSuggestionsFormatted];
+    const allSuggestions = [
+      ...catalogSuggestions,
+      ...recentSuggestions,
+      ...smartSuggestionsFormatted,
+    ];
     const uniqueSuggestions = Array.from(
       allSuggestions
         .reduce((map, suggestion) => {
@@ -289,7 +310,7 @@ export async function getProductSuggestions(query: string): Promise<ProductSugge
           }
           return map;
         }, new Map<string, ProductSuggestion>())
-        .values(),
+        .values()
     );
 
     // Sort by score descending

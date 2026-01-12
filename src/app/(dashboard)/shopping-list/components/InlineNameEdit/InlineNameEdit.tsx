@@ -2,7 +2,11 @@
 
 import { useState, useCallback, useTransition, useEffect, useRef } from 'react';
 import { updateShoppingItem } from '@/app/lib/shopping-actions';
-import { ShoppingItemWithCreator, ProductSuggestion, isCatalogSuggestion } from '@/types/shopping';
+import {
+  ShoppingItemWithCreator,
+  ProductSuggestion,
+  isCatalogSuggestion,
+} from '@/types/shopping';
 import { useProductAutocomplete } from '../../hooks/useProductAutocomplete';
 import { useProductCacheContext } from '../../contexts/ProductCacheContext';
 import CreateProductModal from '../CreateProductModal/CreateProductModal';
@@ -68,7 +72,6 @@ export default function InlineNameEdit({
     suggestions,
     selectedIndex,
     isOpen,
-    isLoading,
     listRef,
     handleKeyDown: autocompleteKeyDown,
     handleSelect,
@@ -78,7 +81,7 @@ export default function InlineNameEdit({
   } = useProductAutocomplete({
     searchQuery: inputValue,
     onSelect: handleProductSelect,
-    filterProducts, // Use client-side filtering for instant results
+    filterProducts,
   });
 
   const handleCreateNewProduct = useCallback(
@@ -98,8 +101,6 @@ export default function InlineNameEdit({
           setShowCreateProduct(false);
           setIsEditing(false);
           inputRef.current?.blur();
-
-          // Refresh cache to include newly created product
           refreshCache();
         }
       });
@@ -109,13 +110,10 @@ export default function InlineNameEdit({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      // Let autocomplete handle navigation when dropdown is open
       if (isOpen) {
         autocompleteKeyDown(e);
         return;
       }
-
-      // Handle regular keyboard shortcuts when dropdown is closed
       if (e.key === 'Enter') {
         e.currentTarget.blur();
       } else if (e.key === 'Escape') {
@@ -127,24 +125,24 @@ export default function InlineNameEdit({
   );
 
   const handleBlur = useCallback(() => {
-    // Delay to allow click on dropdown to register
     setTimeout(() => {
       if (showCreateProduct) return;
-
       setIsEditing(false);
       closeDropdown();
-
-      // Reset to original value if nothing selected
       if (inputValue !== initialName) {
         setInputValue(initialName);
       }
     }, 200);
   }, [initialName, inputValue, closeDropdown, showCreateProduct]);
 
-  const handleFocus = useCallback(() => {
-    setIsEditing(true);
-    openDropdown();
-  }, [openDropdown]);
+  const handleFocus = useCallback(
+    (e: React.FocusEvent<HTMLInputElement>) => {
+      setIsEditing(true);
+      openDropdown();
+      e.currentTarget.select();
+    },
+    [openDropdown]
+  );
 
   const getSourceBadge = (source: ProductSuggestion['source']) => {
     switch (source) {
@@ -172,40 +170,21 @@ export default function InlineNameEdit({
         placeholder="Product name"
         autoComplete="off"
         role="combobox"
-        aria-expanded={isOpen && isEditing}
-        aria-controls="suggestions-list"
-        aria-activedescendant={
-          selectedIndex >= 0 ? `suggestion-${selectedIndex}` : undefined
-        }
       />
 
-      {isPending && <div className={styles.spinner} />}
-      {isLoading && isEditing && (
-        <div className={styles.loadingIndicator}>
-          <span className={styles.loadingSpinner} />
-        </div>
-      )}
-
       {isOpen && isEditing && (inputValue.trim() || suggestions.length > 0) && (
-        <ul
-          ref={listRef}
-          id="suggestions-list"
-          className={styles.suggestionsList}
-          role="listbox"
-        >
+        <ul ref={listRef} className={styles.suggestionsList} role="listbox">
           {suggestions.map((suggestion, index) => {
             const badge = getSourceBadge(suggestion.source);
             return (
               <li
                 key={`${suggestion.source}-${suggestion.name}-${index}`}
-                id={`suggestion-${index}`}
                 className={`${styles.suggestionItem} ${
                   index === selectedIndex ? styles.selected : ''
                 }`}
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => handleSelect(suggestion)}
                 onMouseEnter={() => setSelectedIndex(index)}
-                role="option"
-                aria-selected={index === selectedIndex}
               >
                 <div className={styles.suggestionContent}>
                   <div className={styles.mainInfo}>
@@ -215,9 +194,7 @@ export default function InlineNameEdit({
                     <span className={styles.name}>{suggestion.name}</span>
                   </div>
                   <div className={styles.meta}>
-                    <span className={styles.badge} title={badge.label}>
-                      {badge.icon}
-                    </span>
+                    <span className={styles.badge}>{badge.icon}</span>
                     {suggestion.defaultUnit && (
                       <span className={styles.unit}>
                         {suggestion.defaultUnit}
@@ -235,10 +212,10 @@ export default function InlineNameEdit({
               (s) => s.name.toLowerCase() === inputValue.trim().toLowerCase()
             ) && (
               <li
-                id={`suggestion-${suggestions.length}`}
                 className={`${styles.suggestionItem} ${styles.addNewItem} ${
                   selectedIndex === suggestions.length ? styles.selected : ''
                 }`}
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() =>
                   handleSelect({
                     name: inputValue.trim(),
@@ -249,8 +226,6 @@ export default function InlineNameEdit({
                   })
                 }
                 onMouseEnter={() => setSelectedIndex(suggestions.length)}
-                role="option"
-                aria-selected={selectedIndex === suggestions.length}
               >
                 <div className={styles.suggestionContent}>
                   <div className={styles.mainInfo}>
@@ -265,16 +240,17 @@ export default function InlineNameEdit({
         </ul>
       )}
 
-      <CreateProductModal
-        isOpen={showCreateProduct}
-        onClose={() => {
-          setShowCreateProduct(false);
-          setIsEditing(false);
-          inputRef.current?.blur();
-        }}
-        initialName={newProductName}
-        onProductCreated={handleCreateNewProduct}
-      />
+      {showCreateProduct && (
+        <CreateProductModal
+          isOpen={true}
+          initialName={newProductName}
+          onProductCreated={handleCreateNewProduct}
+          onClose={() => {
+            setShowCreateProduct(false);
+            setIsEditing(false);
+          }}
+        />
+      )}
     </div>
   );
 }
