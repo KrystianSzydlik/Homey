@@ -194,6 +194,7 @@ describe('Shopping Item Actions', () => {
       const input = {
         name: 'Milk',
         shoppingListId: mockListId,
+        productId: 'prod-milk',
         quantity: '1',
         unit: 'liter',
       };

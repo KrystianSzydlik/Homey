@@ -10,16 +10,14 @@ import styles from './AddItemForm.module.scss';
 
 interface AddItemFormProps {
   shoppingListId: string;
-  onAddItem: (item: ShoppingItemWithCreator) => void;
+  onAddItem: (listId: string, item: any, tempId: string) => void;
 }
 
 export default function AddItemForm({
   shoppingListId,
-  onAddItem,
+  onAddItem: onAddItemOptimistic,
 }: AddItemFormProps) {
   const [showForm, setShowForm] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [newProductName, setNewProductName] = useState('');
 
@@ -27,64 +25,42 @@ export default function AddItemForm({
 
   const handleCreateNewProduct = useCallback(
     (product: any) => {
-      setError(null);
-      startTransition(async () => {
-        const result = await createShoppingItem({
-          name: product.name,
-          shoppingListId,
-          productId: product.id,
-          category: product.defaultCategory,
-          unit: product.defaultUnit || undefined,
-          emoji: product.emoji || undefined,
-        });
-
-        if (result.success && result.item) {
-          onAddItem(result.item);
-          setShowForm(false);
-          setShowCreateProduct(false);
-
-          // Refresh cache to include newly created product
-          refreshCache();
-        } else {
-          setError(result.error || 'Failed to add item');
-        }
-      });
+      const tempId = `temp-${Date.now()}`;
+      const newItem = {
+        name: product.name,
+        productId: product.id,
+        category: product.defaultCategory,
+        unit: product.defaultUnit || undefined,
+        emoji: product.emoji || undefined,
+      };
+      onAddItemOptimistic(shoppingListId, newItem, tempId);
+      setShowForm(false);
+      setShowCreateProduct(false);
+      refreshCache();
     },
-    [shoppingListId, onAddItem, refreshCache]
+    [shoppingListId, onAddItemOptimistic, refreshCache]
   );
 
   const handleProductSelect = useCallback(
     (suggestion: ProductSuggestion) => {
-      setError(null);
-
-      // If it's the "Add New" option (score -1) or a history item that isn't a catalog product
       if (suggestion.source !== 'catalog') {
         setNewProductName(suggestion.name);
         setShowCreateProduct(true);
         return;
       }
 
-      startTransition(async () => {
-        const productId = suggestion.id;
-
-        const result = await createShoppingItem({
-          name: suggestion.name,
-          shoppingListId,
-          productId,
-          category: suggestion.category,
-          unit: suggestion.defaultUnit || undefined,
-          emoji: suggestion.emoji || undefined,
-        });
-
-        if (result.success && result.item) {
-          onAddItem(result.item);
-          setShowForm(false);
-        } else {
-          setError(result.error || 'Failed to add item');
-        }
-      });
+      const tempId = `temp-${Date.now()}`;
+      const newItem = {
+        name: suggestion.name,
+        productId: suggestion.id,
+        category: suggestion.category,
+        unit: suggestion.defaultUnit || undefined,
+        emoji: suggestion.emoji || undefined,
+      };
+      onAddItemOptimistic(shoppingListId, newItem, tempId);
+      setShowForm(false);
     },
-    [shoppingListId, onAddItem]
+    [shoppingListId, onAddItemOptimistic]
   );
 
   return (
@@ -105,22 +81,12 @@ export default function AddItemForm({
             autoFocus
           />
 
-          {error && <div className={styles.error}>{error}</div>}
-
-          {isPending && (
-            <div className={styles.loadingOverlay}>
-              <span className={styles.spinner} />
-            </div>
-          )}
-
           <button
             type="button"
             className={styles.cancelButton}
             onClick={() => {
               setShowForm(false);
-              setError(null);
             }}
-            disabled={isPending}
           >
             Cancel
           </button>

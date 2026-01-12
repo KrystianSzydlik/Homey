@@ -38,6 +38,7 @@ export interface ProductActionResult {
   success: boolean;
   product?: Product;
   error?: string;
+  existingProduct?: Product;
 }
 
 export type CatalogSuggestion = {

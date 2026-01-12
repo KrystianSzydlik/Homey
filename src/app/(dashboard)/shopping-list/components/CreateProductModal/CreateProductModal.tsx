@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import type { Product } from '@prisma/client';
 import { ShoppingCategory } from '@prisma/client';
 import { createProduct, updateProduct } from '@/app/lib/product-actions';
 import { getSmartProductDefaults } from '@/app/lib/product-utils';
@@ -43,11 +44,15 @@ export default function CreateProductModal({
   const [unit, setUnit] = useState(initialUnit);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [existingProductToUpdate, setExistingProductToUpdate] =
+    useState<Product | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       setName(initialName);
+      setError(null);
+      setExistingProductToUpdate(null);
 
       if (productId) {
         setCategory(initialCategory || 'OTHER');
@@ -84,36 +89,66 @@ export default function CreateProductModal({
     }
   };
 
+  const handleConfirmUpdate = async () => {
+    if (!existingProductToUpdate) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await updateProduct(existingProductToUpdate.id, {
+        name: name.trim(),
+        defaultCategory: category,
+        emoji: emoji || undefined,
+        defaultUnit: unit?.trim() || undefined,
+      });
+
+      if (result.success && result.product) {
+        onProductCreated(result.product as any);
+        onClose();
+      } else {
+        setError(result.error || 'Failed to update product');
+      }
+    } catch (err) {
+      setError('Something went wrong');
+    } finally {
+      setIsLoading(false);
+      setExistingProductToUpdate(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
     setIsLoading(true);
     setError(null);
+    setExistingProductToUpdate(null);
+
+    const payload = {
+      name: name.trim(),
+      defaultCategory: category,
+      emoji: emoji || undefined,
+      defaultUnit: unit?.trim() || undefined,
+    };
 
     try {
-      let result;
-      if (productId) {
-        result = await updateProduct(productId, {
-          name: name.trim(),
-          defaultCategory: category,
-          emoji: emoji || undefined,
-          defaultUnit: unit.trim() || undefined,
-        });
-      } else {
-        result = await createProduct({
-          name: name.trim(),
-          defaultCategory: category,
-          emoji: emoji || undefined,
-          defaultUnit: unit.trim() || undefined,
-        });
-      }
+      const result = productId
+        ? await updateProduct(productId, payload)
+        : await createProduct(payload);
 
       if (result.success && result.product) {
         onProductCreated(result.product as any);
         onClose();
       } else {
-        setError(result.error || 'Failed to save product');
+        if (!result.success && result.existingProduct) {
+          setExistingProductToUpdate(result.existingProduct);
+          setError(
+            `Produkt "${result.existingProduct.name}" już istnieje. Czy chcesz go zaktualizować?`
+          );
+        } else {
+          setError(result.error || 'Failed to save product');
+        }
       }
     } catch (err) {
       setError('Something went wrong');
@@ -147,17 +182,26 @@ export default function CreateProductModal({
               placeholder="np. Pomidory malinowe"
               required
               autoFocus
+              disabled={!!existingProductToUpdate}
             />
           </div>
 
           <div className={styles.field}>
             <label>Ikona (Emoji)</label>
-            <EmojiPicker currentEmoji={emoji} onSelect={setEmoji} />
+            <EmojiPicker
+              currentEmoji={emoji}
+              onSelect={setEmoji}
+              disabled={!!existingProductToUpdate}
+            />
           </div>
 
           <div className={styles.field}>
             <label>Kategoria</label>
-            <CategoryPicker currentCategory={category} onSelect={setCategory} />
+            <CategoryPicker
+              currentCategory={category}
+              onSelect={setCategory}
+              disabled={!!existingProductToUpdate}
+            />
           </div>
 
           <div className={styles.field}>
@@ -167,28 +211,53 @@ export default function CreateProductModal({
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
               placeholder="np. kg, szt"
+              disabled={!!existingProductToUpdate}
             />
           </div>
 
           {error && <div className={styles.error}>{error}</div>}
 
-          <div className={styles.actions}>
-            <button
-              type="button"
-              onClick={onClose}
-              className={styles.cancelButton}
-              disabled={isLoading}
-            >
-              Anuluj
-            </button>
-            <button
-              type="submit"
-              className={styles.submitButton}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Zapisywanie...' : 'Zapisz produkt'}
-            </button>
-          </div>
+          {existingProductToUpdate ? (
+            <div className={styles.actions}>
+              <button
+                type="button"
+                onClick={() => {
+                  setExistingProductToUpdate(null);
+                  setError(null);
+                }}
+                className={styles.cancelButton}
+                disabled={isLoading}
+              >
+                Anuluj
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmUpdate}
+                className={styles.submitButton}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Aktualizowanie...' : 'Zaktualizuj'}
+              </button>
+            </div>
+          ) : (
+            <div className={styles.actions}>
+              <button
+                type="button"
+                onClick={onClose}
+                className={styles.cancelButton}
+                disabled={isLoading}
+              >
+                Anuluj
+              </button>
+              <button
+                type="submit"
+                className={styles.submitButton}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Zapisywanie...' : 'Zapisz produkt'}
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>

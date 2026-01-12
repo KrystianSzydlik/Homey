@@ -129,7 +129,7 @@ function shoppingListReducer(state: ShoppingListState, action: ShoppingListActio
 export function useShoppingListState(initialLists: ShoppingListWithItems[]) {
   const [state, dispatch] = useReducer(shoppingListReducer, {
     lists: initialLists,
-    selectedListIds: initialLists.length > 0 ? [initialLists[0].id] : [],
+    selectedListIds: [],
   });
 
   const addList = useCallback((list: ShoppingListWithCreator) => {

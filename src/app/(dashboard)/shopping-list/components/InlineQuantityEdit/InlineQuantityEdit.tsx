@@ -9,7 +9,7 @@ interface InlineQuantityEditProps {
   itemId: string;
   initialQuantity: string;
   initialUnit: string | null;
-  onUpdate: (item: ShoppingItemWithCreator) => void;
+  onUpdate: (itemId: string, updatedData: Partial<ShoppingItemWithCreator>) => void;
 }
 
 const parseQuantity = (
@@ -38,25 +38,18 @@ export default function InlineQuantityEdit({
   const [quantity, setQuantity] = useState(initialQuantity);
   const [unit, setUnit] = useState(initialUnit || '');
   const [isEditing, setIsEditing] = useState(false);
-  const [isPending, startTransition] = useTransition();
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(() => {
     if (quantity === initialQuantity && (unit || null) === initialUnit) {
       setIsEditing(false);
       return;
     }
 
-    startTransition(async () => {
-      const result = await updateShoppingItem(itemId, {
-        quantity,
-        unit: unit.trim() || undefined,
-      });
-
-      if (result.success && result.item) {
-        onUpdate(result.item);
-        setIsEditing(false);
-      }
+    onUpdate(itemId, {
+      quantity,
+      unit: unit.trim() || undefined,
     });
+    setIsEditing(false);
   }, [quantity, unit, itemId, onUpdate, initialQuantity, initialUnit]);
 
   const handleKeyDown = useCallback(
@@ -73,6 +66,17 @@ export default function InlineQuantityEdit({
     [initialQuantity, initialUnit]
   );
 
+  if (!isEditing) {
+    return (
+      <button
+        onClick={() => setIsEditing(true)}
+        className={styles.displayButton}
+      >
+        {initialQuantity} {initialUnit}
+      </button>
+    );
+  }
+
   return (
     <div className={styles.editContainer}>
       <div className={styles.inputWrapper}>
@@ -86,7 +90,6 @@ export default function InlineQuantityEdit({
           }}
           onKeyDown={handleKeyDown}
           onBlur={handleSave}
-          disabled={isPending}
           className={styles.quantityInput}
           placeholder="1"
         />
@@ -101,13 +104,11 @@ export default function InlineQuantityEdit({
             }}
             onKeyDown={handleKeyDown}
             onBlur={handleSave}
-            disabled={isPending}
             className={styles.unitInput}
             placeholder="j.m."
           />
         )}
       </div>
-      {isPending && <div className={styles.spinner} />}
     </div>
   );
 }

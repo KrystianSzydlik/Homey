@@ -16,14 +16,18 @@ interface ProductAutocompleteProps {
   onSelect: (suggestion: ProductSuggestion) => void;
   placeholder?: string;
   autoFocus?: boolean;
+  initialValue?: string;
+  strictMode?: boolean;
 }
 
 export default function ProductAutocomplete({
   onSelect,
   placeholder = 'Search products...',
   autoFocus = false,
+  initialValue = '',
+  strictMode = true,
 }: ProductAutocompleteProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialValue);
   const [editingProduct, setEditingProduct] =
     useState<ProductSuggestion | null>(null);
   const [deleteConfirmProduct, setDeleteConfirmProduct] =
@@ -36,11 +40,30 @@ export default function ProductAutocomplete({
   const handleSelectWithClear = useCallback(
     (suggestion: ProductSuggestion) => {
       onSelect(suggestion);
-      setSearchQuery('');
+      setSearchQuery(strictMode ? suggestion.name : '');
+      closeDropdown();
       inputRef.current?.blur();
     },
-    [onSelect]
+    [onSelect, strictMode, closeDropdown]
   );
+
+  const handleLocalKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (strictMode && e.key === 'Enter' && selectedIndex === -1) {
+      e.preventDefault();
+    }
+    handleKeyDown(e);
+  };
+
+  const handleBlur = () => {
+    setTimeout(() => {
+      if (!isOpen) { // Check if dropdown is not open
+        if (strictMode) {
+          setSearchQuery(initialValue);
+        }
+        closeDropdown();
+      }
+    }, 200); // Delay to allow click on suggestion
+  };
 
   const {
     suggestions,
@@ -114,8 +137,9 @@ export default function ProductAutocomplete({
         type="text"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        onKeyDown={handleKeyDown}
+        onKeyDown={handleLocalKeyDown}
         onFocus={openDropdown}
+        onBlur={handleBlur}
         placeholder={placeholder}
         className={styles.input}
         autoFocus={autoFocus}

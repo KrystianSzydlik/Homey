@@ -48,7 +48,11 @@ export async function createProduct(
     });
 
     if (existingProduct) {
-      return { success: false, error: 'Product already exists' };
+      return {
+        success: false,
+        error: 'Product already exists',
+        existingProduct,
+      };
     }
 
     const product = await prisma.product.create({
@@ -73,6 +77,40 @@ export async function createProduct(
     console.error('Error creating product:', error);
     return { success: false, error: 'Failed to create product' };
   }
+}
+
+export async function upsertProduct(
+  input: CreateProductInput
+): Promise<ProductActionResult> {
+  const { householdId } = await getSessionData();
+
+  const existingProduct = await prisma.product.findUnique({
+    where: {
+      name_householdId: {
+        name: input.name,
+        householdId,
+      },
+    },
+  });
+
+  if (existingProduct) {
+    // Merge data - update only provided fields, keeping existing ones if not provided
+    const updateData: UpdateProductInput = {
+      name: input.name,
+      emoji: input.emoji !== undefined ? input.emoji : existingProduct.emoji,
+      defaultCategory:
+        input.defaultCategory !== undefined
+          ? input.defaultCategory
+          : existingProduct.defaultCategory,
+      defaultUnit:
+        input.defaultUnit !== undefined
+          ? input.defaultUnit
+          : existingProduct.defaultUnit,
+    };
+    return updateProduct(existingProduct.id, updateData);
+  }
+
+  return createProduct(input);
 }
 
 export async function updateProduct(

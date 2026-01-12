@@ -35,8 +35,9 @@ import ListSelector from '../ListSelector/ListSelector';
 import CreateListModal from '../CreateListModal/CreateListModal';
 import ConfirmModal from '../ConfirmModal/ConfirmModal';
 import ListHeader from '../ListHeader/ListHeader';
-import { useShoppingListState } from '@/app/(dashboard)/shopping-list/hooks/useShoppingListState';
+import { useOptimisticShoppingList } from '@/app/(dashboard)/shopping-list/hooks/useOptimisticShoppingList';
 import { useProductCacheContext } from '../../contexts/ProductCacheContext';
+import ListGrid from '../ListGrid/ListGrid';
 import styles from './ShoppingList.module.scss';
 
 interface ShoppingListProps {
@@ -47,16 +48,17 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   const {
     lists,
     selectedListIds,
-    addList,
+    addList: addListOptimistic,
     deleteList: removeList,
     toggleListSelection,
-    addItem,
-    deleteItem,
-    updateItem,
+    addItem: addItemOptimistic,
+    deleteItem: deleteItemOptimistic,
+    updateItem: updateItemOptimistic,
     reorderItems,
-    clearCheckedItems,
-    deleteAllItems,
-  } = useShoppingListState(initialLists);
+    clearCheckedItems: clearCheckedOptimistic,
+    deleteAllItems: deleteAllItemsOptimistic,
+    deleteListOptimistic,
+  } = useOptimisticShoppingList(initialLists);
 
   const { refreshIfStale } = useProductCacheContext();
 
@@ -64,7 +66,6 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     ShoppingCategory | 'ALL'
   >('ALL');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
   const [deleteListId, setDeleteListId] = useState<string | null>(null);
   const [deleteAllListId, setDeleteAllListId] = useState<string | null>(null);
 
@@ -104,30 +105,31 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
 
   const handleListCreated = useCallback(
     (newList: ShoppingListWithCreator) => {
-      addList(newList);
+      // Assuming addListOptimistic is now handled in the modal for temp ID generation
+      // This function might need adjustment based on modal implementation
     },
-    [addList]
+    []
   );
 
   const handleAddItem = useCallback(
     (newItem: ShoppingItemWithCreator) => {
-      addItem(newItem);
+      // This will be handled by addItemOptimistic in AddItemForm
     },
-    [addItem]
+    []
   );
 
   const handleDeleteItem = useCallback(
     (itemId: string) => {
-      deleteItem(itemId);
+      deleteItemOptimistic(itemId);
     },
-    [deleteItem]
+    [deleteItemOptimistic]
   );
 
   const handleItemUpdate = useCallback(
     (itemId: string, updatedItem: ShoppingItemWithCreator) => {
-      updateItem(itemId, updatedItem);
+      updateItemOptimistic(itemId, updatedItem);
     },
-    [updateItem]
+    [updateItemOptimistic]
   );
 
   const handleDragEnd = useCallback(
@@ -159,49 +161,37 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
           reorderItems(listId, newItems);
 
           const itemIds = reorderedUnchecked.map((item) => item.id);
-          startTransition(async () => {
-            const result = await reorderShoppingItems(listId, itemIds);
+          // Fire and forget server action
+          reorderShoppingItems(listId, itemIds).then(result => {
             if (!result.success) {
-              console.error('Failed to reorder:', result.error);
+                console.error('Failed to reorder:', result.error);
+                // Optionally show a toast, but UI state is already updated
             }
           });
         }
       }
     },
-    [lists, reorderItems, startTransition]
+    [lists, reorderItems]
   );
 
   const handleClearCompleted = useCallback(() => {
-    startTransition(async () => {
-      await clearCheckedItemsAction();
-      clearCheckedItems();
-    });
-  }, [clearCheckedItems]);
+    clearCheckedOptimistic();
+  }, [clearCheckedOptimistic]);
 
   const handleDeleteList = useCallback(
     (listId: string) => {
-      startTransition(async () => {
-        const result = await deleteShoppingList(listId);
-        if (result.success) {
-          removeList(listId);
-          setDeleteListId(null);
-        }
-      });
+      deleteListOptimistic(listId);
+      setDeleteListId(null);
     },
-    [removeList]
+    [deleteListOptimistic]
   );
 
   const handleDeleteAllItems = useCallback(
     (listId: string) => {
-      startTransition(async () => {
-        const result = await deleteAllShoppingItems(listId);
-        if (result.success) {
-          deleteAllItems(listId);
-          setDeleteAllListId(null);
-        }
-      });
+      deleteAllItemsOptimistic(listId);
+      setDeleteAllListId(null);
     },
-    [deleteAllItems]
+    [deleteAllItemsOptimistic]
   );
 
   return (
@@ -210,12 +200,32 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
         <h1 className={styles.title}>Lista zakupów</h1>
       </header>
 
-      <ListSelector
-        lists={lists}
-        selectedListIds={selectedListIds}
-        onSelectList={handleSelectList}
-        onOpenCreateModal={() => setIsCreateModalOpen(true)}
-      />
+      <div className={styles.listManagementContainer}>
+        {lists.length === 0 ? (
+          <div className={styles.emptyState}>
+            <p>Nie masz jeszcze żadnej listy zakupów.</p>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className={styles.createFirstListButton}
+            >
+              Utwórz pierwszą listę
+            </button>
+          </div>
+        ) : selectedListIds.length === 0 ? (
+          <ListGrid
+            lists={lists}
+            onSelectList={handleSelectList}
+            onOpenCreateModal={() => setIsCreateModalOpen(true)}
+          />
+        ) : (
+          <ListSelector
+            lists={lists}
+            selectedListIds={selectedListIds}
+            onSelectList={handleSelectList}
+            onOpenCreateModal={() => setIsCreateModalOpen(true)}
+          />
+        )}
+      </div>
 
       <CreateListModal
         isOpen={isCreateModalOpen}
@@ -224,11 +234,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       />
 
       <div className={styles.content}>
-        {selectedLists.length === 0 ? (
-          <div className={styles.emptyState}>
-            <p>Wybierz listę lub utwórz nową</p>
-          </div>
-        ) : (
+        {selectedLists.length > 0 &&
           selectedLists.map((list) => {
             const filteredItems =
               selectedCategory === 'ALL'
@@ -293,8 +299,9 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
                               <ShoppingItem
                                 key={item.id}
                                 item={item}
-                                onDelete={handleDeleteItem}
-                                onUpdate={handleItemUpdate}
+                                onDelete={deleteItemOptimistic}
+                                onUpdate={updateItemOptimistic}
+                                onToggle={toggleItemOptimistic}
                               />
                             ))}
                           </ul>
@@ -322,8 +329,9 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
                             <ShoppingItem
                               key={item.id}
                               item={item}
-                              onDelete={handleDeleteItem}
-                              onUpdate={handleItemUpdate}
+                              onDelete={deleteItemOptimistic}
+                              onUpdate={updateItemOptimistic}
+                              onToggle={toggleItemOptimistic}
                             />
                           ))}
                         </ul>
@@ -333,8 +341,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
                 )}
               </div>
             );
-          })
-        )}
+          }))}
       </div>
 
       {/* Delete List Confirmation Modal */}
