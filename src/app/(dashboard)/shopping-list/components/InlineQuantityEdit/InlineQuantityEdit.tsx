@@ -80,7 +80,10 @@ export default function InlineQuantityEdit({
           type="text"
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
-          onFocus={() => setIsEditing(true)}
+          onFocus={(e) => {
+            setIsEditing(true);
+            e.currentTarget.select();
+          }}
           onKeyDown={handleKeyDown}
           onBlur={handleSave}
           disabled={isPending}
@@ -92,7 +95,10 @@ export default function InlineQuantityEdit({
             type="text"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
-            onFocus={() => setIsEditing(true)}
+            onFocus={(e) => {
+              setIsEditing(true);
+              e.currentTarget.select();
+            }}
             onKeyDown={handleKeyDown}
             onBlur={handleSave}
             disabled={isPending}

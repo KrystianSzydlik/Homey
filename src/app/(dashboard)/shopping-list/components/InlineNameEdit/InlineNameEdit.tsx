@@ -135,10 +135,14 @@ export default function InlineNameEdit({
     }, 200);
   }, [initialName, inputValue, closeDropdown, showCreateProduct]);
 
-  const handleFocus = useCallback(() => {
-    setIsEditing(true);
-    openDropdown();
-  }, [openDropdown]);
+  const handleFocus = useCallback(
+    (e: React.FocusEvent<HTMLInputElement>) => {
+      setIsEditing(true);
+      openDropdown();
+      e.currentTarget.select();
+    },
+    [openDropdown]
+  );
 
   const getSourceBadge = (source: ProductSuggestion['source']) => {
     switch (source) {
