@@ -196,6 +196,7 @@ describe('Shopping Item Actions', () => {
         shoppingListId: mockListId,
         quantity: '1',
         unit: 'liter',
+        productId: 'prod-1',
       };
 
       // Mock validating list access
@@ -211,13 +212,18 @@ describe('Shopping Item Actions', () => {
         ...input,
         position: 3,
         householdId: mockHouseholdId,
+        createdBy: { name: 'Test User' },
+        product: null,
+        shoppingList: { name: 'My List', emoji: '🛒' },
       };
       (prisma.shoppingItem.create as any).mockResolvedValue(mockItem);
 
       const result = await createShoppingItem(input);
 
       expect(result.success).toBe(true);
-      expect(prisma.shoppingItem.create).toHaveBeenCalled();
+      if (result.success) {
+        expect(result.item).toEqual(mockItem);
+      }
     });
   });
 });

@@ -37,6 +37,7 @@ import ConfirmModal from '../ConfirmModal/ConfirmModal';
 import ListHeader from '../ListHeader/ListHeader';
 import { useShoppingListState } from '@/app/(dashboard)/shopping-list/hooks/useShoppingListState';
 import { useProductCacheContext } from '../../contexts/ProductCacheContext';
+import ListGrid from '../ListGrid/ListGrid';
 import styles from './ShoppingList.module.scss';
 
 interface ShoppingListProps {
@@ -210,12 +211,14 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
         <h1 className={styles.title}>Lista zakupów</h1>
       </header>
 
-      <ListSelector
-        lists={lists}
-        selectedListIds={selectedListIds}
-        onSelectList={handleSelectList}
-        onOpenCreateModal={() => setIsCreateModalOpen(true)}
-      />
+      {lists.length > 0 && selectedListIds.length > 0 && (
+        <ListSelector
+          lists={lists}
+          selectedListIds={selectedListIds}
+          onSelectList={handleSelectList}
+          onOpenCreateModal={() => setIsCreateModalOpen(true)}
+        />
+      )}
 
       <CreateListModal
         isOpen={isCreateModalOpen}
@@ -224,10 +227,22 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       />
 
       <div className={styles.content}>
-        {selectedLists.length === 0 ? (
+        {lists.length === 0 ? (
           <div className={styles.emptyState}>
-            <p>Wybierz listę lub utwórz nową</p>
+            <p>Utwórz swoją pierwszą listę zakupów</p>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className={styles.createButton}
+            >
+              Utwórz listę
+            </button>
           </div>
+        ) : selectedListIds.length === 0 ? (
+          <ListGrid
+            lists={lists}
+            onSelectList={handleSelectList}
+            onOpenCreateModal={() => setIsCreateModalOpen(true)}
+          />
         ) : (
           selectedLists.map((list) => {
             const filteredItems =

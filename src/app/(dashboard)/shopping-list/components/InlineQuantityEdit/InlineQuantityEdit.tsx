@@ -39,8 +39,13 @@ export default function InlineQuantityEdit({
   const [unit, setUnit] = useState(initialUnit || '');
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const escapePressed = useRef(false);
 
   const handleSave = useCallback(async () => {
+    if (escapePressed.current) {
+      escapePressed.current = false;
+      return;
+    }
     if (quantity === initialQuantity && (unit || null) === initialUnit) {
       setIsEditing(false);
       return;
@@ -64,6 +69,7 @@ export default function InlineQuantityEdit({
       if (e.key === 'Enter') {
         e.currentTarget.blur();
       } else if (e.key === 'Escape') {
+        escapePressed.current = true;
         setQuantity(initialQuantity);
         setUnit(initialUnit || '');
         setIsEditing(false);

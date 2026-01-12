@@ -16,14 +16,20 @@ interface ProductAutocompleteProps {
   onSelect: (suggestion: ProductSuggestion) => void;
   placeholder?: string;
   autoFocus?: boolean;
+  initialValue?: string;
+  isCompleted?: boolean;
+  strictMode?: boolean;
 }
 
 export default function ProductAutocomplete({
   onSelect,
   placeholder = 'Search products...',
   autoFocus = false,
+  initialValue = '',
+  isCompleted = false,
+  strictMode = false,
 }: ProductAutocompleteProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialValue);
   const [editingProduct, setEditingProduct] =
     useState<ProductSuggestion | null>(null);
   const [deleteConfirmProduct, setDeleteConfirmProduct] =
