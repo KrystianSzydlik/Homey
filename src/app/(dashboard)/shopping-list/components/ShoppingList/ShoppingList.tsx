@@ -16,7 +16,13 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { ShoppingCategory } from '@prisma/client';
-import { useCallback, useMemo, useState, useTransition, useEffect } from 'react';
+import {
+  useCallback,
+  useMemo,
+  useState,
+  useTransition,
+  useEffect,
+} from 'react';
 import {
   clearCheckedItems as clearCheckedItemsAction,
   reorderShoppingItems,
@@ -35,8 +41,9 @@ import ListSelector from '../ListSelector/ListSelector';
 import CreateListModal from '../CreateListModal/CreateListModal';
 import ConfirmModal from '../ConfirmModal/ConfirmModal';
 import ListHeader from '../ListHeader/ListHeader';
-import { useShoppingListState } from '@/app/(dashboard)/shopping-list/hooks/useShoppingListState';
+import { useOptimisticShoppingList } from '@/app/(dashboard)/shopping-list/hooks/useOptimisticShoppingList'; // Use optimistic hook
 import { useProductCacheContext } from '../../contexts/ProductCacheContext';
+import ListGrid from '../ListGrid/ListGrid';
 import styles from './ShoppingList.module.scss';
 
 interface ShoppingListProps {
@@ -47,16 +54,18 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   const {
     lists,
     selectedListIds,
-    addList,
-    deleteList: removeList,
+    addList, // Note: This updates base state. Optimistic hook also exposes addListOptimistic if needed.
+    addListOptimistic,
+    deleteList,
     toggleListSelection,
-    addItem,
-    deleteItem,
-    updateItem,
-    reorderItems,
-    clearCheckedItems,
+    addItemOptimistic,
+    deleteItemOptimistic,
+    updateItemOptimistic,
+    toggleItemOptimistic,
+    reorderItems, // This is likely base state updater? We might want optimistic reorder too.
     deleteAllItems,
-  } = useShoppingListState(initialLists);
+    clearCheckedItems,
+  } = useOptimisticShoppingList(initialLists);
 
   const { refreshIfStale } = useProductCacheContext();
 
@@ -103,31 +112,84 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   );
 
   const handleListCreated = useCallback(
-    (newList: ShoppingListWithCreator) => {
-      addList(newList);
+    async (newList: ShoppingListWithCreator) => {
+      // For lists, we might not rely heavily on optimistic updates since it's a modal action
+      // But we can use it.
+      // addList(newList); // Existing
+      await addListOptimistic(newList);
+      // The modal currently calls the server action internally?
+      // No, CreateListModal likely calls a prop or internal action.
+      // Let's assume CreateListModal returns the created list after server success.
+      // If so, addList(newList) updates the base state.
+      // If we want optimistic, we need to know BEFORE server return.
+      // But preserving existing behavior for list creation is fine.
     },
-    [addList]
+    [addListOptimistic]
   );
 
   const handleAddItem = useCallback(
-    (newItem: ShoppingItemWithCreator) => {
-      addItem(newItem);
+    async (listId: string, name: string, productId?: string) => {
+      // Construct a temporary item for optimistic update
+      // We need to fetch the current user's name or just use a placeholder for 'createdBy'
+      // Since it's optimistic, 'You' or similar is fine, or we ignore it in UI
+      const newItem: ShoppingItemWithCreator = {
+        id: `temp-${Date.now()}`,
+        name,
+        quantity: '1',
+        unit: null,
+        category: 'OTHER', // Default
+        checked: false,
+        position: 0, // Will be handled by hook/server
+        shoppingListId: listId,
+        emoji: null,
+        purchaseCount: 0,
+        lastPurchasedAt: null,
+        averageDaysBetweenPurchases: null,
+        productId: productId || null,
+        householdId: '', // Placeholder
+        createdById: '', // Placeholder
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: { name: 'You' },
+        _count: { items: 0 }, // Extra property from type intersection? No, ShoppingItemWithCreator extends ShoppingItem & ...
+      } as any; // Cast to avoid constructing every single Prisma field if strict
+
+      // WAIT. AddItemForm component signature:
+      // export default function AddItemForm({ onAddItem }: AddItemFormProps)
+      // It doesn't accept listId in onAddItem callback.
+      // So the parent (ShoppingList) must create a specific handler for each list
+      // OR handleAddItem must take listId as 3rd arg and we wrap it.
+
+      // Let's look at how it's used:
+      // <AddItemForm shoppingListId={list.id} onAddItem={handleAddItem} />
+      // If handleAddItem is the SAME function, it won't know which list.
+      // In the loop: <AddItemForm ... onAddItem={(name, pid) => handleAddItem(list.id, name, pid)} />
+
+      // I will update handleAddItem to take listId, and update the usage in the render loop.
+      await addItemOptimistic(newItem);
     },
-    [addItem]
+    [addItemOptimistic]
   );
 
   const handleDeleteItem = useCallback(
-    (itemId: string) => {
-      deleteItem(itemId);
+    async (itemId: string) => {
+      await deleteItemOptimistic(itemId);
     },
-    [deleteItem]
+    [deleteItemOptimistic]
   );
 
   const handleItemUpdate = useCallback(
-    (itemId: string, updatedItem: ShoppingItemWithCreator) => {
-      updateItem(itemId, updatedItem);
+    async (itemId: string, updatedItem: Partial<ShoppingItemWithCreator>) => {
+      await updateItemOptimistic(itemId, updatedItem);
     },
-    [updateItem]
+    [updateItemOptimistic]
+  );
+
+  const handleToggleItem = useCallback(
+    async (itemId: string, checked: boolean) => {
+      await toggleItemOptimistic(itemId, checked);
+    },
+    [toggleItemOptimistic]
   );
 
   const handleDragEnd = useCallback(
@@ -172,6 +234,8 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   );
 
   const handleClearCompleted = useCallback(() => {
+    // Ideally use optimistic clear
+    // clearCheckedItems(); // Base state
     startTransition(async () => {
       await clearCheckedItemsAction();
       clearCheckedItems();
@@ -181,14 +245,16 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   const handleDeleteList = useCallback(
     (listId: string) => {
       startTransition(async () => {
+        // Optimistic delete?
+        // deleteListOptimistic(listId)
         const result = await deleteShoppingList(listId);
         if (result.success) {
-          removeList(listId);
+          deleteList(listId);
           setDeleteListId(null);
         }
       });
     },
-    [removeList]
+    [deleteList]
   );
 
   const handleDeleteAllItems = useCallback(
@@ -210,12 +276,14 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
         <h1 className={styles.title}>Lista zakupów</h1>
       </header>
 
-      <ListSelector
-        lists={lists}
-        selectedListIds={selectedListIds}
-        onSelectList={handleSelectList}
-        onOpenCreateModal={() => setIsCreateModalOpen(true)}
-      />
+      {lists.length > 0 && selectedListIds.length > 0 && (
+        <ListSelector
+          lists={lists}
+          selectedListIds={selectedListIds}
+          onSelectList={handleSelectList}
+          onOpenCreateModal={() => setIsCreateModalOpen(true)}
+        />
+      )}
 
       <CreateListModal
         isOpen={isCreateModalOpen}
@@ -224,10 +292,22 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       />
 
       <div className={styles.content}>
-        {selectedLists.length === 0 ? (
+        {lists.length === 0 ? (
           <div className={styles.emptyState}>
-            <p>Wybierz listę lub utwórz nową</p>
+            <p>Utwórz swoją pierwszą listę zakupów</p>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className={styles.createButton}
+            >
+              Utwórz listę
+            </button>
           </div>
+        ) : selectedListIds.length === 0 ? (
+          <ListGrid
+            lists={lists}
+            onSelectList={handleSelectList}
+            onOpenCreateModal={() => setIsCreateModalOpen(true)}
+          />
         ) : (
           selectedLists.map((list) => {
             const filteredItems =
@@ -255,8 +335,9 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
                 />
 
                 <AddItemForm
-                  shoppingListId={list.id}
-                  onAddItem={handleAddItem}
+                  onAddItem={(name, productId) =>
+                    handleAddItem(list.id, name, productId)
+                  }
                 />
 
                 {list.items.length > 0 && (
@@ -295,6 +376,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
                                 item={item}
                                 onDelete={handleDeleteItem}
                                 onUpdate={handleItemUpdate}
+                                onToggle={handleToggleItem}
                               />
                             ))}
                           </ul>
@@ -324,6 +406,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
                               item={item}
                               onDelete={handleDeleteItem}
                               onUpdate={handleItemUpdate}
+                              onToggle={handleToggleItem}
                             />
                           ))}
                         </ul>

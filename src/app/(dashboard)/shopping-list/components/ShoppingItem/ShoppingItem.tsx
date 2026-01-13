@@ -2,11 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useCallback, useState, useTransition } from 'react';
-import {
-  deleteShoppingItem,
-  toggleShoppingItemChecked,
-} from '@/app/lib/shopping-actions';
+import { useCallback, useState } from 'react';
 import { ShoppingItemWithCreator } from '@/types/shopping';
 import InlineQuantityEdit from '../InlineQuantityEdit/InlineQuantityEdit';
 import InlineNameEdit from '../InlineNameEdit/InlineNameEdit';
@@ -16,15 +12,19 @@ import styles from './ShoppingItem.module.scss';
 interface ShoppingItemProps {
   item: ShoppingItemWithCreator;
   onDelete: (itemId: string) => void;
-  onUpdate: (itemId: string, updatedItem: ShoppingItemWithCreator) => void;
+  onUpdate: (
+    itemId: string,
+    updatedItem: Partial<ShoppingItemWithCreator>
+  ) => void;
+  onToggle: (itemId: string, checked: boolean) => void;
 }
 
 export default function ShoppingItem({
   item,
   onDelete,
   onUpdate,
+  onToggle,
 }: ShoppingItemProps) {
-  const [isPending, startTransition] = useTransition();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const {
@@ -34,34 +34,25 @@ export default function ShoppingItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: item.id });
+  } = useSortable({ id: item.id, disabled: item.checked });
 
   const handleToggleCheck = useCallback(() => {
-    startTransition(async () => {
-      const result = await toggleShoppingItemChecked(item.id);
-      if (result.success && result.item) {
-        onUpdate(item.id, result.item);
-      }
-    });
-  }, [item.id, onUpdate]);
+    onToggle(item.id, !item.checked);
+  }, [item.id, item.checked, onToggle]);
 
   const handleDeleteClick = useCallback(() => {
     setShowDeleteConfirm(true);
   }, []);
 
   const handleDeleteConfirm = useCallback(() => {
-    startTransition(async () => {
-      const result = await deleteShoppingItem(item.id);
-      if (result.success) {
-        onDelete(item.id);
-        setShowDeleteConfirm(false);
-      }
-    });
+    // No transition needed, modal closes instantly
+    setShowDeleteConfirm(false);
+    onDelete(item.id);
   }, [item.id, onDelete]);
 
   const handleUpdate = useCallback(
-    (updatedItem: ShoppingItemWithCreator) => {
-      onUpdate(item.id, updatedItem);
+    (updatedFields: Partial<ShoppingItemWithCreator>) => {
+      onUpdate(item.id, updatedFields);
     },
     [item.id, onUpdate]
   );
@@ -72,26 +63,33 @@ export default function ShoppingItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const emoji = item.product?.emoji || '✨';
+
   return (
     <li
       ref={setNodeRef}
       style={style}
-      className={`${styles.item} ${item.checked ? styles.completed : ''} ${isDragging ? styles.dragging : ''}`}
+      className={`${styles.item} ${item.checked ? styles.completed : ''} ${
+        isDragging ? styles.dragging : ''
+      }`}
     >
-      <div className={styles.dragHandle} {...attributes} {...listeners}>
-        <span className={styles.dragIcon}>⋮⋮</span>
-      </div>
+      {!item.checked && (
+        <div className={styles.dragHandle} {...attributes} {...listeners}>
+          <span className={styles.dragIcon}>⋮⋮</span>
+        </div>
+      )}
       <div className={styles.content}>
         <input
           type="checkbox"
           checked={item.checked}
           onChange={handleToggleCheck}
-          disabled={isPending}
           className={styles.checkbox}
-          aria-label={`Mark "${item.name}" as ${item.checked ? 'unchecked' : 'checked'}`}
+          aria-label={`Mark "${item.name}" as ${
+            item.checked ? 'unchecked' : 'checked'
+          }`}
         />
         <div className={styles.itemDetails}>
-          {item.emoji && <span className={styles.emoji}>{item.emoji}</span>}
+          <span className={styles.emoji}>{emoji}</span>
           <div className={styles.text}>
             <InlineNameEdit
               itemId={item.id}
@@ -116,7 +114,6 @@ export default function ShoppingItem({
         <button
           className={styles.deleteButton}
           onClick={handleDeleteClick}
-          disabled={isPending}
           type="button"
           aria-label={`Delete "${item.name}"`}
         >
@@ -134,7 +131,6 @@ export default function ShoppingItem({
           confirmText="Delete"
           cancelText="Cancel"
           variant="danger"
-          isLoading={isPending}
         />
       )}
     </li>

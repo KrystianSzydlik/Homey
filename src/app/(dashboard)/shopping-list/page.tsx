@@ -39,42 +39,6 @@ export default async function ShoppingListPage() {
     },
   });
 
-  // Create default list if none exist
-  if (lists.length === 0) {
-    const defaultList = await prisma.shoppingList.create({
-      data: {
-        name: 'Main List',
-        isDefault: true,
-        householdId,
-        createdById: session.user.id,
-      },
-      include: {
-        items: {
-          orderBy: { position: 'asc' },
-          include: {
-            createdBy: {
-              select: { name: true },
-            },
-            shoppingList: {
-              select: { name: true, emoji: true },
-            },
-            product: {
-              select: { name: true },
-            },
-          },
-        },
-        createdBy: {
-          select: { name: true },
-        },
-        _count: {
-          select: { items: true },
-        },
-      },
-    });
-
-    lists = [defaultList];
-  }
-
   return (
     <ProductCacheProvider>
       <ShoppingList initialLists={lists} />

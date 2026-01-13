@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
+  createShoppingItem,
   toggleShoppingItemChecked,
   clearCheckedItems,
   deleteAllShoppingItems,
@@ -45,6 +46,36 @@ describe('Shopping Actions - Additional Tests', () => {
         id: mockUserId,
         householdId: mockHouseholdId,
       },
+    });
+  });
+
+  describe('createShoppingItem', () => {
+    it('should create an item successfully', async () => {
+      const input = {
+        name: 'Milk',
+        shoppingListId: 'list-1',
+        productId: 'prod-1',
+      };
+
+      (prisma.shoppingList.findFirst as any).mockResolvedValue({ id: 'list-1' });
+      (prisma.shoppingItem.findFirst as any).mockResolvedValue(null);
+      (prisma.shoppingItem.create as any).mockResolvedValue({
+        id: 'item-1',
+        ...input,
+        position: 0,
+        householdId: mockHouseholdId,
+        createdBy: { name: 'Test User' },
+        product: null,
+        shoppingList: { name: 'My List', emoji: '🛒' },
+      });
+
+      const result = await createShoppingItem(input);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.item).toBeDefined();
+        expect(result.item?.name).toBe('Milk');
+      }
     });
   });
 

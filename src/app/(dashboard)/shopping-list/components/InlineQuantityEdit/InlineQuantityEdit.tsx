@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useTransition } from 'react';
+import { useState, useRef, useCallback, useTransition, useEffect } from 'react';
 import { updateShoppingItem } from '@/src/app/lib/shopping-actions';
 import { ShoppingItemWithCreator } from '@/src/types/shopping';
 import styles from './InlineQuantityEdit.module.scss';
@@ -39,8 +39,21 @@ export default function InlineQuantityEdit({
   const [unit, setUnit] = useState(initialUnit || '');
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const escapePressed = useRef(false);
+
+  // Sync state with props when they change (e.g. after successful update)
+  useEffect(() => {
+    if (!isEditing) {
+      setQuantity(initialQuantity);
+      setUnit(initialUnit || '');
+    }
+  }, [initialQuantity, initialUnit, isEditing]);
 
   const handleSave = useCallback(async () => {
+    if (escapePressed.current) {
+      escapePressed.current = false;
+      return;
+    }
     if (quantity === initialQuantity && (unit || null) === initialUnit) {
       setIsEditing(false);
       return;
@@ -64,6 +77,7 @@ export default function InlineQuantityEdit({
       if (e.key === 'Enter') {
         e.currentTarget.blur();
       } else if (e.key === 'Escape') {
+        escapePressed.current = true;
         setQuantity(initialQuantity);
         setUnit(initialUnit || '');
         setIsEditing(false);
@@ -73,8 +87,21 @@ export default function InlineQuantityEdit({
     [initialQuantity, initialUnit]
   );
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleBlur = (e: React.FocusEvent) => {
+    // If focus moves to another element inside the container, don't save yet
+    if (
+      containerRef.current &&
+      containerRef.current.contains(e.relatedTarget as Node)
+    ) {
+      return;
+    }
+    handleSave();
+  };
+
   return (
-    <div className={styles.editContainer}>
+    <div className={styles.editContainer} ref={containerRef}>
       <div className={styles.inputWrapper}>
         <input
           type="text"
@@ -85,7 +112,7 @@ export default function InlineQuantityEdit({
             e.currentTarget.select();
           }}
           onKeyDown={handleKeyDown}
-          onBlur={handleSave}
+          onBlur={handleBlur}
           disabled={isPending}
           className={styles.quantityInput}
           placeholder="1"
@@ -100,7 +127,7 @@ export default function InlineQuantityEdit({
               e.currentTarget.select();
             }}
             onKeyDown={handleKeyDown}
-            onBlur={handleSave}
+            onBlur={handleBlur}
             disabled={isPending}
             className={styles.unitInput}
             placeholder="j.m."

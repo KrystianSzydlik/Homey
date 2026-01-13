@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ShoppingCategory } from '@prisma/client';
+import { ShoppingCategory, Product } from '@prisma/client';
 import { createProduct, updateProduct } from '@/app/lib/product-actions';
 import { getSmartProductDefaults } from '@/app/lib/product-utils';
 import EmojiPicker from '../EmojiPicker/EmojiPicker';
 import CategoryPicker from '../CategoryPicker/CategoryPicker';
 import styles from './CreateProductModal.module.scss';
+import ConfirmModal from '../ConfirmModal/ConfirmModal';
 
 interface CreateProductModalProps {
   isOpen: boolean;
@@ -17,7 +18,7 @@ interface CreateProductModalProps {
   initialEmoji?: string;
   initialUnit?: string;
   onProductCreated: (product: {
-    id: string;
+    id:string;
     name: string;
     emoji: string | null;
     defaultCategory: ShoppingCategory;
@@ -43,6 +44,10 @@ export default function CreateProductModal({
   const [unit, setUnit] = useState(initialUnit);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [duplicateProduct, setDuplicateProduct] = useState<Product | null>(
+    null
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -84,6 +89,31 @@ export default function CreateProductModal({
     }
   };
 
+  const handleConfirmUpdate = async () => {
+    if (!duplicateProduct) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    const result = await updateProduct(duplicateProduct.id, {
+      name: name.trim(),
+      defaultCategory: category,
+      emoji: emoji || undefined,
+      defaultUnit: unit.trim() || undefined,
+    });
+
+    if (result.success && result.product) {
+      onProductCreated(result.product as any);
+      onClose();
+    } else {
+      setError(result.error || 'Failed to update product');
+    }
+
+    setIsLoading(false);
+    setDuplicateProduct(null);
+    setShowConfirmation(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -92,28 +122,37 @@ export default function CreateProductModal({
     setError(null);
 
     try {
-      let result;
       if (productId) {
-        result = await updateProduct(productId, {
+        const result = await updateProduct(productId, {
           name: name.trim(),
           defaultCategory: category,
           emoji: emoji || undefined,
           defaultUnit: unit.trim() || undefined,
         });
-      } else {
-        result = await createProduct({
-          name: name.trim(),
-          defaultCategory: category,
-          emoji: emoji || undefined,
-          defaultUnit: unit.trim() || undefined,
-        });
-      }
 
-      if (result.success && result.product) {
-        onProductCreated(result.product as any);
-        onClose();
+        if (result.success && result.product) {
+          onProductCreated(result.product as any);
+          onClose();
+        } else {
+          setError(result.error || 'Failed to save product');
+        }
       } else {
-        setError(result.error || 'Failed to save product');
+        const result = await createProduct({
+          name: name.trim(),
+          defaultCategory: category,
+          emoji: emoji || undefined,
+          defaultUnit: unit.trim() || undefined,
+        });
+
+        if (result.success && result.product) {
+          onProductCreated(result.product as any);
+          onClose();
+        } else if (result.existingProduct) {
+          setDuplicateProduct(result.existingProduct);
+          setShowConfirmation(true);
+        } else {
+          setError(result.error || 'Failed to create product');
+        }
       }
     } catch (err) {
       setError('Something went wrong');
@@ -125,72 +164,96 @@ export default function CreateProductModal({
   if (!isOpen) return null;
 
   return (
-    <div
-      className={styles.overlay}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div className={styles.modal}>
-        <div className={styles.header}>
-          <h2>{productId ? 'Edytuj produkt' : 'Dodaj nowy produkt'}</h2>
-          <button onClick={onClose} className={styles.closeButton}>
-            ×
-          </button>
+    <>
+      <div
+        className={styles.overlay}
+        onClick={(e) => e.target === e.currentTarget && onClose()}
+      >
+        <div className={styles.modal}>
+          <div className={styles.header}>
+            <h2>{productId ? 'Edytuj produkt' : 'Dodaj nowy produkt'}</h2>
+            <button onClick={onClose} className={styles.closeButton}>
+              ×
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <div className={styles.field}>
+              <label>Nazwa produktu</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => handleNameChange(e.target.value)}
+                placeholder="np. Pomidory malinowe"
+                required
+                autoFocus
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label>Ikona (Emoji)</label>
+              <EmojiPicker currentEmoji={emoji} onSelect={setEmoji} />
+            </div>
+
+            <div className={styles.field}>
+              <label>Kategoria</label>
+              <CategoryPicker
+                currentCategory={category}
+                onSelect={setCategory}
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label>Jednostka (opcjonalnie)</label>
+              <input
+                type="text"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                placeholder="np. kg, szt"
+              />
+            </div>
+
+            {error && <div className={styles.error}>{error}</div>}
+
+            <div className={styles.actions}>
+              <button
+                type="button"
+                onClick={onClose}
+                className={styles.cancelButton}
+                disabled={isLoading}
+              >
+                Anuluj
+              </button>
+              <button
+                type="submit"
+                className={styles.submitButton}
+                disabled={isLoading}
+              >
+                {isLoading
+                  ? 'Zapisywanie...'
+                  : productId
+                  ? 'Zapisz zmiany'
+                  : 'Zapisz produkt'}
+              </button>
+            </div>
+          </form>
         </div>
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.field}>
-            <label>Nazwa produktu</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => handleNameChange(e.target.value)}
-              placeholder="np. Pomidory malinowe"
-              required
-              autoFocus
-            />
-          </div>
-
-          <div className={styles.field}>
-            <label>Ikona (Emoji)</label>
-            <EmojiPicker currentEmoji={emoji} onSelect={setEmoji} />
-          </div>
-
-          <div className={styles.field}>
-            <label>Kategoria</label>
-            <CategoryPicker currentCategory={category} onSelect={setCategory} />
-          </div>
-
-          <div className={styles.field}>
-            <label>Jednostka (opcjonalnie)</label>
-            <input
-              type="text"
-              value={unit}
-              onChange={(e) => setUnit(e.target.value)}
-              placeholder="np. kg, szt"
-            />
-          </div>
-
-          {error && <div className={styles.error}>{error}</div>}
-
-          <div className={styles.actions}>
-            <button
-              type="button"
-              onClick={onClose}
-              className={styles.cancelButton}
-              disabled={isLoading}
-            >
-              Anuluj
-            </button>
-            <button
-              type="submit"
-              className={styles.submitButton}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Zapisywanie...' : 'Zapisz produkt'}
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
+      {showConfirmation && (
+        <ConfirmModal
+          title="Produkt już istnieje"
+          message={`Produkt o nazwie "${
+            duplicateProduct?.name
+          }" już istnieje. Czy chcesz go zaktualizować danymi, które wprowadziłeś?`}
+          onConfirm={handleConfirmUpdate}
+          onCancel={() => setShowConfirmation(false)}
+          confirmText="Tak, zaktualizuj"
+          cancelText="Nie, anuluj"
+          isOpen={showConfirmation}
+          variant="warning"
+          isLoading={isLoading}
+        />
+      )}
+    </>
   );
 }
