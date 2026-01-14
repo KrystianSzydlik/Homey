@@ -91,7 +91,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250,
+        delay: 0, // Set delay to 0 for immediate activation
         tolerance: 5,
       },
     }),
@@ -133,7 +133,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       listId: string,
       name: string,
       productId?: string,
-      product?: { emoji?: string | null }
+      product?: { emoji?: string | null; defaultUnit?: string | null }
     ) => {
       // Construct a temporary item for optimistic update
       // We need to fetch the current user's name or just use a placeholder for 'createdBy'
@@ -142,7 +142,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
         id: `temp-${Date.now()}`,
         name,
         quantity: '1',
-        unit: null,
+        unit: product?.defaultUnit || null,
         category: 'OTHER', // Default
         checked: false,
         position: 0, // Will be handled by hook/server

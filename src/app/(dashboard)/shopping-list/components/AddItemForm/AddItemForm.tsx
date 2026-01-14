@@ -10,12 +10,11 @@ interface AddItemFormProps {
   onAddItem: (
     name: string,
     productId?: string,
-    product?: { emoji?: string | null }
+    product?: { emoji?: string | null; defaultUnit?: string | null }
   ) => void;
 }
 
 export default function AddItemForm({ onAddItem }: AddItemFormProps) {
-  const [showForm, setShowForm] = useState(false);
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [newProductName, setNewProductName] = useState('');
 
@@ -23,9 +22,11 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
     (product: any) => {
       // This is called from the modal after a new product is created.
       // Now we can add the shopping item with the new product's ID.
-      onAddItem(product.name, product.id, product);
+      onAddItem(product.name, product.id, {
+        emoji: product.emoji,
+        defaultUnit: product.defaultUnit,
+      });
       setShowCreateProduct(false);
-      setShowForm(false);
     },
     [onAddItem]
   );
@@ -40,31 +41,13 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
       }
 
       // Otherwise, add the item directly
-      onAddItem(suggestion.name, suggestion.id, { emoji: suggestion.emoji });
-      setShowForm(false);
+      onAddItem(suggestion.name, suggestion.id, {
+        emoji: suggestion.emoji,
+        defaultUnit: suggestion.defaultUnit,
+      });
     },
     [onAddItem]
   );
-
-  const handleCancel = () => {
-    setShowForm(false);
-    setNewProductName('');
-    setShowCreateProduct(false);
-  };
-
-  if (!showForm) {
-    return (
-      <div className={styles.container}>
-        <button
-          className={styles.toggleButton}
-          onClick={() => setShowForm(true)}
-          type="button"
-        >
-          Dodaj Produkt
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className={styles.container}>
@@ -72,15 +55,8 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
         <ProductAutocomplete
           onSelect={handleProductSelect}
           placeholder="Search or type product name..."
-          autoFocus
+          autoFocus={false}
         />
-        <button
-          type="button"
-          className={styles.cancelButton}
-          onClick={handleCancel}
-        >
-          Cancel
-        </button>
       </div>
 
       <CreateProductModal
