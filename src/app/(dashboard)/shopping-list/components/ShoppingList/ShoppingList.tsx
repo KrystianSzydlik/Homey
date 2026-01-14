@@ -129,7 +129,12 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   );
 
   const handleAddItem = useCallback(
-    async (listId: string, name: string, productId?: string) => {
+    async (
+      listId: string,
+      name: string,
+      productId?: string,
+      product?: { emoji?: string | null }
+    ) => {
       // Construct a temporary item for optimistic update
       // We need to fetch the current user's name or just use a placeholder for 'createdBy'
       // Since it's optimistic, 'You' or similar is fine, or we ignore it in UI
@@ -152,21 +157,10 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
         createdAt: new Date(),
         updatedAt: new Date(),
         createdBy: { name: 'You' },
+        product: product ? { name, emoji: product.emoji } : null,
         _count: { items: 0 }, // Extra property from type intersection? No, ShoppingItemWithCreator extends ShoppingItem & ...
       } as any; // Cast to avoid constructing every single Prisma field if strict
 
-      // WAIT. AddItemForm component signature:
-      // export default function AddItemForm({ onAddItem }: AddItemFormProps)
-      // It doesn't accept listId in onAddItem callback.
-      // So the parent (ShoppingList) must create a specific handler for each list
-      // OR handleAddItem must take listId as 3rd arg and we wrap it.
-
-      // Let's look at how it's used:
-      // <AddItemForm shoppingListId={list.id} onAddItem={handleAddItem} />
-      // If handleAddItem is the SAME function, it won't know which list.
-      // In the loop: <AddItemForm ... onAddItem={(name, pid) => handleAddItem(list.id, name, pid)} />
-
-      // I will update handleAddItem to take listId, and update the usage in the render loop.
       await addItemOptimistic(newItem);
     },
     [addItemOptimistic]
@@ -336,8 +330,8 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
                 />
 
                 <AddItemForm
-                  onAddItem={(name, productId) =>
-                    handleAddItem(list.id, name, productId)
+                  onAddItem={(name, productId, product) =>
+                    handleAddItem(list.id, name, productId, product)
                   }
                 />
 

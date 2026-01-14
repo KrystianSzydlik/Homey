@@ -77,7 +77,7 @@ export async function createShoppingItem(
           select: { name: true, emoji: true },
         },
         product: {
-          select: { name: true },
+          select: { name: true, emoji: true },
         },
       },
     });
@@ -147,6 +147,12 @@ export async function updateShoppingItem(
       include: {
         createdBy: {
           select: { name: true },
+        },
+        shoppingList: {
+          select: { name: true, emoji: true },
+        },
+        product: {
+          select: { name: true, emoji: true },
         },
       },
     });
@@ -249,6 +255,12 @@ export async function toggleShoppingItemChecked(
       include: {
         createdBy: {
           select: { name: true },
+        },
+        shoppingList: {
+          select: { name: true, emoji: true },
+        },
+        product: {
+          select: { name: true, emoji: true },
         },
       },
     });

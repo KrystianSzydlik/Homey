@@ -19,6 +19,7 @@ interface ProductAutocompleteProps {
   initialValue?: string;
   isCompleted?: boolean;
   strictMode?: boolean;
+  onBlur?: () => void;
 }
 
 export default function ProductAutocomplete({
@@ -28,6 +29,7 @@ export default function ProductAutocomplete({
   initialValue = '',
   isCompleted = false,
   strictMode = false,
+  onBlur,
 }: ProductAutocompleteProps) {
   const [searchQuery, setSearchQuery] = useState(initialValue);
   const [editingProduct, setEditingProduct] =
@@ -122,6 +124,7 @@ export default function ProductAutocomplete({
         onChange={(e) => setSearchQuery(e.target.value)}
         onKeyDown={handleKeyDown}
         onFocus={openDropdown}
+        onBlur={onBlur}
         placeholder={placeholder}
         className={styles.input}
         autoFocus={autoFocus}
@@ -157,6 +160,7 @@ export default function ProductAutocomplete({
                   index === selectedIndex ? styles.selected : ''
                 }`}
                 onClick={() => handleSelect(suggestion)}
+                onMouseDown={(e) => e.preventDefault()}
                 onMouseEnter={() => setSelectedIndex(index)}
                 role="option"
                 aria-selected={index === selectedIndex}
@@ -181,7 +185,10 @@ export default function ProductAutocomplete({
                       <div
                         className={styles.dropdownWrapper}
                         onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
                       >
                         <DropdownMenu items={getDropdownItems(suggestion)} />
                       </div>
@@ -211,6 +218,7 @@ export default function ProductAutocomplete({
                     source: 'history',
                   })
                 }
+                onMouseDown={(e) => e.preventDefault()}
                 onMouseEnter={() => setSelectedIndex(suggestions.length)}
                 role="option"
                 aria-selected={selectedIndex === suggestions.length}

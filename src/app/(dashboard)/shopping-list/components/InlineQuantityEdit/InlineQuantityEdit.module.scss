@@ -47,13 +47,13 @@
 
 .quantityInput {
   width: 45px;
-  text-align: right;
+  text-align: center;
   font-weight: 600;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .unitInput {
-  width: 50px;
+  max-width: 35px;
   color: rgba(255, 255, 255, 0.6);
   font-size: 0.8rem;
 }

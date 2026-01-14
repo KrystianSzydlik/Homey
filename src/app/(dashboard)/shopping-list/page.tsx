@@ -26,7 +26,7 @@ export default async function ShoppingListPage() {
             select: { name: true, emoji: true },
           },
           product: {
-            select: { name: true },
+            select: { name: true, emoji: true },
           },
         },
       },

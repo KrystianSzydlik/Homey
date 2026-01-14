@@ -98,6 +98,7 @@ export default function InlineNameEdit({
         isCompleted={isCompleted}
         strictMode={true}
         autoFocus={true}
+        onBlur={onCancel}
       />
 
       {showCreateProduct && (

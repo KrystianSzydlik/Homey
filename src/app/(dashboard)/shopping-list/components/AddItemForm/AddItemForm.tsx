@@ -7,7 +7,11 @@ import CreateProductModal from '../CreateProductModal/CreateProductModal';
 import styles from './AddItemForm.module.scss';
 
 interface AddItemFormProps {
-  onAddItem: (name: string, productId?: string) => void;
+  onAddItem: (
+    name: string,
+    productId?: string,
+    product?: { emoji?: string | null }
+  ) => void;
 }
 
 export default function AddItemForm({ onAddItem }: AddItemFormProps) {
@@ -19,7 +23,7 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
     (product: any) => {
       // This is called from the modal after a new product is created.
       // Now we can add the shopping item with the new product's ID.
-      onAddItem(product.name, product.id);
+      onAddItem(product.name, product.id, product);
       setShowCreateProduct(false);
       setShowForm(false);
     },
@@ -36,7 +40,7 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
       }
 
       // Otherwise, add the item directly
-      onAddItem(suggestion.name, suggestion.id);
+      onAddItem(suggestion.name, suggestion.id, { emoji: suggestion.emoji });
       setShowForm(false);
     },
     [onAddItem]

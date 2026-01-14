@@ -74,10 +74,9 @@
   overflow: hidden;
   padding: 4px;
 
-  // Transform handled by Framer Motion, but we need horizontal alignment
   &.right {
     transform: translateX(
-      -100%
+      25%
     ) !important; // Force right alignment relative to the point using CSS
     // Wait, framer motion handles transform. This might conflict.
     // Better to handle position in JS or wrap in a positioned div.
