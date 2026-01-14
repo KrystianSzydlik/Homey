@@ -15,6 +15,7 @@ import {
   verticalListSortingStrategy,
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { ShoppingCategory } from '@prisma/client';
 import {
   useCallback,
@@ -364,6 +365,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
                         sensors={sensors}
                         collisionDetection={closestCenter}
                         onDragEnd={(event) => handleDragEnd(event, list.id)}
+                        modifiers={[restrictToVerticalAxis]}
                       >
                         <SortableContext
                           items={uncheckedItems.map((item) => item.id)}

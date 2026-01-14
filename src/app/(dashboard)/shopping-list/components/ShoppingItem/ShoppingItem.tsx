@@ -3,11 +3,12 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useCallback, useState } from 'react';
-import { ShoppingItemWithCreator } from '@/types/shopping';
-import InlineQuantityEdit from '../InlineQuantityEdit/InlineQuantityEdit';
+import DropdownMenu from '@/components/shared/DropdownMenu';
 import InlineNameEdit from '../InlineNameEdit/InlineNameEdit';
 import ConfirmModal from '../ConfirmModal/ConfirmModal';
+import InlineQuantityEdit from '../InlineQuantityEdit/InlineQuantityEdit';
 import styles from './ShoppingItem.module.scss';
+import { ShoppingItemWithCreator } from '@/types/shopping';
 
 interface ShoppingItemProps {
   item: ShoppingItemWithCreator;
@@ -26,6 +27,7 @@ export default function ShoppingItem({
   onToggle,
 }: ShoppingItemProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const {
     attributes,
@@ -96,6 +98,8 @@ export default function ShoppingItem({
               initialName={item.name}
               onUpdate={handleUpdate}
               isCompleted={item.checked}
+              isEditing={isEditing}
+              onCancel={() => setIsEditing(false)}
             />
           </div>
         </div>
@@ -111,14 +115,22 @@ export default function ShoppingItem({
         onPointerDown={(e) => e.stopPropagation()}
         onTouchStart={(e) => e.stopPropagation()}
       >
-        <button
-          className={styles.deleteButton}
-          onClick={handleDeleteClick}
-          type="button"
-          aria-label={`Delete "${item.name}"`}
-        >
-          🗑️
-        </button>
+        <DropdownMenu
+          align="right"
+          items={[
+            {
+              label: 'Edytuj',
+              onClick: () => setIsEditing(true),
+              icon: <span>✏️</span>,
+            },
+            {
+              label: 'Usuń',
+              onClick: handleDeleteClick,
+              variant: 'danger',
+              icon: <span>🗑️</span>,
+            },
+          ]}
+        />
       </div>
 
       {showDeleteConfirm && (

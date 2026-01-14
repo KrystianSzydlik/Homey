@@ -1,7 +1,9 @@
 'use client';
 
 import { ShoppingListWithCreator } from '@/types/shopping';
-import DropdownMenu, { DropdownMenuItem } from '@/components/shared/DropdownMenu';
+import DropdownMenu, {
+  DropdownMenuItem,
+} from '@/components/shared/DropdownMenu';
 import styles from './ListHeader.module.scss';
 
 interface ListHeaderProps {
@@ -37,7 +39,14 @@ export default function ListHeader({
   return (
     <div
       className={styles.listHeader}
-      style={list.color ? { backgroundColor: list.color } : undefined}
+      style={
+        list.color
+          ? {
+              background: `linear-gradient(135deg, ${list.color}26 0%, ${list.color}0d 100%)`,
+              borderBottomColor: `${list.color}1a`,
+            }
+          : undefined
+      }
     >
       <div className={styles.listHeaderContent}>
         {list.emoji && <span className={styles.listEmoji}>{list.emoji}</span>}

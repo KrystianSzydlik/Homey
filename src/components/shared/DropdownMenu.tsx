@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './DropdownMenu.module.scss';
 
@@ -24,6 +25,7 @@ export default function DropdownMenu({
   disabled = false,
 }: DropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -42,9 +44,40 @@ export default function DropdownMenu({
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+      window.addEventListener('resize', () => setIsOpen(false));
+      window.addEventListener('scroll', () => setIsOpen(false), true);
+
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
+        window.removeEventListener('resize', () => setIsOpen(false));
+        window.removeEventListener('scroll', () => setIsOpen(false), true);
       };
+    }
+  }, [isOpen]);
+
+  // Calculate position
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const scrollY = window.scrollY;
+      const scrollX = window.scrollX;
+
+      // Default to bottom-right alignment relative to trigger
+      let top = rect.bottom + 8 + scrollY;
+      let left = rect.right + scrollX; // Align right edge of menu with right edge of trigger
+
+      // We'll adjust 'left' in CSS or here.
+      // Simplified: Just pass the rect coordinates and let styling handle alignment?
+      // No, for Portal we need absolute page coordinates.
+
+      // Let's set the top-right corner of the menu to the bottom-right of the button
+      // But we can't know width easily before render.
+      // Strategy: Pass 'top' and 'left' (of the trigger's bottom-right corner) and transform: translateX(-100%) in CSS?
+
+      setPosition({
+        top: rect.bottom + 8,
+        left: rect.left, // Default align left, adjust later?
+      });
     }
   }, [isOpen]);
 
@@ -94,36 +127,50 @@ export default function DropdownMenu({
         <span className={styles.dot} />
       </button>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            ref={menuRef}
-            className={`${styles.menu} ${styles[align]}`}
-            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            role="menu"
-            aria-orientation="vertical"
+      {isOpen &&
+        createPortal(
+          <div
+            className={styles.portalContainer}
+            style={{
+              top: position.top,
+              left: position.left,
+              position: 'fixed', // Since we use getBoundingClientRect (viewport relative)
+              zIndex: 9999,
+            }}
           >
-            {items.map((item, index) => (
-              <button
-                key={index}
-                type="button"
-                className={`${styles.menuItem} ${
-                  item.variant ? styles[item.variant] : ''
-                } ${item.disabled ? styles.disabled : ''}`}
-                onClick={() => handleItemClick(item)}
-                disabled={item.disabled}
-                role="menuitem"
+            <AnimatePresence>
+              <motion.div
+                ref={menuRef}
+                className={`${styles.menu} ${styles[align]}`}
+                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                role="menu"
+                aria-orientation="vertical"
               >
-                {item.icon && <span className={styles.icon}>{item.icon}</span>}
-                <span className={styles.label}>{item.label}</span>
-              </button>
-            ))}
-          </motion.div>
+                {items.map((item, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    className={`${styles.menuItem} ${
+                      item.variant ? styles[item.variant] : ''
+                    } ${item.disabled ? styles.disabled : ''}`}
+                    onClick={() => handleItemClick(item)}
+                    disabled={item.disabled}
+                    role="menuitem"
+                  >
+                    {item.icon && (
+                      <span className={styles.icon}>{item.icon}</span>
+                    )}
+                    <span className={styles.label}>{item.label}</span>
+                  </button>
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          </div>,
+          document.body
         )}
-      </AnimatePresence>
     </div>
   );
 }

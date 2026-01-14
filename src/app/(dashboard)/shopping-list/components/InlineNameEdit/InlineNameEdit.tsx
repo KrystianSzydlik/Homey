@@ -24,7 +24,9 @@ export default function InlineNameEdit({
   initialName,
   onUpdate,
   isCompleted = false,
-}: InlineNameEditProps) {
+  isEditing = false,
+  onCancel,
+}: InlineNameEditProps & { isEditing?: boolean; onCancel?: () => void }) {
   const [isPending, startTransition] = useTransition();
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [newProductName, setNewProductName] = useState('');
@@ -49,10 +51,11 @@ export default function InlineNameEdit({
 
         if (result.success && result.item) {
           onUpdate(result.item);
+          if (onCancel) onCancel();
         }
       });
     },
-    [itemId, onUpdate]
+    [itemId, onUpdate, onCancel]
   );
 
   const handleCreateNewProduct = useCallback(
@@ -70,11 +73,22 @@ export default function InlineNameEdit({
           onUpdate(result.item);
           setShowCreateProduct(false);
           refreshCache();
+          if (onCancel) onCancel();
         }
       });
     },
-    [itemId, onUpdate, refreshCache]
+    [itemId, onUpdate, refreshCache, onCancel]
   );
+
+  if (!isEditing) {
+    return (
+      <span
+        className={`${styles.nameDisplay} ${isCompleted ? styles.completed : ''}`}
+      >
+        {initialName}
+      </span>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -83,6 +97,7 @@ export default function InlineNameEdit({
         initialValue={initialName}
         isCompleted={isCompleted}
         strictMode={true}
+        autoFocus={true}
       />
 
       {showCreateProduct && (

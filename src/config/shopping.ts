@@ -14,12 +14,11 @@ export const EMOJI_OPTIONS = [
 ] as const;
 
 export const COLOR_PRESETS = [
-  { label: 'Purple', value: '#8b5cf6' },
   { label: 'Rose', value: '#f43f5e' },
-  { label: 'Blue', value: '#0ea5e9' },
-  { label: 'Green', value: '#10b981' },
-  { label: 'Cyan', value: '#06b6d4' },
-  { label: 'Amber', value: '#f59e0b' },
+  { label: 'Violet', value: '#7c3aed' },
+  { label: 'Pink', value: '#f06292' },
+  { label: 'Golden', value: '#ffd54f' },
+  { label: 'Amber', value: '#af8f2c' },
 ] as const;
 
 export const CATEGORIES: {
@@ -41,6 +40,6 @@ export const CATEGORIES: {
 ] as const;
 
 export const DEFAULT_LIST_EMOJI = '🛒';
-export const DEFAULT_LIST_COLOR = '#8b5cf6';
+export const DEFAULT_LIST_COLOR = '#f43f5e';
 export const DEFAULT_ITEM_CATEGORY: ShoppingCategory = 'OTHER';
 export const DEFAULT_ITEM_QUANTITY = '1';

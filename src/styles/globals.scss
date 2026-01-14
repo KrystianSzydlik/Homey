@@ -87,3 +87,8 @@ button {
   cursor: pointer;
   font-family: inherit;
 }
+
+.custom-vertical-scrollbar {
+  @include vertical-scrollbar;
+  overflow-y: auto;
+}

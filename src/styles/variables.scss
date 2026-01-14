@@ -66,3 +66,27 @@ $mobile-breakpoint: 768px;
     @content;
   }
 }
+
+@mixin vertical-scrollbar(
+  $width: 8px,
+  $track-color: transparent,
+  $thumb-color: rgba(255, 255, 255, 0.2),
+  $thumb-hover-color: rgba(255, 255, 255, 0.3)
+) {
+  &::-webkit-scrollbar {
+    width: $width;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $track-color;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $thumb-color;
+    border-radius: calc($width / 2);
+
+    &:hover {
+      background: $thumb-hover-color;
+    }
+  }
+}
