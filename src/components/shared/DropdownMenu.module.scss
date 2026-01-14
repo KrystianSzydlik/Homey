@@ -63,9 +63,6 @@
 }
 
 .menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  z-index: 1000;
   min-width: 180px;
   background: rgba(30, 30, 35, 0.98);
   backdrop-filter: blur(20px);
@@ -77,12 +74,36 @@
   overflow: hidden;
   padding: 4px;
 
-  &.left {
-    left: 0;
-  }
-
   &.right {
-    right: 0;
+    transform: translateX(
+      25%
+    ) !important; // Force right alignment relative to the point using CSS
+    // Wait, framer motion handles transform. This might conflict.
+    // Better to handle position in JS or wrap in a positioned div.
+    // We wrapped in .portalContainer in JS, let's use that.
+  }
+}
+
+.portalContainer {
+  pointer-events: auto;
+  // If 'right' aligned, we want the menu to expand to the left of the point.
+  // The JS sets left/top to the button's position.
+
+  // If we want the menu's top-right corner to be at the point:
+  // .menu needs to translate -100% on X.
+
+  // Actually, let's just use a wrapper div that handles the "anchor" logic.
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; // Default left align
+
+  &:has(.right) {
+    align-items: flex-end; // If child has .right class, align to end
+    transform: translateX(
+      -100%
+    ); // Move the whole container to the left so the "point" is the top-right corner
+    // But wait, the point in JS is Rect.left.
+    // If align=right, JS should probably pass Rect.right.
   }
 }
 

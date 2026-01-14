@@ -35,6 +35,7 @@
   padding: 0;
   flex: 1;
   overflow-y: auto;
+  @include vertical-scrollbar;
 
   li {
     border-bottom: 1px solid rgba(244, 63, 94, 0.1);

@@ -1,21 +1,4 @@
 :root {
-  --primary: #3b82f6; // Blue 500
-  --primary-gradient: linear-gradient(
-    135deg,
-    #38bdf8 0%,
-    #3b82f6 100%
-  ); // Sky to Blue
-  --background: #0f172a; // Slate 900
-  --surface: #1e293b; // Slate 800
-  --text: #f8fafc; // Slate 50
-  --text-secondary: #94a3b8; // Slate 400
-  --accent: #38bdf8; // Sky 400
-  --white: #ffffff;
-  --error: #ef4444;
-  --success: #10b981;
-
-  --font-sans: 'Cartograph CF', system-ui, -apple-system, sans-serif;
-
   // Warm palette colors
   --rose: #f43f5e;
   --rose-glow: rgba(244, 63, 94, 0.15);
@@ -25,17 +8,22 @@
   --golden: #ffd54f;
   --amber: #af8f2c;
 
-  // Warm gradients
-  --gradient-warm-rose: linear-gradient(135deg, #f43f5e 0%, #f06292 100%);
-  --gradient-warm-violet: linear-gradient(135deg, #7c3aed 0%, #f43f5e 100%);
-  --gradient-warm-amber: linear-gradient(135deg, #ffd54f 0%, #af8f2c 100%);
+  // Main Colors (Mapped to Warm Palette)
+  --primary: var(--rose);
+  --primary-gradient: linear-gradient(135deg, #f43f5e 0%, #f06292 100%);
+  --accent: var(--violet);
 
-  // Glows (subtle)
-  --glow-rose: 0 0 15px rgba(244, 63, 94, 0.25);
-  --glow-violet: 0 0 15px rgba(124, 58, 237, 0.25);
-  --glow-amber: 0 0 15px rgba(255, 213, 79, 0.2);
+  // Text Colors
+  --text: #f8fafc; // Slate 50
+  --text-secondary: #94a3b8; // Slate 400
+  --white: #ffffff;
+  --error: #ef4444;
+  --success: #10b981;
 
-  // Shopping list backgrounds (dark translucent)
+  // Fonts
+  --font-sans: 'Cartograph CF', system-ui, -apple-system, sans-serif;
+
+  // Backgrounds
   --shopping-bg:
     radial-gradient(
       circle at 80% 20%,
@@ -53,9 +41,22 @@
       rgba(15, 23, 42, 0.5) 100%
     ),
     #0f172a;
+
+  --background: var(--shopping-bg);
+
   --item-bg: rgba(30, 41, 59, 0.6);
   --item-bg-hover: rgba(30, 41, 59, 0.75);
   --item-checked-bg: rgba(30, 41, 59, 0.3);
+
+  // Warm gradients
+  --gradient-warm-rose: linear-gradient(135deg, #f43f5e 0%, #f06292 100%);
+  --gradient-warm-violet: linear-gradient(135deg, #7c3aed 0%, #f43f5e 100%);
+  --gradient-warm-amber: linear-gradient(135deg, #ffd54f 0%, #af8f2c 100%);
+
+  // Glows (subtle)
+  --glow-rose: 0 0 15px rgba(244, 63, 94, 0.25);
+  --glow-violet: 0 0 15px rgba(124, 58, 237, 0.25);
+  --glow-amber: 0 0 15px rgba(255, 213, 79, 0.2);
 }
 
 $mobile-breakpoint: 768px;
@@ -63,5 +64,29 @@ $mobile-breakpoint: 768px;
 @mixin mobile {
   @media (max-width: $mobile-breakpoint) {
     @content;
+  }
+}
+
+@mixin vertical-scrollbar(
+  $width: 8px,
+  $track-color: transparent,
+  $thumb-color: rgba(255, 255, 255, 0.2),
+  $thumb-hover-color: rgba(255, 255, 255, 0.3)
+) {
+  &::-webkit-scrollbar {
+    width: $width;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $track-color;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $thumb-color;
+    border-radius: calc($width / 2);
+
+    &:hover {
+      background: $thumb-hover-color;
+    }
   }
 }

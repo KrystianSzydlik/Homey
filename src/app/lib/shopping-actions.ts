@@ -31,7 +31,7 @@ interface UpdateShoppingItemInput {
 }
 
 export async function createShoppingItem(
-  input: CreateShoppingItemInput,
+  input: CreateShoppingItemInput
 ): Promise<ShoppingItemActionResult> {
   try {
     const { householdId, userId } = await getSessionData();
@@ -77,7 +77,7 @@ export async function createShoppingItem(
           select: { name: true, emoji: true },
         },
         product: {
-          select: { name: true },
+          select: { name: true, emoji: true },
         },
       },
     });
@@ -85,16 +85,21 @@ export async function createShoppingItem(
     return { success: true, item };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.issues[0]?.message || 'Validation failed' };
+      return {
+        success: false,
+        error: error.issues[0]?.message || 'Validation failed',
+      };
     }
     console.error('Error creating shopping item:', error);
     return { success: false, error: 'Failed to create item' };
   }
 }
 
+export const addShoppingItem = createShoppingItem;
+
 export async function updateShoppingItem(
   itemId: string,
-  input: UpdateShoppingItemInput,
+  input: UpdateShoppingItemInput
 ): Promise<ShoppingItemActionResult> {
   try {
     const householdId = await getHouseholdId();
@@ -121,13 +126,20 @@ export async function updateShoppingItem(
       productId: string;
     }> = {};
 
-    if (validatedInput.name !== undefined) updateData.name = validatedInput.name;
-    if (validatedInput.quantity !== undefined) updateData.quantity = validatedInput.quantity;
-    if (validatedInput.unit !== undefined) updateData.unit = validatedInput.unit;
-    if (validatedInput.category !== undefined) updateData.category = validatedInput.category;
-    if (validatedInput.emoji !== undefined) updateData.emoji = validatedInput.emoji;
-    if (validatedInput.checked !== undefined) updateData.checked = validatedInput.checked;
-    if (validatedInput.productId !== undefined) updateData.productId = validatedInput.productId;
+    if (validatedInput.name !== undefined)
+      updateData.name = validatedInput.name;
+    if (validatedInput.quantity !== undefined)
+      updateData.quantity = validatedInput.quantity;
+    if (validatedInput.unit !== undefined)
+      updateData.unit = validatedInput.unit;
+    if (validatedInput.category !== undefined)
+      updateData.category = validatedInput.category;
+    if (validatedInput.emoji !== undefined)
+      updateData.emoji = validatedInput.emoji;
+    if (validatedInput.checked !== undefined)
+      updateData.checked = validatedInput.checked;
+    if (validatedInput.productId !== undefined)
+      updateData.productId = validatedInput.productId;
 
     const updatedItem = await prisma.shoppingItem.update({
       where: { id: itemId },
@@ -136,13 +148,22 @@ export async function updateShoppingItem(
         createdBy: {
           select: { name: true },
         },
+        shoppingList: {
+          select: { name: true, emoji: true },
+        },
+        product: {
+          select: { name: true, emoji: true },
+        },
       },
     });
 
     return { success: true, item: updatedItem };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.issues[0]?.message || 'Validation failed' };
+      return {
+        success: false,
+        error: error.issues[0]?.message || 'Validation failed',
+      };
     }
     console.error('Error updating shopping item:', error);
     return { success: false, error: 'Failed to update item' };
@@ -150,7 +171,7 @@ export async function updateShoppingItem(
 }
 
 export async function deleteShoppingItem(
-  itemId: string,
+  itemId: string
 ): Promise<ShoppingItemActionResult> {
   try {
     const householdId = await getHouseholdId();
@@ -176,7 +197,7 @@ export async function deleteShoppingItem(
 }
 
 export async function toggleShoppingItemChecked(
-  itemId: string,
+  itemId: string
 ): Promise<ShoppingItemActionResult> {
   try {
     const householdId = await getHouseholdId();
@@ -235,6 +256,12 @@ export async function toggleShoppingItemChecked(
         createdBy: {
           select: { name: true },
         },
+        shoppingList: {
+          select: { name: true, emoji: true },
+        },
+        product: {
+          select: { name: true, emoji: true },
+        },
       },
     });
 
@@ -265,7 +292,7 @@ export async function clearCheckedItems(): Promise<ShoppingItemActionResult> {
 
 export async function reorderShoppingItems(
   shoppingListId: string,
-  itemIds: string[],
+  itemIds: string[]
 ): Promise<ShoppingItemActionResult> {
   try {
     const householdId = await getHouseholdId();
@@ -284,7 +311,7 @@ export async function reorderShoppingItems(
       prisma.shoppingItem.update({
         where: { id },
         data: { position: index },
-      }),
+      })
     );
 
     await Promise.all(updatePromises);
@@ -297,7 +324,7 @@ export async function reorderShoppingItems(
 }
 
 export async function deleteAllShoppingItems(
-  shoppingListId: string,
+  shoppingListId: string
 ): Promise<ShoppingItemActionResult> {
   try {
     const householdId = await getHouseholdId();
@@ -382,8 +409,12 @@ export async function getSuggestedItems() {
           urgencyScore,
         };
       })
-      .filter((item): item is Exclude<typeof items[number], null> & { urgencyScore: number } =>
-        item !== null && item.urgencyScore > 1,
+      .filter(
+        (
+          item
+        ): item is Exclude<(typeof items)[number], null> & {
+          urgencyScore: number;
+        } => item !== null && item.urgencyScore > 1
       )
       .sort((a, b) => b.urgencyScore - a.urgencyScore);
 

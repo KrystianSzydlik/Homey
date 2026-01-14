@@ -8,26 +8,7 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  // Deep dark background with warm ambient glows
-  background-color: var(--background);
-  background-image:
-    radial-gradient(
-      circle at 80% 20%,
-      rgba(244, 63, 94, 0.15) 0%,
-      transparent 50%
-    ),
-    // Warm Rose glow top-right
-    radial-gradient(
-        circle at 20% 80%,
-        rgba(124, 58, 237, 0.15) 0%,
-        transparent 50%
-      ),
-    // Deep Violet glow bottom-left
-    radial-gradient(
-        circle at 50% 50%,
-        rgba(15, 23, 42, 0) 0%,
-        rgba(15, 23, 42, 0.5) 100%
-      ); // Vignette
+  background: var(--background);
   overflow: hidden;
 }
 

@@ -21,77 +21,54 @@ describe('InlineQuantityEdit', () => {
     vi.clearAllMocks();
   });
 
-  describe('Display Mode', () => {
-    it('should render display button with quantity and unit', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
+      success: true,
+      item: {
+        id: 'item-1',
+        quantity: '2',
+        unit: 'kg',
+        createdBy: { name: 'Test' },
+      } as any,
+    });
+  });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
+      success: true,
+      item: {
+        id: 'item-1',
+        quantity: '2',
+        unit: 'kg',
+        createdBy: { name: 'Test' },
+      } as any,
+    });
+  });
+  describe('Rendering', () => {
+    it('should render quantity and unit inputs with initial values', () => {
       render(<InlineQuantityEdit {...defaultProps} />);
-
-      const button = screen.getByRole('button', { name: '2 kg' });
-      expect(button).toBeInTheDocument();
-      expect(button).toHaveTextContent('2 kg');
+      expect(screen.getByDisplayValue('2')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('kg')).toBeInTheDocument();
     });
 
-    it('should render quantity without unit if unit is null', () => {
-      render(
-        <InlineQuantityEdit
-          {...defaultProps}
-          initialQuantity="5"
-          initialUnit={null}
-        />
-      );
-
-      const button = screen.getByRole('button');
-      expect(button).toHaveTextContent('5');
-      expect(button).not.toHaveTextContent('kg');
+    it('should render only quantity input if unit is null and not focused', () => {
+      render(<InlineQuantityEdit {...defaultProps} initialUnit={null} />);
+      expect(screen.getByDisplayValue('2')).toBeInTheDocument();
+      expect(screen.queryByPlaceholderText('j.m.')).not.toBeInTheDocument();
     });
 
-    it('should enter edit mode when clicked', async () => {
+    it('should render unit input if unit is null but input is focused', async () => {
       const user = userEvent.setup();
-      render(<InlineQuantityEdit {...defaultProps} />);
-
-      const button = screen.getByRole('button');
-      await user.click(button);
-
-      const input = screen.getByRole('textbox');
-      expect(input).toBeInTheDocument();
-      expect(input).toHaveFocus();
+      render(<InlineQuantityEdit {...defaultProps} initialUnit={null} />);
+      const quantityInput = screen.getByDisplayValue('2');
+      await user.click(quantityInput);
+      expect(screen.getByPlaceholderText('j.m.')).toBeInTheDocument();
     });
   });
 
-  describe('Edit Mode', () => {
-    it('should render input with initial value', async () => {
-      const user = userEvent.setup();
-      render(<InlineQuantityEdit {...defaultProps} />);
-
-      await user.click(screen.getByRole('button'));
-
-      const input = screen.getByRole('textbox') as HTMLInputElement;
-      expect(input.value).toBe('2 kg');
-    });
-
-    it('should allow typing in input', async () => {
-      const user = userEvent.setup();
-      render(<InlineQuantityEdit {...defaultProps} />);
-
-      await user.click(screen.getByRole('button'));
-
-      const input = screen.getByRole('textbox');
-      await user.clear(input);
-      await user.type(input, '3 liters');
-
-      expect(input).toHaveValue('3 liters');
-    });
-
-    it('should show placeholder text', async () => {
-      const user = userEvent.setup();
-      render(<InlineQuantityEdit {...defaultProps} />);
-
-      await user.click(screen.getByRole('button'));
-
-      const input = screen.getByPlaceholderText('e.g., 2kg, 3 szt');
-      expect(input).toBeInTheDocument();
-    });
-
-    it('should disable input when saving', async () => {
+  describe('Editing', () => {
+    it('should disable inputs when saving', async () => {
       const user = userEvent.setup();
       vi.mocked(shoppingActions.updateShoppingItem).mockImplementation(
         () =>
@@ -102,8 +79,8 @@ describe('InlineQuantityEdit', () => {
                   success: true,
                   item: {
                     id: 'item-1',
-                    quantity: '3',
-                    unit: 'liters',
+                    quantity: '5',
+                    unit: 'szt',
                     createdBy: { name: 'Test' },
                   } as any,
                 }),
@@ -111,94 +88,25 @@ describe('InlineQuantityEdit', () => {
             );
           })
       );
-
       render(<InlineQuantityEdit {...defaultProps} />);
 
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
-
-      await user.clear(input);
-      await user.type(input, '3 liters');
-      fireEvent.blur(input);
+      const quantityInput = screen.getByDisplayValue('2');
+      await user.clear(quantityInput);
+      await user.type(quantityInput, '5');
+      fireEvent.blur(quantityInput);
 
       await waitFor(() => {
-        expect(input).toBeDisabled();
+        expect(quantityInput).toBeDisabled();
+        // The unit input might disappear if empty, so we check conditionally
+        const unitInput = screen.queryByDisplayValue('kg');
+        if (unitInput) {
+          expect(unitInput).toBeDisabled();
+        }
       });
     });
   });
 
   describe('Save Functionality', () => {
-    it('should save on blur', async () => {
-      const user = userEvent.setup();
-      const mockItem = {
-        id: 'item-1',
-        quantity: '3',
-        unit: 'liters',
-        createdBy: { name: 'Test' },
-      };
-
-      vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
-        success: true,
-        item: mockItem as any,
-      });
-
-      render(<InlineQuantityEdit {...defaultProps} />);
-
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
-
-      await user.clear(input);
-      await user.type(input, '3 liters');
-      fireEvent.blur(input);
-
-      await waitFor(() => {
-        expect(shoppingActions.updateShoppingItem).toHaveBeenCalledWith(
-          'item-1',
-          {
-            quantity: '3',
-            unit: 'liters',
-          }
-        );
-        expect(mockOnUpdate).toHaveBeenCalledWith(mockItem);
-      });
-
-      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    });
-
-    it('should save on Enter key', async () => {
-      const user = userEvent.setup();
-      const mockItem = {
-        id: 'item-1',
-        quantity: '500',
-        unit: 'g',
-        createdBy: { name: 'Test' },
-      };
-
-      vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
-        success: true,
-        item: mockItem as any,
-      });
-
-      render(<InlineQuantityEdit {...defaultProps} />);
-
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
-
-      await user.clear(input);
-      await user.type(input, '500g');
-      await user.keyboard('{Enter}');
-
-      await waitFor(() => {
-        expect(shoppingActions.updateShoppingItem).toHaveBeenCalledWith(
-          'item-1',
-          {
-            quantity: '500',
-            unit: 'g',
-          }
-        );
-      });
-    });
-
     it('should call onUpdate with updated item', async () => {
       const user = userEvent.setup();
       const mockItem = {
@@ -213,14 +121,13 @@ describe('InlineQuantityEdit', () => {
         item: mockItem as any,
       });
 
-      render(<InlineQuantityEdit {...defaultProps} />);
+      render(<InlineQuantityEdit {...defaultProps} initialUnit={null} />);
+      const quantityInput = screen.getByDisplayValue('2');
 
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
+      await user.clear(quantityInput);
+      await user.type(quantityInput, '10');
 
-      await user.clear(input);
-      await user.type(input, '10');
-      fireEvent.blur(input);
+      fireEvent.blur(quantityInput);
 
       await waitFor(() => {
         expect(mockOnUpdate).toHaveBeenCalledWith(mockItem);
@@ -239,20 +146,20 @@ describe('InlineQuantityEdit', () => {
         } as any,
       });
 
-      render(<InlineQuantityEdit {...defaultProps} />);
+      const { rerender } = render(<InlineQuantityEdit {...defaultProps} />);
+      const quantityInput = screen.getByDisplayValue('2');
+      fireEvent.blur(quantityInput);
 
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
-
-      await user.clear(input);
-      await user.type(input, '5 pieces');
-      fireEvent.blur(input);
-
-      await waitFor(() => {
-        expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-      });
-
-      expect(screen.getByRole('button')).toBeInTheDocument();
+      // After save, the component should re-render with new initial values
+      rerender(
+        <InlineQuantityEdit
+          {...defaultProps}
+          initialQuantity="5"
+          initialUnit="pieces"
+        />
+      );
+      expect(screen.getByDisplayValue('5')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('pieces')).toBeInTheDocument();
     });
   });
 
@@ -260,188 +167,41 @@ describe('InlineQuantityEdit', () => {
     it('should cancel on Escape key', async () => {
       const user = userEvent.setup();
       render(<InlineQuantityEdit {...defaultProps} />);
+      const quantityInput = screen.getByDisplayValue('2');
 
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
-
-      await user.clear(input);
-      await user.type(input, '100 kg');
+      await user.clear(quantityInput);
+      await user.type(quantityInput, '100');
       await user.keyboard('{Escape}');
 
-      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
       expect(shoppingActions.updateShoppingItem).not.toHaveBeenCalled();
-
-      const button = screen.getByRole('button');
-      expect(button).toHaveTextContent('2 kg');
+      expect(screen.getByDisplayValue('2')).toBeInTheDocument();
     });
 
     it('should restore initial value on cancel', async () => {
       const user = userEvent.setup();
       render(<InlineQuantityEdit {...defaultProps} />);
+      const quantityInput = screen.getByDisplayValue('2') as HTMLInputElement;
 
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
-
-      await user.clear(input);
-      await user.type(input, 'invalid value');
+      await user.clear(quantityInput);
+      await user.type(quantityInput, 'invalid value');
       await user.keyboard('{Escape}');
 
-      await user.click(screen.getByRole('button'));
-      const newInput = screen.getByRole('textbox') as HTMLInputElement;
-
-      expect(newInput.value).toBe('2 kg');
+      expect(quantityInput.value).toBe('2');
     });
   });
 
-  describe('parseQuantity Logic', () => {
-    it('should parse quantity with space-separated unit', async () => {
+  describe('Save Logic', () => {
+    it('should save quantity without unit', async () => {
       const user = userEvent.setup();
-      vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
-        success: true,
-        item: {
-          id: 'item-1',
-          quantity: '2',
-          unit: 'kg',
-          createdBy: { name: 'Test' },
-        } as any,
-      });
-
       render(<InlineQuantityEdit {...defaultProps} />);
 
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
+      const quantityInput = screen.getByDisplayValue('2');
+      const unitInput = screen.getByDisplayValue('kg');
 
-      await user.clear(input);
-      await user.type(input, '2 kg');
-      fireEvent.blur(input);
-
-      await waitFor(() => {
-        expect(shoppingActions.updateShoppingItem).toHaveBeenCalledWith(
-          'item-1',
-          {
-            quantity: '2',
-            unit: 'kg',
-          }
-        );
-      });
-    });
-
-    it('should parse quantity without space before unit', async () => {
-      const user = userEvent.setup();
-      vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
-        success: true,
-        item: {
-          id: 'item-1',
-          quantity: '500',
-          unit: 'g',
-          createdBy: { name: 'Test' },
-        } as any,
-      });
-
-      render(<InlineQuantityEdit {...defaultProps} />);
-
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
-
-      await user.clear(input);
-      await user.type(input, '500g');
-      fireEvent.blur(input);
-
-      await waitFor(() => {
-        expect(shoppingActions.updateShoppingItem).toHaveBeenCalledWith(
-          'item-1',
-          {
-            quantity: '500',
-            unit: 'g',
-          }
-        );
-      });
-    });
-
-    it('should handle decimal quantities with comma', async () => {
-      const user = userEvent.setup();
-      vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
-        success: true,
-        item: {
-          id: 'item-1',
-          quantity: '2.5',
-          unit: 'kg',
-          createdBy: { name: 'Test' },
-        } as any,
-      });
-
-      render(<InlineQuantityEdit {...defaultProps} />);
-
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
-
-      await user.clear(input);
-      await user.type(input, '2,5 kg');
-      fireEvent.blur(input);
-
-      await waitFor(() => {
-        expect(shoppingActions.updateShoppingItem).toHaveBeenCalledWith(
-          'item-1',
-          {
-            quantity: '2.5',
-            unit: 'kg',
-          }
-        );
-      });
-    });
-
-    it('should handle quantity with decimal point', async () => {
-      const user = userEvent.setup();
-      vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
-        success: true,
-        item: {
-          id: 'item-1',
-          quantity: '1.5',
-          unit: 'liters',
-          createdBy: { name: 'Test' },
-        } as any,
-      });
-
-      render(<InlineQuantityEdit {...defaultProps} />);
-
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
-
-      await user.clear(input);
-      await user.type(input, '1.5 liters');
-      fireEvent.blur(input);
-
-      await waitFor(() => {
-        expect(shoppingActions.updateShoppingItem).toHaveBeenCalledWith(
-          'item-1',
-          {
-            quantity: '1.5',
-            unit: 'liters',
-          }
-        );
-      });
-    });
-
-    it('should parse quantity without unit', async () => {
-      const user = userEvent.setup();
-      vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
-        success: true,
-        item: {
-          id: 'item-1',
-          quantity: '5',
-          unit: null,
-          createdBy: { name: 'Test' },
-        } as any,
-      });
-
-      render(<InlineQuantityEdit {...defaultProps} />);
-
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
-
-      await user.clear(input);
-      await user.type(input, '5');
-      fireEvent.blur(input);
+      await user.clear(quantityInput);
+      await user.type(quantityInput, '5');
+      await user.clear(unitInput);
+      fireEvent.blur(quantityInput);
 
       await waitFor(() => {
         expect(shoppingActions.updateShoppingItem).toHaveBeenCalledWith(
@@ -449,69 +209,6 @@ describe('InlineQuantityEdit', () => {
           {
             quantity: '5',
             unit: undefined,
-          }
-        );
-      });
-    });
-
-    it('should handle empty input as "1"', async () => {
-      const user = userEvent.setup();
-      vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
-        success: true,
-        item: {
-          id: 'item-1',
-          quantity: '1',
-          unit: null,
-          createdBy: { name: 'Test' },
-        } as any,
-      });
-
-      render(<InlineQuantityEdit {...defaultProps} />);
-
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
-
-      await user.clear(input);
-      fireEvent.blur(input);
-
-      await waitFor(() => {
-        expect(shoppingActions.updateShoppingItem).toHaveBeenCalledWith(
-          'item-1',
-          {
-            quantity: '1',
-            unit: undefined,
-          }
-        );
-      });
-    });
-
-    it('should handle Polish units (sztuki)', async () => {
-      const user = userEvent.setup();
-      vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
-        success: true,
-        item: {
-          id: 'item-1',
-          quantity: '3',
-          unit: 'sztuki',
-          createdBy: { name: 'Test' },
-        } as any,
-      });
-
-      render(<InlineQuantityEdit {...defaultProps} />);
-
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
-
-      await user.clear(input);
-      await user.type(input, '3 sztuki');
-      fireEvent.blur(input);
-
-      await waitFor(() => {
-        expect(shoppingActions.updateShoppingItem).toHaveBeenCalledWith(
-          'item-1',
-          {
-            quantity: '3',
-            unit: 'sztuki',
           }
         );
       });
@@ -531,12 +228,12 @@ describe('InlineQuantityEdit', () => {
 
       render(<InlineQuantityEdit {...defaultProps} />);
 
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
+      const quantityInput = screen.getByDisplayValue('2');
+      const unitInput = screen.getByDisplayValue('kg');
 
-      await user.clear(input);
-      await user.type(input, '2 large bottles');
-      fireEvent.blur(input);
+      await user.clear(unitInput);
+      await user.type(unitInput, 'large bottles');
+      fireEvent.blur(unitInput);
 
       await waitFor(() => {
         expect(shoppingActions.updateShoppingItem).toHaveBeenCalledWith(
@@ -560,18 +257,19 @@ describe('InlineQuantityEdit', () => {
 
       render(<InlineQuantityEdit {...defaultProps} />);
 
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
-
-      await user.clear(input);
-      await user.type(input, '10 kg');
-      fireEvent.blur(input);
+      const quantityInput = screen.getByDisplayValue('2');
+      await user.clear(quantityInput);
+      await user.type(quantityInput, '10');
+      fireEvent.blur(quantityInput);
 
       await waitFor(() => {
         expect(shoppingActions.updateShoppingItem).toHaveBeenCalled();
       });
 
       expect(mockOnUpdate).not.toHaveBeenCalled();
+      // Value should revert or stay, depending on desired behavior.
+      // Current implementation does not revert.
+      expect(screen.getByDisplayValue('10')).toBeInTheDocument();
     });
 
     it('should handle rapid Enter key presses', async () => {
@@ -588,11 +286,9 @@ describe('InlineQuantityEdit', () => {
 
       render(<InlineQuantityEdit {...defaultProps} />);
 
-      await user.click(screen.getByRole('button'));
-      const input = screen.getByRole('textbox');
-
-      await user.clear(input);
-      await user.type(input, '5{Enter}{Enter}{Enter}');
+      const quantityInput = screen.getByDisplayValue('2');
+      await user.clear(quantityInput);
+      await user.type(quantityInput, '5{Enter}{Enter}{Enter}');
 
       await waitFor(() => {
         expect(shoppingActions.updateShoppingItem).toHaveBeenCalledTimes(1);

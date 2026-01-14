@@ -1,9 +1,15 @@
-import { ShoppingItem, ShoppingList, Product, ShoppingCategory } from '@prisma/client';
+export { type Product, type ShoppingItem } from '@prisma/client';
+import {
+  ShoppingItem,
+  ShoppingList,
+  Product,
+  ShoppingCategory,
+} from '@prisma/client';
 
 export type ShoppingItemWithCreator = ShoppingItem & {
   createdBy: { name: string };
   shoppingList?: { name: string; emoji?: string | null };
-  product?: { name: string } | null;
+  product?: { name: string; emoji?: string | null } | null;
 };
 
 export type ShoppingListWithItems = ShoppingList & {
@@ -38,6 +44,7 @@ export interface ProductActionResult {
   success: boolean;
   product?: Product;
   error?: string;
+  existingProduct?: Product;
 }
 
 export type CatalogSuggestion = {

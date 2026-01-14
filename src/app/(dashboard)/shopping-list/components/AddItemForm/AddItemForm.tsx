@@ -1,138 +1,70 @@
 'use client';
 
-import { useState, useTransition, useCallback } from 'react';
-import { createShoppingItem } from '@/app/lib/shopping-actions';
-import { ShoppingItemWithCreator, ProductSuggestion } from '@/types/shopping';
-import { useProductCacheContext } from '../../contexts/ProductCacheContext';
+import { useState, useCallback } from 'react';
+import { Product, ProductSuggestion } from '@/types/shopping';
 import ProductAutocomplete from '../ProductAutocomplete/ProductAutocomplete';
 import CreateProductModal from '../CreateProductModal/CreateProductModal';
 import styles from './AddItemForm.module.scss';
 
 interface AddItemFormProps {
-  shoppingListId: string;
-  onAddItem: (item: ShoppingItemWithCreator) => void;
+  onAddItem: (
+    name: string,
+    productId?: string,
+    product?: { emoji?: string | null; defaultUnit?: string | null }
+  ) => void;
 }
 
-export default function AddItemForm({
-  shoppingListId,
-  onAddItem,
-}: AddItemFormProps) {
-  const [showForm, setShowForm] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+export default function AddItemForm({ onAddItem }: AddItemFormProps) {
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [newProductName, setNewProductName] = useState('');
 
-  const { refreshCache } = useProductCacheContext();
-
   const handleCreateNewProduct = useCallback(
     (product: any) => {
-      setError(null);
-      startTransition(async () => {
-        const result = await createShoppingItem({
-          name: product.name,
-          shoppingListId,
-          productId: product.id,
-          category: product.defaultCategory,
-          unit: product.defaultUnit || undefined,
-          emoji: product.emoji || undefined,
-        });
-
-        if (result.success && result.item) {
-          onAddItem(result.item);
-          setShowForm(false);
-          setShowCreateProduct(false);
-
-          // Refresh cache to include newly created product
-          refreshCache();
-        } else {
-          setError(result.error || 'Failed to add item');
-        }
+      // This is called from the modal after a new product is created.
+      // Now we can add the shopping item with the new product's ID.
+      onAddItem(product.name, product.id, {
+        emoji: product.emoji,
+        defaultUnit: product.defaultUnit,
       });
+      setShowCreateProduct(false);
     },
-    [shoppingListId, onAddItem, refreshCache]
+    [onAddItem]
   );
 
   const handleProductSelect = useCallback(
     (suggestion: ProductSuggestion) => {
-      setError(null);
-
-      // If it's the "Add New" option (score -1) or a history item that isn't a catalog product
+      // If it's a non-catalog item, open the create product modal
       if (suggestion.source !== 'catalog') {
         setNewProductName(suggestion.name);
         setShowCreateProduct(true);
         return;
       }
 
-      startTransition(async () => {
-        const productId = suggestion.id;
-
-        const result = await createShoppingItem({
-          name: suggestion.name,
-          shoppingListId,
-          productId,
-          category: suggestion.category,
-          unit: suggestion.defaultUnit || undefined,
-          emoji: suggestion.emoji || undefined,
-        });
-
-        if (result.success && result.item) {
-          onAddItem(result.item);
-          setShowForm(false);
-        } else {
-          setError(result.error || 'Failed to add item');
-        }
+      // Otherwise, add the item directly
+      onAddItem(suggestion.name, suggestion.id, {
+        emoji: suggestion.emoji,
+        defaultUnit: suggestion.defaultUnit,
       });
     },
-    [shoppingListId, onAddItem]
+    [onAddItem]
   );
 
   return (
     <div className={styles.container}>
-      {!showForm ? (
-        <button
-          className={styles.toggleButton}
-          onClick={() => setShowForm(true)}
-          type="button"
-        >
-          Dodaj Produkt
-        </button>
-      ) : (
-        <div className={styles.form}>
-          <ProductAutocomplete
-            onSelect={handleProductSelect}
-            placeholder="Search or type product name..."
-            autoFocus
-          />
+      <div className={styles.form}>
+        <ProductAutocomplete
+          onSelect={handleProductSelect}
+          placeholder="Search or type product name..."
+          autoFocus={false}
+        />
+      </div>
 
-          {error && <div className={styles.error}>{error}</div>}
-
-          {isPending && (
-            <div className={styles.loadingOverlay}>
-              <span className={styles.spinner} />
-            </div>
-          )}
-
-          <button
-            type="button"
-            className={styles.cancelButton}
-            onClick={() => {
-              setShowForm(false);
-              setError(null);
-            }}
-            disabled={isPending}
-          >
-            Cancel
-          </button>
-
-          <CreateProductModal
-            isOpen={showCreateProduct}
-            onClose={() => setShowCreateProduct(false)}
-            initialName={newProductName}
-            onProductCreated={handleCreateNewProduct}
-          />
-        </div>
-      )}
+      <CreateProductModal
+        isOpen={showCreateProduct}
+        onClose={() => setShowCreateProduct(false)}
+        initialName={newProductName}
+        onProductCreated={handleCreateNewProduct}
+      />
     </div>
   );
 }
