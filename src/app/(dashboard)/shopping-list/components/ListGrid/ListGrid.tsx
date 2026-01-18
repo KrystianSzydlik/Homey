@@ -24,7 +24,7 @@ export default function ListGrid({
         >
           <div className={styles.emoji}>{list.emoji}</div>
           <div className={styles.name}>{list.name}</div>
-          <div className={styles.count}>{list._count.items} items</div>
+          <div className={styles.count}>{list._count.items} produktów</div>
         </div>
       ))}
       <div className={styles.card} onClick={onOpenCreateModal}>

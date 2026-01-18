@@ -133,7 +133,13 @@ export function useProductAutocomplete({
           e.preventDefault();
           if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
             handleSelect(suggestions[selectedIndex]);
-          } else if (selectedIndex === suggestions.length && hasAddNew) {
+          } else if (selectedIndex === -1 && suggestions.length > 0) {
+            // If nothing selected but we have suggestions, select the first one
+            handleSelect(suggestions[0]);
+          } else if (
+            (selectedIndex === suggestions.length || selectedIndex === -1) &&
+            hasAddNew
+          ) {
             handleSelect({
               name: searchQuery.trim(),
               emoji: null,
