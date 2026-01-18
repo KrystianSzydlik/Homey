@@ -87,3 +87,19 @@ export interface ShoppingItemInput {
   category?: ShoppingCategory;
   emoji?: string;
 }
+
+export interface ProductCallbackData {
+  id: string;
+  name: string;
+  emoji: string | null;
+  defaultCategory: ShoppingCategory;
+  defaultUnit: string | null;
+}
+
+export type OptimisticShoppingItem = Omit<
+  ShoppingItemWithCreator,
+  'householdId' | 'createdById'
+> & {
+  householdId: string;
+  createdById: string;
+};

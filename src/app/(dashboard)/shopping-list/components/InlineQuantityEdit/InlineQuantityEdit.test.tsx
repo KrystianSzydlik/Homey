@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import InlineQuantityEdit from './InlineQuantityEdit';
-import * as shoppingActions from '@/src/app/lib/shopping-actions';
+import * as shoppingActions from '@/app/lib/shopping-actions';
 
-vi.mock('@/src/app/lib/shopping-actions', () => ({
+vi.mock('@/app/lib/shopping-actions', () => ({
   updateShoppingItem: vi.fn(),
 }));
 

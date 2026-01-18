@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef, useCallback, useTransition, useEffect } from 'react';
-import { updateShoppingItem } from '@/src/app/lib/shopping-actions';
-import { ShoppingItemWithCreator } from '@/src/types/shopping';
+import { updateShoppingItem } from '@/app/lib/shopping-actions';
+import { ShoppingItemWithCreator } from '@/types/shopping';
 import styles from './InlineQuantityEdit.module.scss';
 
 interface InlineQuantityEditProps {
@@ -11,23 +11,6 @@ interface InlineQuantityEditProps {
   initialUnit: string | null;
   onUpdate: (item: ShoppingItemWithCreator) => void;
 }
-
-const parseQuantity = (
-  input: string
-): { quantity: string; unit: string | null } => {
-  const trimmed = input.trim();
-  if (!trimmed) return { quantity: '1', unit: null };
-
-  const match = trimmed.match(/^(\d+(?:[.,]\d+)?)\s*(.*)$/);
-
-  if (match) {
-    const quantity = match[1].replace(',', '.');
-    const unit = match[2].trim() || null;
-    return { quantity, unit };
-  }
-
-  return { quantity: trimmed, unit: null };
-};
 
 export default function InlineQuantityEdit({
   itemId,
