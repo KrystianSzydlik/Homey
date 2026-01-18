@@ -51,15 +51,31 @@ export function useOptimisticShoppingList(
       case 'ADD_ITEM':
         return currentState.map((list) =>
           list.id === action.payload.shoppingListId
-            ? { ...list, items: [...list.items, action.payload] }
+            ? {
+                ...list,
+                items: [...list.items, action.payload],
+                _count: {
+                  ...list._count,
+                  items: list._count.items + 1,
+                },
+              }
             : list
         );
 
       case 'DELETE_ITEM':
-        return currentState.map((list) => ({
-          ...list,
-          items: list.items.filter((item) => item.id !== action.payload),
-        }));
+        return currentState.map((list) => {
+          if (list.items.some((item) => item.id === action.payload)) {
+            return {
+              ...list,
+              items: list.items.filter((item) => item.id !== action.payload),
+              _count: {
+                ...list._count,
+                items: Math.max(0, list._count.items - 1),
+              },
+            };
+          }
+          return list;
+        });
 
       case 'UPDATE_ITEM':
         return currentState.map((list) =>
@@ -94,15 +110,30 @@ export function useOptimisticShoppingList(
 
       case 'DELETE_ALL_ITEMS':
         return currentState.map((list) =>
-          list.id === action.payload ? { ...list, items: [] } : list
+          list.id === action.payload
+            ? {
+                ...list,
+                items: [],
+                _count: { ...list._count, items: 0 },
+              }
+            : list
         );
 
       case 'CLEAR_CHECKED_ITEMS':
-        return currentState.map((list) =>
-          list.id === action.payload.listId
-            ? { ...list, items: list.items.filter((item) => !item.checked) }
-            : list
-        );
+        return currentState.map((list) => {
+          if (list.id === action.payload.listId) {
+            const uncheckedItems = list.items.filter((item) => !item.checked);
+            return {
+              ...list,
+              items: uncheckedItems,
+              _count: {
+                ...list._count,
+                items: uncheckedItems.length,
+              },
+            };
+          }
+          return list;
+        });
 
       default:
         return currentState;

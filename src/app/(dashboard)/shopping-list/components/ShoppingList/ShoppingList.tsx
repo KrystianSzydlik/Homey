@@ -55,6 +55,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   const {
     lists,
     selectedListIds,
+    addList,
     addListOptimistic,
     deleteList,
     toggleListSelection,
@@ -112,19 +113,12 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   );
 
   const handleListCreated = useCallback(
-    async (newList: ShoppingListWithCreator) => {
-      // For lists, we might not rely heavily on optimistic updates since it's a modal action
-      // But we can use it.
-      // addList(newList); // Existing
-      await addListOptimistic(newList);
-      // The modal currently calls the server action internally?
-      // No, CreateListModal likely calls a prop or internal action.
-      // Let's assume CreateListModal returns the created list after server success.
-      // If so, addList(newList) updates the base state.
-      // If we want optimistic, we need to know BEFORE server return.
-      // But preserving existing behavior for list creation is fine.
+    (newList: ShoppingListWithCreator) => {
+      // Update the base state directly since the list is already created on server
+      addList(newList);
+      // We don't need optimistic update here as we have the real data
     },
-    [addListOptimistic]
+    [addList]
   );
 
   const handleAddItem = useCallback(

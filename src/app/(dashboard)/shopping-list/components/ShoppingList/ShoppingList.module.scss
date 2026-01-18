@@ -114,6 +114,29 @@
   }
 }
 
+.createButton {
+  padding: 0.5rem 1rem;
+  background: var(--gradient-warm-rose);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: var(--glow-rose);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
 .emptyStateHint {
   font-size: 0.875rem !important;
   color: var(--text-secondary) !important;
