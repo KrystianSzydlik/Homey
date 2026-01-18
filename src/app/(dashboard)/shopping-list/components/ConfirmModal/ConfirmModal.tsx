@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
-import { useEffect, useState } from 'react';
+import { useBodyOverflow } from '@/hooks/useBodyOverflow';
 import styles from './ConfirmModal.module.scss';
 
 interface ConfirmModalProps {
@@ -28,17 +28,7 @@ export default function ConfirmModal({
   variant = 'danger',
   isLoading = false,
 }: ConfirmModalProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  useBodyOverflow(isOpen);
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget && !isLoading) {
@@ -46,7 +36,7 @@ export default function ConfirmModal({
     }
   };
 
-  if (!mounted) return null;
+  if (typeof window === 'undefined') return null;
 
   const modalContent = (
     <AnimatePresence>

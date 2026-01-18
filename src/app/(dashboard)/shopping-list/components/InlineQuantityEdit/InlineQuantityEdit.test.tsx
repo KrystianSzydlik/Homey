@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import InlineQuantityEdit from './InlineQuantityEdit';
-import * as shoppingActions from '@/src/app/lib/shopping-actions';
+import * as shoppingActions from '@/app/lib/shopping-actions';
 
-vi.mock('@/src/app/lib/shopping-actions', () => ({
+vi.mock('@/app/lib/shopping-actions', () => ({
   updateShoppingItem: vi.fn(),
 }));
 
@@ -146,20 +146,28 @@ describe('InlineQuantityEdit', () => {
         } as any,
       });
 
-      const { rerender } = render(<InlineQuantityEdit {...defaultProps} />);
+      render(<InlineQuantityEdit {...defaultProps} />);
       const quantityInput = screen.getByDisplayValue('2');
+
+      await user.clear(quantityInput);
+      await user.type(quantityInput, '5');
+
+      const unitInput = screen.getByDisplayValue('kg');
+      await user.clear(unitInput);
+      await user.type(unitInput, 'pieces');
+
       fireEvent.blur(quantityInput);
 
-      // After save, the component should re-render with new initial values
-      rerender(
-        <InlineQuantityEdit
-          {...defaultProps}
-          initialQuantity="5"
-          initialUnit="pieces"
-        />
-      );
-      expect(screen.getByDisplayValue('5')).toBeInTheDocument();
-      expect(screen.getByDisplayValue('pieces')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(shoppingActions.updateShoppingItem).toHaveBeenCalled();
+        expect(mockOnUpdate).toHaveBeenCalled();
+      });
+
+      // After successful save, component updates its state from the API response
+      await waitFor(() => {
+        expect(screen.getByDisplayValue('5')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('pieces')).toBeInTheDocument();
+      });
     });
   });
 

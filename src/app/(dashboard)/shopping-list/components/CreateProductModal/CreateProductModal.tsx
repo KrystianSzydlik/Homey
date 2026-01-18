@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ShoppingCategory, Product } from '@prisma/client';
 import { createProduct, updateProduct } from '@/app/lib/product-actions';
 import { getSmartProductDefaults } from '@/app/lib/product-utils';
+import { ProductCallbackData } from '@/types/shopping';
 import EmojiPicker from '../EmojiPicker/EmojiPicker';
 import CategoryPicker from '../CategoryPicker/CategoryPicker';
 import styles from './CreateProductModal.module.scss';
@@ -17,13 +18,7 @@ interface CreateProductModalProps {
   initialCategory?: ShoppingCategory;
   initialEmoji?: string;
   initialUnit?: string;
-  onProductCreated: (product: {
-    id:string;
-    name: string;
-    emoji: string | null;
-    defaultCategory: ShoppingCategory;
-    defaultUnit: string | null;
-  }) => void;
+  onProductCreated: (product: ProductCallbackData) => void;
 }
 
 export default function CreateProductModal({
@@ -103,7 +98,20 @@ export default function CreateProductModal({
     });
 
     if (result.success && result.product) {
-      onProductCreated(result.product as any);
+      const {
+        id,
+        name: productName,
+        emoji: productEmoji,
+        defaultCategory,
+        defaultUnit,
+      } = result.product;
+      onProductCreated({
+        id,
+        name: productName,
+        emoji: productEmoji,
+        defaultCategory,
+        defaultUnit,
+      });
       onClose();
     } else {
       setError(result.error || 'Failed to update product');
@@ -131,7 +139,20 @@ export default function CreateProductModal({
         });
 
         if (result.success && result.product) {
-          onProductCreated(result.product as any);
+          const {
+            id,
+            name: productName,
+            emoji: productEmoji,
+            defaultCategory,
+            defaultUnit,
+          } = result.product;
+          onProductCreated({
+            id,
+            name: productName,
+            emoji: productEmoji,
+            defaultCategory,
+            defaultUnit,
+          });
           onClose();
         } else {
           setError(result.error || 'Failed to save product');
@@ -145,7 +166,20 @@ export default function CreateProductModal({
         });
 
         if (result.success && result.product) {
-          onProductCreated(result.product as any);
+          const {
+            id,
+            name: productName,
+            emoji: productEmoji,
+            defaultCategory,
+            defaultUnit,
+          } = result.product;
+          onProductCreated({
+            id,
+            name: productName,
+            emoji: productEmoji,
+            defaultCategory,
+            defaultUnit,
+          });
           onClose();
         } else if (result.existingProduct) {
           setDuplicateProduct(result.existingProduct);
@@ -154,7 +188,7 @@ export default function CreateProductModal({
           setError(result.error || 'Failed to create product');
         }
       }
-    } catch (err) {
+    } catch {
       setError('Something went wrong');
     } finally {
       setIsLoading(false);
@@ -232,8 +266,8 @@ export default function CreateProductModal({
                 {isLoading
                   ? 'Zapisywanie...'
                   : productId
-                  ? 'Zapisz zmiany'
-                  : 'Zapisz produkt'}
+                    ? 'Zapisz zmiany'
+                    : 'Zapisz produkt'}
               </button>
             </div>
           </form>

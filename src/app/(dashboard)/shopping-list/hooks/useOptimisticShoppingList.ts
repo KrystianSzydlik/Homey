@@ -11,14 +11,7 @@ import {
   deleteShoppingItem,
   addShoppingItem,
   updateShoppingItem,
-  deleteAllShoppingItems,
-  reorderShoppingItems,
-  clearCheckedItems,
 } from '@/app/lib/shopping-actions';
-import {
-  deleteShoppingList,
-  createShoppingList,
-} from '@/app/lib/shopping-list-actions';
 
 type OptimisticAction =
   | { type: 'ADD_LIST'; payload: ShoppingListWithCreator }
@@ -163,7 +156,7 @@ export function useOptimisticShoppingList(
           // React's useOptimistic reverts if the transition finishes.
           // But here we are manually managing baseState.
         }
-      } catch (e) {
+      } catch {
         showToast('Failed to add item', 'error');
       }
     },
@@ -180,7 +173,7 @@ export function useOptimisticShoppingList(
         } else {
           showToast(result.error || 'Failed to update item', 'error');
         }
-      } catch (e) {
+      } catch {
         showToast('Failed to update item', 'error');
       }
     },
@@ -197,7 +190,7 @@ export function useOptimisticShoppingList(
         } else {
           showToast(result.error || 'Failed to delete item', 'error');
         }
-      } catch (e) {
+      } catch {
         showToast('Failed to delete item', 'error');
       }
     },
@@ -240,7 +233,7 @@ export function useOptimisticShoppingList(
           } else {
             showToast(result.error || 'Failed to update item', 'error');
           }
-        } catch (e) {
+        } catch {
           showToast('Failed to update item', 'error');
         }
       }

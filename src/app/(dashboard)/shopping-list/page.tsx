@@ -12,7 +12,7 @@ export default async function ShoppingListPage() {
 
   const householdId = session.user.householdId;
 
-  let lists = await prisma.shoppingList.findMany({
+  const lists = await prisma.shoppingList.findMany({
     where: { householdId },
     orderBy: { position: 'asc' },
     include: {

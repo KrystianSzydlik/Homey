@@ -26,8 +26,8 @@ export const { auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.householdId = (user as any).householdId;
-        token.id = (user as any).id;
+        token.householdId = user.householdId;
+        token.id = user.id;
       }
       return token;
     },

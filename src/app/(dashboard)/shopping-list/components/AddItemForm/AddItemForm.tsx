@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Product, ProductSuggestion } from '@/types/shopping';
+import { ProductSuggestion, ProductCallbackData } from '@/types/shopping';
 import ProductAutocomplete from '../ProductAutocomplete/ProductAutocomplete';
 import CreateProductModal from '../CreateProductModal/CreateProductModal';
 import styles from './AddItemForm.module.scss';
@@ -19,9 +19,7 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
   const [newProductName, setNewProductName] = useState('');
 
   const handleCreateNewProduct = useCallback(
-    (product: any) => {
-      // This is called from the modal after a new product is created.
-      // Now we can add the shopping item with the new product's ID.
+    (product: ProductCallbackData) => {
       onAddItem(product.name, product.id, {
         emoji: product.emoji,
         defaultUnit: product.defaultUnit,

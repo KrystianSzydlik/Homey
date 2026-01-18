@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CatalogSuggestion } from '@/types/shopping';
 import { getAllProducts } from '@/app/lib/product-actions';
 
@@ -113,7 +113,10 @@ export function useProductCache() {
 
       // Filter out non-matches and sort by score
       return scored
-        .filter((item): item is { product: CatalogSuggestion; score: number } => item !== null)
+        .filter(
+          (item): item is { product: CatalogSuggestion; score: number } =>
+            item !== null
+        )
         .sort((a, b) => b.score - a.score)
         .slice(0, maxResults)
         .map((item) => item.product);
@@ -167,7 +170,8 @@ export function useProductCache() {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    return () =>
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [lastFetched, fetchProducts]);
 
   return {

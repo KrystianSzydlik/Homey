@@ -27,8 +27,6 @@ export default function ProductAutocomplete({
   placeholder = 'Search products...',
   autoFocus = false,
   initialValue = '',
-  isCompleted = false,
-  strictMode = false,
   onBlur,
 }: ProductAutocompleteProps) {
   const [searchQuery, setSearchQuery] = useState(initialValue);
@@ -60,7 +58,6 @@ export default function ProductAutocomplete({
     handleSelect,
     setSelectedIndex,
     openDropdown,
-    closeDropdown,
   } = useProductAutocomplete({
     searchQuery,
     onSelect: handleSelectWithClear,
@@ -227,7 +224,7 @@ export default function ProductAutocomplete({
                   <div className={styles.mainInfo}>
                     <span className={styles.emoji}>✨</span>
                     <span className={styles.name}>
-                      + Dodaj nowy produkt: "{searchQuery}"
+                      + Dodaj nowy produkt: &ldquo;{searchQuery}&rdquo;
                     </span>
                   </div>
                 </div>

@@ -59,24 +59,10 @@ export default function DropdownMenu({
   useEffect(() => {
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      const scrollY = window.scrollY;
-      const scrollX = window.scrollX;
-
-      // Default to bottom-right alignment relative to trigger
-      let top = rect.bottom + 8 + scrollY;
-      let left = rect.right + scrollX; // Align right edge of menu with right edge of trigger
-
-      // We'll adjust 'left' in CSS or here.
-      // Simplified: Just pass the rect coordinates and let styling handle alignment?
-      // No, for Portal we need absolute page coordinates.
-
-      // Let's set the top-right corner of the menu to the bottom-right of the button
-      // But we can't know width easily before render.
-      // Strategy: Pass 'top' and 'left' (of the trigger's bottom-right corner) and transform: translateX(-100%) in CSS?
 
       setPosition({
         top: rect.bottom + 8,
-        left: rect.left, // Default align left, adjust later?
+        left: rect.left,
       });
     }
   }, [isOpen]);

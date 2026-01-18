@@ -55,7 +55,6 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   const {
     lists,
     selectedListIds,
-    addList, // Note: This updates base state. Optimistic hook also exposes addListOptimistic if needed.
     addListOptimistic,
     deleteList,
     toggleListSelection,
@@ -63,7 +62,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     deleteItemOptimistic,
     updateItemOptimistic,
     toggleItemOptimistic,
-    reorderItems, // This is likely base state updater? We might want optimistic reorder too.
+    reorderItems,
     deleteAllItems,
     clearCheckedItems,
   } = useOptimisticShoppingList(initialLists);
@@ -136,30 +135,29 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       product?: { emoji?: string | null; defaultUnit?: string | null }
     ) => {
       // Construct a temporary item for optimistic update
-      // We need to fetch the current user's name or just use a placeholder for 'createdBy'
-      // Since it's optimistic, 'You' or similar is fine, or we ignore it in UI
-      const newItem: ShoppingItemWithCreator = {
+      // Note: productId is required in Prisma but optional for optimistic items
+      // The server action will handle proper product linking
+      const newItem = {
         id: `temp-${Date.now()}`,
         name,
         quantity: '1',
         unit: product?.defaultUnit || null,
-        category: 'OTHER', // Default
+        category: 'OTHER',
         checked: false,
-        position: 0, // Will be handled by hook/server
+        position: 0,
         shoppingListId: listId,
         emoji: null,
         purchaseCount: 0,
         lastPurchasedAt: null,
         averageDaysBetweenPurchases: null,
-        productId: productId || null,
-        householdId: '', // Placeholder
-        createdById: '', // Placeholder
+        productId: productId ?? '',
+        householdId: '',
+        createdById: '',
         createdAt: new Date(),
         updatedAt: new Date(),
         createdBy: { name: 'You' },
-        product: product ? { name, emoji: product.emoji } : null,
-        _count: { items: 0 }, // Extra property from type intersection? No, ShoppingItemWithCreator extends ShoppingItem & ...
-      } as any; // Cast to avoid constructing every single Prisma field if strict
+        product: product ? { name, emoji: product.emoji ?? null } : null,
+      } satisfies ShoppingItemWithCreator;
 
       await addItemOptimistic(newItem);
     },

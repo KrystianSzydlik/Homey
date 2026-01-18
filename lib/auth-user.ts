@@ -11,5 +11,10 @@ export async function authenticateUser(email: string, password: string) {
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) return null;
 
-  return user;
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    householdId: user.householdId,
+  };
 }

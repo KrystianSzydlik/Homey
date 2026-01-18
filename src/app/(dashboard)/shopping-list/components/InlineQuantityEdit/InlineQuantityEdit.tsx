@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useCallback, useTransition, useEffect } from 'react';
-import { updateShoppingItem } from '@/src/app/lib/shopping-actions';
-import { ShoppingItemWithCreator } from '@/src/types/shopping';
+import { useState, useRef, useCallback, useTransition } from 'react';
+import { updateShoppingItem } from '@/app/lib/shopping-actions';
+import { ShoppingItemWithCreator } from '@/types/shopping';
 import styles from './InlineQuantityEdit.module.scss';
 
 interface InlineQuantityEditProps {
@@ -11,23 +11,6 @@ interface InlineQuantityEditProps {
   initialUnit: string | null;
   onUpdate: (item: ShoppingItemWithCreator) => void;
 }
-
-const parseQuantity = (
-  input: string
-): { quantity: string; unit: string | null } => {
-  const trimmed = input.trim();
-  if (!trimmed) return { quantity: '1', unit: null };
-
-  const match = trimmed.match(/^(\d+(?:[.,]\d+)?)\s*(.*)$/);
-
-  if (match) {
-    const quantity = match[1].replace(',', '.');
-    const unit = match[2].trim() || null;
-    return { quantity, unit };
-  }
-
-  return { quantity: trimmed, unit: null };
-};
 
 export default function InlineQuantityEdit({
   itemId,
@@ -41,17 +24,11 @@ export default function InlineQuantityEdit({
   const [isPending, startTransition] = useTransition();
   const escapePressed = useRef(false);
 
-  // Sync state with props when they change (e.g. after successful update)
-  useEffect(() => {
-    if (!isEditing) {
-      setQuantity(initialQuantity);
-      setUnit(initialUnit || '');
-    }
-  }, [initialQuantity, initialUnit, isEditing]);
-
   const handleSave = useCallback(async () => {
     if (escapePressed.current) {
       escapePressed.current = false;
+      setQuantity(initialQuantity);
+      setUnit(initialUnit || '');
       return;
     }
     if (quantity === initialQuantity && (unit || null) === initialUnit) {
@@ -67,6 +44,8 @@ export default function InlineQuantityEdit({
 
       if (result.success && result.item) {
         onUpdate(result.item);
+        setQuantity(result.item.quantity);
+        setUnit(result.item.unit || '');
         setIsEditing(false);
       }
     });
