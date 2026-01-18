@@ -15,6 +15,7 @@ const { mockPrisma, mockAuth } = vi.hoisted(() => {
     shoppingItem: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
+      create: vi.fn(),
       update: vi.fn(),
       deleteMany: vi.fn(),
     },
@@ -113,6 +114,12 @@ describe('Shopping Actions - Additional Tests', () => {
           createdBy: {
             select: { name: true },
           },
+          product: {
+            select: { name: true, emoji: true },
+          },
+          shoppingList: {
+            select: { name: true, emoji: true },
+          },
         },
       });
     });
@@ -151,6 +158,12 @@ describe('Shopping Actions - Additional Tests', () => {
           createdBy: {
             select: { name: true },
           },
+          product: {
+            select: { name: true, emoji: true },
+          },
+          shoppingList: {
+            select: { name: true, emoji: true },
+          },
         },
       });
 
@@ -186,6 +199,12 @@ describe('Shopping Actions - Additional Tests', () => {
         include: {
           createdBy: {
             select: { name: true },
+          },
+          product: {
+            select: { name: true, emoji: true },
+          },
+          shoppingList: {
+            select: { name: true, emoji: true },
           },
         },
       });
