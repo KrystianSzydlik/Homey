@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { ShoppingCategory } from '@prisma/client';
 import { ShoppingItemActionResult } from '@/types/shopping';
 import { z } from 'zod';
-import { getHouseholdId, getUserId, getSessionData } from './auth-utils';
+import { getHouseholdId, getSessionData } from './auth-utils';
 import {
   createShoppingItemSchema,
   updateShoppingItemSchema,

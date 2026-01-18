@@ -98,8 +98,20 @@ export default function CreateProductModal({
     });
 
     if (result.success && result.product) {
-      const { id, name: productName, emoji: productEmoji, defaultCategory, defaultUnit } = result.product;
-      onProductCreated({ id, name: productName, emoji: productEmoji, defaultCategory, defaultUnit });
+      const {
+        id,
+        name: productName,
+        emoji: productEmoji,
+        defaultCategory,
+        defaultUnit,
+      } = result.product;
+      onProductCreated({
+        id,
+        name: productName,
+        emoji: productEmoji,
+        defaultCategory,
+        defaultUnit,
+      });
       onClose();
     } else {
       setError(result.error || 'Failed to update product');
@@ -127,8 +139,20 @@ export default function CreateProductModal({
         });
 
         if (result.success && result.product) {
-          const { id, name: productName, emoji: productEmoji, defaultCategory, defaultUnit } = result.product;
-          onProductCreated({ id, name: productName, emoji: productEmoji, defaultCategory, defaultUnit });
+          const {
+            id,
+            name: productName,
+            emoji: productEmoji,
+            defaultCategory,
+            defaultUnit,
+          } = result.product;
+          onProductCreated({
+            id,
+            name: productName,
+            emoji: productEmoji,
+            defaultCategory,
+            defaultUnit,
+          });
           onClose();
         } else {
           setError(result.error || 'Failed to save product');
@@ -142,8 +166,20 @@ export default function CreateProductModal({
         });
 
         if (result.success && result.product) {
-          const { id, name: productName, emoji: productEmoji, defaultCategory, defaultUnit } = result.product;
-          onProductCreated({ id, name: productName, emoji: productEmoji, defaultCategory, defaultUnit });
+          const {
+            id,
+            name: productName,
+            emoji: productEmoji,
+            defaultCategory,
+            defaultUnit,
+          } = result.product;
+          onProductCreated({
+            id,
+            name: productName,
+            emoji: productEmoji,
+            defaultCategory,
+            defaultUnit,
+          });
           onClose();
         } else if (result.existingProduct) {
           setDuplicateProduct(result.existingProduct);
@@ -152,7 +188,7 @@ export default function CreateProductModal({
           setError(result.error || 'Failed to create product');
         }
       }
-    } catch (err) {
+    } catch {
       setError('Something went wrong');
     } finally {
       setIsLoading(false);
@@ -230,8 +266,8 @@ export default function CreateProductModal({
                 {isLoading
                   ? 'Zapisywanie...'
                   : productId
-                  ? 'Zapisz zmiany'
-                  : 'Zapisz produkt'}
+                    ? 'Zapisz zmiany'
+                    : 'Zapisz produkt'}
               </button>
             </div>
           </form>

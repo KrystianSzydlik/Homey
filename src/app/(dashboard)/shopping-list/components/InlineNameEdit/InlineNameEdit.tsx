@@ -5,6 +5,7 @@ import { updateShoppingItem } from '@/app/lib/shopping-actions';
 import {
   ShoppingItemWithCreator,
   ProductSuggestion,
+  ProductCallbackData,
   isCatalogSuggestion,
 } from '@/types/shopping';
 import { useProductCacheContext } from '../../contexts/ProductCacheContext';
@@ -27,7 +28,7 @@ export default function InlineNameEdit({
   isEditing = false,
   onCancel,
 }: InlineNameEditProps & { isEditing?: boolean; onCancel?: () => void }) {
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [newProductName, setNewProductName] = useState('');
   const { refreshCache } = useProductCacheContext();
@@ -59,7 +60,7 @@ export default function InlineNameEdit({
   );
 
   const handleCreateNewProduct = useCallback(
-    (product: any) => {
+    (product: ProductCallbackData) => {
       startTransition(async () => {
         const result = await updateShoppingItem(itemId, {
           name: product.name,

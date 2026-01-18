@@ -55,7 +55,6 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   const {
     lists,
     selectedListIds,
-    addList, // Note: This updates base state. Optimistic hook also exposes addListOptimistic if needed.
     addListOptimistic,
     deleteList,
     toggleListSelection,
@@ -63,7 +62,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     deleteItemOptimistic,
     updateItemOptimistic,
     toggleItemOptimistic,
-    reorderItems, // This is likely base state updater? We might want optimistic reorder too.
+    reorderItems,
     deleteAllItems,
     clearCheckedItems,
   } = useOptimisticShoppingList(initialLists);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useTransition, useEffect } from 'react';
+import { useState, useRef, useCallback, useTransition } from 'react';
 import { updateShoppingItem } from '@/app/lib/shopping-actions';
 import { ShoppingItemWithCreator } from '@/types/shopping';
 import styles from './InlineQuantityEdit.module.scss';
@@ -24,17 +24,11 @@ export default function InlineQuantityEdit({
   const [isPending, startTransition] = useTransition();
   const escapePressed = useRef(false);
 
-  // Sync state with props when they change (e.g. after successful update)
-  useEffect(() => {
-    if (!isEditing) {
-      setQuantity(initialQuantity);
-      setUnit(initialUnit || '');
-    }
-  }, [initialQuantity, initialUnit, isEditing]);
-
   const handleSave = useCallback(async () => {
     if (escapePressed.current) {
       escapePressed.current = false;
+      setQuantity(initialQuantity);
+      setUnit(initialUnit || '');
       return;
     }
     if (quantity === initialQuantity && (unit || null) === initialUnit) {
@@ -50,6 +44,8 @@ export default function InlineQuantityEdit({
 
       if (result.success && result.item) {
         onUpdate(result.item);
+        setQuantity(result.item.quantity);
+        setUnit(result.item.unit || '');
         setIsEditing(false);
       }
     });
