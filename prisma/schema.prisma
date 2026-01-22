@@ -116,6 +116,9 @@ model ShoppingItem {
   position    Int       @default(0)
   emoji       String?
 
+  // Purchase price tracking for finances analytics
+  price       Decimal?  @db.Decimal(10, 2)
+
   // Statystyki dla smart suggestions
   purchaseCount              Int       @default(0)
   lastPurchasedAt            DateTime?

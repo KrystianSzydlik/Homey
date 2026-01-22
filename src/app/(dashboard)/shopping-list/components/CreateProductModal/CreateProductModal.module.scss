@@ -1,16 +1,5 @@
 @import '@/styles/variables';
 
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10001;
-}
-
 .modal {
   background: rgba(30, 27, 75, 0.95);
   border: 1px solid rgba(139, 92, 246, 0.3);
@@ -24,6 +13,9 @@
     0 25px 50px -12px rgba(0, 0, 0, 0.5),
     var(--glow-rose);
   animation: modalAppear 0.3s ease-out;
+  position: relative;
+  bottom: 250px;
+  z-index: 100;
 }
 
 @keyframes modalAppear {

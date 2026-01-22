@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { ShoppingCategory } from '@prisma/client';
 import { ProductSuggestion, ProductCallbackData } from '@/types/shopping';
+import { useProductCacheContext } from '../../contexts/ProductCacheContext';
 import ProductAutocomplete from '../ProductAutocomplete/ProductAutocomplete';
 import CreateProductModal from '../CreateProductModal/CreateProductModal';
 import styles from './AddItemForm.module.scss';
@@ -10,23 +12,30 @@ interface AddItemFormProps {
   onAddItem: (
     name: string,
     productId?: string,
-    product?: { emoji?: string | null; defaultUnit?: string | null }
+    product?: {
+      emoji?: string | null;
+      defaultUnit?: string | null;
+      category?: ShoppingCategory;
+    }
   ) => void;
 }
 
 export default function AddItemForm({ onAddItem }: AddItemFormProps) {
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [newProductName, setNewProductName] = useState('');
+  const { refreshCache } = useProductCacheContext();
 
   const handleCreateNewProduct = useCallback(
     (product: ProductCallbackData) => {
       onAddItem(product.name, product.id, {
         emoji: product.emoji,
         defaultUnit: product.defaultUnit,
+        category: product.defaultCategory,
       });
+      refreshCache();
       setShowCreateProduct(false);
     },
-    [onAddItem]
+    [onAddItem, refreshCache]
   );
 
   const handleProductSelect = useCallback(
@@ -42,6 +51,7 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
       onAddItem(suggestion.name, suggestion.id, {
         emoji: suggestion.emoji,
         defaultUnit: suggestion.defaultUnit,
+        category: suggestion.category,
       });
     },
     [onAddItem]
