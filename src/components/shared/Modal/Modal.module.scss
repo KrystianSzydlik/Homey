@@ -1,0 +1,306 @@
+@use '@/styles/variables' as *;
+
+// ============================================================================
+// Modal Wrapper & Overlay
+// ============================================================================
+
+.wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1;
+}
+
+// ============================================================================
+// Modal Content (Sizes)
+// ============================================================================
+
+.content {
+  position: relative;
+  z-index: 2;
+  background: rgba(30, 27, 75, 0.98);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  border-radius: 16px;
+  width: 100%;
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(139, 92, 246, 0.1);
+
+  @include vertical-scrollbar;
+
+  // Size variants
+  &.sm {
+    max-width: 320px;
+  }
+
+  &.md {
+    max-width: 450px;
+  }
+
+  &.lg {
+    max-width: 600px;
+  }
+
+  &.xl {
+    max-width: 800px;
+  }
+
+  &.full {
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100vh - 2rem);
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// ============================================================================
+// Modal Header
+// ============================================================================
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.5rem 0;
+  gap: 1rem;
+}
+
+.title {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.25rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(139, 92, 246, 0.25);
+    border-color: rgba(139, 92, 246, 0.5);
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #8b5cf6;
+    outline-offset: 2px;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// ============================================================================
+// Modal Body
+// ============================================================================
+
+.body {
+  padding: 1.5rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+// ============================================================================
+// Modal Footer
+// ============================================================================
+
+.footer {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding: 0 1.5rem 1.5rem;
+}
+
+// ============================================================================
+// Buttons (Base)
+// ============================================================================
+
+%button-base {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  &:focus-visible {
+    outline: 2px solid #8b5cf6;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// ============================================================================
+// Cancel Button
+// ============================================================================
+
+.cancelButton {
+  @extend %button-base;
+  background: rgba(139, 92, 246, 0.2);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+
+  &:hover:not(:disabled) {
+    background: rgba(139, 92, 246, 0.3);
+    border-color: rgba(139, 92, 246, 0.5);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+}
+
+// ============================================================================
+// Confirm Button (Variants)
+// ============================================================================
+
+.confirmButton {
+  @extend %button-base;
+  color: white;
+
+  // Default variant (primary/violet)
+  &.default {
+    background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+    }
+  }
+
+  // Danger variant (red)
+  &.danger {
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
+  }
+
+  // Warning variant (amber/orange)
+  &.warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+    }
+  }
+
+  // Success variant (green)
+  &.success {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+}
+
+// ============================================================================
+// Spinner
+// ============================================================================
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ============================================================================
+// Mobile Responsive
+// ============================================================================
+
+@include mobile {
+  .wrapper {
+    padding: 0.5rem;
+  }
+
+  .content {
+    &.sm,
+    &.md,
+    &.lg,
+    &.xl {
+      max-width: calc(100vw - 1rem);
+    }
+  }
+
+  .header {
+    padding: 1.25rem 1.25rem 0;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .body {
+    padding: 1.25rem;
+  }
+
+  .footer {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+    padding: 0 1.25rem 1.25rem;
+  }
+
+  .cancelButton,
+  .confirmButton {
+    width: 100%;
+  }
+}

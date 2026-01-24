@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useState, useTransition } from 'react';
+import { motion } from 'framer-motion';
+import { Modal } from '@/components/shared/Modal';
 import { createShoppingList } from '@/app/lib/shopping-list-actions';
 import { ShoppingListWithCreator } from '@/types/shopping';
 import {
@@ -31,18 +32,6 @@ export default function CreateListModal({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  // Close modal on Escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -70,163 +59,110 @@ export default function CreateListModal({
     });
   };
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={handleBackdropClick}
-            className={styles.backdrop}
-            aria-hidden="true"
-          />
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal.Overlay />
+      <Modal.Content size="md">
+        <Modal.Header>
+          <Modal.Title>Create Shopping List</Modal.Title>
+          <Modal.CloseButton />
+        </Modal.Header>
 
-          {/* Modal */}
-          <motion.div
-            initial={{
-              opacity: 0,
-              scale: 0.95,
-              x: '-50%',
-              y: 'calc(-50% + 20px)',
-            }}
-            animate={{ opacity: 1, scale: 1, x: '-50%', y: '-50%' }}
-            exit={{
-              opacity: 0,
-              scale: 0.95,
-              x: '-50%',
-              y: 'calc(-50% + 20px)',
-            }}
-            transition={{
-              type: 'spring',
-              damping: 20,
-              stiffness: 300,
-              duration: 0.3,
-            }}
-            className={styles.modal}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-title"
+        <Modal.Body>
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <div className={styles.formGroup}>
+              <label htmlFor="list-name" className={styles.label}>
+                List Name
+              </label>
+              <input
+                id="list-name"
+                type="text"
+                placeholder="e.g., Groceries, Hardware Store..."
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                maxLength={50}
+                className={styles.input}
+                autoFocus
+                disabled={isPending}
+              />
+              <span className={styles.charCount}>
+                {formData.name.length}/50
+              </span>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Emoji (Optional)</label>
+              <div className={styles.emojiGrid}>
+                {EMOJI_OPTIONS.map((emoji) => (
+                  <motion.button
+                    key={emoji}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, emoji })}
+                    className={`${styles.emojiOption} ${
+                      formData.emoji === emoji ? styles.selected : ''
+                    }`}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    disabled={isPending}
+                  >
+                    {emoji}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Color (Optional)</label>
+              <div className={styles.colorGrid}>
+                {COLOR_PRESETS.map((preset) => (
+                  <motion.button
+                    key={preset.value}
+                    type="button"
+                    onClick={() =>
+                      setFormData({ ...formData, color: preset.value })
+                    }
+                    className={`${styles.colorOption} ${
+                      formData.color === preset.value ? styles.selected : ''
+                    }`}
+                    style={{ backgroundColor: preset.value }}
+                    title={preset.label}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    disabled={isPending}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={styles.error}
+                role="alert"
+              >
+                {error}
+              </motion.div>
+            )}
+          </form>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Modal.CancelButton disabled={isPending}>Cancel</Modal.CancelButton>
+          <motion.button
+            type="submit"
+            disabled={isPending || !formData.name.trim()}
+            className={styles.submitButton}
+            onClick={handleSubmit}
+            whileHover={{ y: -2 }}
+            whileTap={{ y: 0 }}
           >
-            <h2 id="modal-title" className={styles.title}>
-              Create Shopping List
-            </h2>
-
-            <form onSubmit={handleSubmit} className={styles.form}>
-              {/* Name Input */}
-              <div className={styles.formGroup}>
-                <label htmlFor="list-name" className={styles.label}>
-                  List Name
-                </label>
-                <input
-                  id="list-name"
-                  type="text"
-                  placeholder="e.g., Groceries, Hardware Store..."
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  maxLength={50}
-                  className={styles.input}
-                  autoFocus
-                  disabled={isPending}
-                />
-                <span className={styles.charCount}>
-                  {formData.name.length}/50
-                </span>
-              </div>
-
-              {/* Emoji Selector */}
-              <div className={styles.formGroup}>
-                <label className={styles.label}>Emoji (Optional)</label>
-                <div className={styles.emojiGrid}>
-                  {EMOJI_OPTIONS.map((emoji) => (
-                    <motion.button
-                      key={emoji}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, emoji })}
-                      className={`${styles.emojiOption} ${
-                        formData.emoji === emoji ? styles.selected : ''
-                      }`}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      disabled={isPending}
-                    >
-                      {emoji}
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Color Picker */}
-              <div className={styles.formGroup}>
-                <label className={styles.label}>Color (Optional)</label>
-                <div className={styles.colorGrid}>
-                  {COLOR_PRESETS.map((preset) => (
-                    <motion.button
-                      key={preset.value}
-                      type="button"
-                      onClick={() =>
-                        setFormData({ ...formData, color: preset.value })
-                      }
-                      className={`${styles.colorOption} ${
-                        formData.color === preset.value ? styles.selected : ''
-                      }`}
-                      style={{ backgroundColor: preset.value }}
-                      title={preset.label}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      disabled={isPending}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Error Message */}
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={styles.error}
-                  role="alert"
-                >
-                  {error}
-                </motion.div>
-              )}
-
-              {/* Actions */}
-              <div className={styles.actions}>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={isPending}
-                  className={styles.cancelButton}
-                >
-                  Cancel
-                </button>
-                <motion.button
-                  type="submit"
-                  disabled={isPending || !formData.name.trim()}
-                  className={styles.submitButton}
-                  whileHover={{ y: -2 }}
-                  whileTap={{ y: 0 }}
-                >
-                  {isPending ? 'Creating...' : 'Create List'}
-                </motion.button>
-              </div>
-            </form>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            {isPending ? 'Creating...' : 'Create List'}
+          </motion.button>
+        </Modal.Footer>
+      </Modal.Content>
+    </Modal>
   );
 }

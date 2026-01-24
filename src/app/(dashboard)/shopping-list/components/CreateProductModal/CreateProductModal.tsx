@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ShoppingCategory, Product } from '@prisma/client';
+import { Modal } from '@/components/shared/Modal';
 import { createProduct, updateProduct } from '@/app/lib/product-actions';
 import { getSmartProductDefaults } from '@/app/lib/product-utils';
 import { ProductCallbackData } from '@/types/shopping';
@@ -46,7 +47,6 @@ export default function CreateProductModal({
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
       setName(initialName);
 
       if (productId) {
@@ -59,13 +59,7 @@ export default function CreateProductModal({
         setEmoji(defaults.emoji);
         setUnit('');
       }
-    } else {
-      document.body.style.overflow = 'unset';
     }
-
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
   }, [
     isOpen,
     initialName,
@@ -195,84 +189,77 @@ export default function CreateProductModal({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <>
-      <div
-        className={styles.overlay}
-        onClick={(e) => e.target === e.currentTarget && onClose()}
-      >
-        <div className={styles.modal}>
-          <div className={styles.header}>
-            <h2>{productId ? 'Edytuj produkt' : 'Dodaj nowy produkt'}</h2>
-            <button onClick={onClose} className={styles.closeButton}>
-              ×
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <Modal.Overlay />
+        <Modal.Content size="md">
+          <Modal.Header>
+            <Modal.Title>
+              {productId ? 'Edytuj produkt' : 'Dodaj nowy produkt'}
+            </Modal.Title>
+            <Modal.CloseButton />
+          </Modal.Header>
+
+          <Modal.Body>
+            <form onSubmit={handleSubmit} className={styles.form}>
+              <div className={styles.field}>
+                <label>Nazwa produktu</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  placeholder="np. Pomidory malinowe"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label>Ikona (Emoji)</label>
+                <EmojiPicker currentEmoji={emoji} onSelect={setEmoji} />
+              </div>
+
+              <div className={styles.field}>
+                <label>Kategoria</label>
+                <CategoryPicker
+                  currentCategory={category}
+                  onSelect={setCategory}
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label>Jednostka (opcjonalnie)</label>
+                <input
+                  type="text"
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  placeholder="np. kg, szt"
+                />
+              </div>
+
+              {error && <div className={styles.error}>{error}</div>}
+            </form>
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Modal.CancelButton disabled={isLoading}>Anuluj</Modal.CancelButton>
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={isLoading}
+              onClick={handleSubmit}
+            >
+              {isLoading
+                ? 'Zapisywanie...'
+                : productId
+                  ? 'Zapisz zmiany'
+                  : 'Zapisz produkt'}
             </button>
-          </div>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
 
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <div className={styles.field}>
-              <label>Nazwa produktu</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                placeholder="np. Pomidory malinowe"
-                required
-                autoFocus
-              />
-            </div>
-
-            <div className={styles.field}>
-              <label>Ikona (Emoji)</label>
-              <EmojiPicker currentEmoji={emoji} onSelect={setEmoji} />
-            </div>
-
-            <div className={styles.field}>
-              <label>Kategoria</label>
-              <CategoryPicker
-                currentCategory={category}
-                onSelect={setCategory}
-              />
-            </div>
-
-            <div className={styles.field}>
-              <label>Jednostka (opcjonalnie)</label>
-              <input
-                type="text"
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                placeholder="np. kg, szt"
-              />
-            </div>
-
-            {error && <div className={styles.error}>{error}</div>}
-
-            <div className={styles.actions}>
-              <button
-                type="button"
-                onClick={onClose}
-                className={styles.cancelButton}
-                disabled={isLoading}
-              >
-                Anuluj
-              </button>
-              <button
-                type="submit"
-                className={styles.submitButton}
-                disabled={isLoading}
-              >
-                {isLoading
-                  ? 'Zapisywanie...'
-                  : productId
-                    ? 'Zapisz zmiany'
-                    : 'Zapisz produkt'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
       {showConfirmation && (
         <ConfirmModal
           title="Produkt już istnieje"
