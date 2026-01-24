@@ -8,9 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "validate": "pnpm lint && pnpm typecheck && pnpm test:run",
     "postinstall": "prisma generate"
   },
   "dependencies": {

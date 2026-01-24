@@ -126,7 +126,11 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       listId: string,
       name: string,
       productId?: string,
-      product?: { emoji?: string | null; defaultUnit?: string | null }
+      product?: {
+        emoji?: string | null;
+        defaultUnit?: string | null;
+        category?: ShoppingCategory;
+      }
     ) => {
       // Construct a temporary item for optimistic update
       // Note: productId is required in Prisma but optional for optimistic items
@@ -136,11 +140,12 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
         name,
         quantity: '1',
         unit: product?.defaultUnit || null,
-        category: 'OTHER',
+        category: product?.category || 'OTHER',
         checked: false,
         position: 0,
         shoppingListId: listId,
         emoji: null,
+        price: null,
         purchaseCount: 0,
         lastPurchasedAt: null,
         averageDaysBetweenPurchases: null,
