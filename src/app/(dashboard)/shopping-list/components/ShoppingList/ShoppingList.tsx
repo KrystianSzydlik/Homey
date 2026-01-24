@@ -145,6 +145,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
         position: 0,
         shoppingListId: listId,
         emoji: null,
+        price: null,
         purchaseCount: 0,
         lastPurchasedAt: null,
         averageDaysBetweenPurchases: null,
