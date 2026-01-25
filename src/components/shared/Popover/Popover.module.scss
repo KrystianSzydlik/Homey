@@ -1,0 +1,93 @@
+@use '@/styles/variables' as *;
+
+// ============================================================================
+// Popover Content
+// ============================================================================
+
+.content {
+  z-index: 10001;
+  background: rgba(30, 27, 75, 0.98);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  border-radius: 12px;
+  min-width: 180px;
+  max-width: 320px;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(139, 92, 246, 0.1);
+  overflow: hidden;
+}
+
+// ============================================================================
+// Popover Header
+// ============================================================================
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  gap: 0.5rem;
+}
+
+.title {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(139, 92, 246, 0.25);
+    border-color: rgba(139, 92, 246, 0.4);
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #8b5cf6;
+    outline-offset: 2px;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// ============================================================================
+// Popover Body
+// ============================================================================
+
+.body {
+  padding: 0.75rem 1rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+// ============================================================================
+// Mobile Responsive
+// ============================================================================
+
+@include mobile {
+  .content {
+    max-width: calc(100vw - 2rem);
+  }
+}

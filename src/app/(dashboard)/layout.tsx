@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
+import Header from '@/components/shared/Header';
 
 export default async function DashboardLayout({
   children,
@@ -8,10 +9,16 @@ export default async function DashboardLayout({
 }) {
   const session = await auth();
 
-  // Protect all routes in this group - redirect unauthenticated users to login
   if (!session?.user) {
     redirect('/login');
   }
 
-  return children;
+  const avatarFallback = session.user.name?.[0]?.toUpperCase() || 'U';
+
+  return (
+    <>
+      <Header avatarFallback={avatarFallback} />
+      <main>{children}</main>
+    </>
+  );
 }

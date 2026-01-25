@@ -23,7 +23,7 @@ describe('ConfirmModal', () => {
     it('should render modal when isOpen is true', () => {
       render(<ConfirmModal {...defaultProps} />);
 
-      expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
       expect(screen.getByText('Confirm Action')).toBeInTheDocument();
       expect(
         screen.getByText('Are you sure you want to proceed?')
@@ -33,7 +33,7 @@ describe('ConfirmModal', () => {
     it('should not render modal when isOpen is false', () => {
       render(<ConfirmModal {...defaultProps} isOpen={false} />);
 
-      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     it('should render custom button text', () => {
@@ -182,7 +182,7 @@ describe('ConfirmModal', () => {
       const user = userEvent.setup();
       render(<ConfirmModal {...defaultProps} />);
 
-      const modal = screen.getByRole('alertdialog');
+      const modal = screen.getByRole('dialog');
       await user.click(modal);
 
       expect(mockOnCancel).not.toHaveBeenCalled();
@@ -193,24 +193,30 @@ describe('ConfirmModal', () => {
     it('should have correct ARIA attributes', () => {
       render(<ConfirmModal {...defaultProps} />);
 
-      const modal = screen.getByRole('alertdialog');
+      const modal = screen.getByRole('dialog');
       expect(modal).toHaveAttribute('aria-modal', 'true');
-      expect(modal).toHaveAttribute('aria-labelledby', 'confirm-title');
-      expect(modal).toHaveAttribute('aria-describedby', 'confirm-message');
+      expect(modal).toHaveAttribute('aria-labelledby');
+      expect(modal).toHaveAttribute('aria-describedby');
     });
 
     it('should have proper heading id', () => {
       render(<ConfirmModal {...defaultProps} />);
 
+      const modal = screen.getByRole('dialog');
       const title = screen.getByText('Confirm Action');
-      expect(title).toHaveAttribute('id', 'confirm-title');
+      const titleId = title.getAttribute('id');
+      expect(titleId).toBeTruthy();
+      expect(modal).toHaveAttribute('aria-labelledby', titleId);
     });
 
     it('should have proper message id', () => {
       render(<ConfirmModal {...defaultProps} />);
 
+      const modal = screen.getByRole('dialog');
       const message = screen.getByText('Are you sure you want to proceed?');
-      expect(message).toHaveAttribute('id', 'confirm-message');
+      const messageId = message.getAttribute('id');
+      expect(messageId).toBeTruthy();
+      expect(modal).toHaveAttribute('aria-describedby', messageId);
     });
   });
 
@@ -220,12 +226,12 @@ describe('ConfirmModal', () => {
         <ConfirmModal {...defaultProps} isOpen={false} />
       );
 
-      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
       rerender(<ConfirmModal {...defaultProps} isOpen={true} />);
 
       await waitFor(() => {
-        expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
     });
 
@@ -234,13 +240,13 @@ describe('ConfirmModal', () => {
         <ConfirmModal {...defaultProps} isOpen={true} />
       );
 
-      expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
 
       rerender(<ConfirmModal {...defaultProps} isOpen={false} />);
 
       await waitFor(
         () => {
-          expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+          expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
         },
         { timeout: 1000 }
       );
@@ -259,7 +265,9 @@ describe('ConfirmModal', () => {
     it('should handle empty message', () => {
       render(<ConfirmModal {...defaultProps} message="" />);
 
-      const message = document.getElementById('confirm-message');
+      const modal = screen.getByRole('dialog');
+      const messageId = modal.getAttribute('aria-describedby');
+      const message = messageId ? document.getElementById(messageId) : null;
       expect(message).toBeInTheDocument();
       expect(message).toBeEmptyDOMElement();
     });
@@ -289,7 +297,7 @@ describe('ConfirmModal', () => {
       rerender(<ConfirmModal {...defaultProps} isOpen={true} />);
 
       await waitFor(() => {
-        expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
     });
 
