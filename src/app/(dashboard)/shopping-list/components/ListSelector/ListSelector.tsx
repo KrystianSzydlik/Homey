@@ -2,8 +2,15 @@
 
 import { useMemo, useCallback, useTransition } from 'react';
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
-import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
-import { ShoppingListWithCreator, ShoppingListWithItems } from '@/types/shopping';
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import {
+  ShoppingListWithCreator,
+  ShoppingListWithItems,
+} from '@/types/shopping';
 import { useContextMenuState } from '../../hooks/useContextMenuState';
 import { useDndSensors } from '../../hooks/useDndSensors';
 import { reorderShoppingLists } from '@/app/lib/shopping-list-actions';
@@ -53,10 +60,16 @@ export default function ListSelector({
 
       if (oldIndex === -1 || newIndex === -1) return;
 
-      const reorderedLists = arrayMove(sortedLists, oldIndex, newIndex) as ShoppingListWithItems[];
+      const reorderedLists = arrayMove(
+        sortedLists,
+        oldIndex,
+        newIndex
+      ) as ShoppingListWithItems[];
 
       // Update UI optimistically
-      onReorderLists?.(reorderedLists);
+      startTransition(() => {
+        onReorderLists?.(reorderedLists);
+      });
 
       // Persist to server
       const listIds = reorderedLists.map((list) => list.id);
