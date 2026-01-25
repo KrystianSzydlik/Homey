@@ -48,4 +48,14 @@
     transform: translateY(-5px);
     box-shadow: var(--glow-rose);
   }
+
+  &.dragging {
+    cursor: grabbing;
+    box-shadow: var(--glow-rose);
+    transform: scale(1.05);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
 }

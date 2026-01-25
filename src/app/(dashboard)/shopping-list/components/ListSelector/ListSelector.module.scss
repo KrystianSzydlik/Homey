@@ -53,6 +53,7 @@
   gap: 0.5rem;
   background: rgba(139, 92, 246, 0.2);
   font-size: 0.95rem;
+  touch-action: manipulation;
 
   &:hover {
     border-color: #8b5cf6;
@@ -69,6 +70,12 @@
   &:focus-visible {
     outline: 2px solid #8b5cf6;
     outline-offset: 2px;
+  }
+
+  &.dragging {
+    cursor: grabbing;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
+    transform: scale(1.05);
   }
 }
 

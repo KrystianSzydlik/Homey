@@ -4,11 +4,16 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useCallback, useState } from 'react';
 import DropdownMenu from '@/components/shared/DropdownMenu';
-import InlineNameEdit from '../InlineNameEdit/InlineNameEdit';
 import ConfirmModal from '../ConfirmModal/ConfirmModal';
 import InlineQuantityEdit from '../InlineQuantityEdit/InlineQuantityEdit';
 import styles from './ShoppingItem.module.scss';
 import { ShoppingItemWithCreator } from '@/types/shopping';
+
+interface SourceListInfo {
+  id: string;
+  name: string;
+  emoji: string | null;
+}
 
 interface ShoppingItemProps {
   item: ShoppingItemWithCreator;
@@ -18,6 +23,7 @@ interface ShoppingItemProps {
     updatedItem: Partial<ShoppingItemWithCreator>
   ) => void;
   onToggle: (itemId: string, checked: boolean) => void;
+  sourceList?: SourceListInfo;
 }
 
 export default function ShoppingItem({
@@ -25,9 +31,9 @@ export default function ShoppingItem({
   onDelete,
   onUpdate,
   onToggle,
+  sourceList,
 }: ShoppingItemProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
 
   const {
     attributes,
@@ -93,14 +99,7 @@ export default function ShoppingItem({
         <div className={styles.itemDetails}>
           <span className={styles.emoji}>{emoji}</span>
           <div className={styles.text}>
-            <InlineNameEdit
-              itemId={item.id}
-              initialName={item.name}
-              onUpdate={handleUpdate}
-              isCompleted={item.checked}
-              isEditing={isEditing}
-              onCancel={() => setIsEditing(false)}
-            />
+            <span className={styles.name}>{item.name}</span>
           </div>
         </div>
         <InlineQuantityEdit
@@ -109,6 +108,11 @@ export default function ShoppingItem({
           initialUnit={item.unit}
           onUpdate={handleUpdate}
         />
+        {sourceList && (
+          <span className={styles.sourceList} title={sourceList.name}>
+            {sourceList.emoji || '📋'}
+          </span>
+        )}
       </div>
       <div
         className={styles.actions}
@@ -118,11 +122,6 @@ export default function ShoppingItem({
         <DropdownMenu
           align="right"
           items={[
-            {
-              label: 'Edytuj',
-              onClick: () => setIsEditing(true),
-              icon: <span>✏️</span>,
-            },
             {
               label: 'Usuń',
               onClick: handleDeleteClick,

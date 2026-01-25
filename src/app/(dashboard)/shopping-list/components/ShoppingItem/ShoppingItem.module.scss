@@ -151,10 +151,31 @@
   line-height: 1.4;
 }
 
+.name {
+  font-size: 1rem;
+  color: var(--text-primary);
+
+  .completed & {
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+}
+
 .quantity {
   margin: 0.25rem 0 0;
   font-size: 0.8rem;
   color: var(--text-secondary);
+}
+
+.sourceList {
+  flex-shrink: 0;
+  font-size: 1rem;
+  opacity: 0.6;
+  margin-left: auto;
+  padding: 0.25rem 0.5rem;
+  background: rgba(139, 92, 246, 0.2);
+  border-radius: 12px;
+  cursor: help;
 }
 
 .actions {

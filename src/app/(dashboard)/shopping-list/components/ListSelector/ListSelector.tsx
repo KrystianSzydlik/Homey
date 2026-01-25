@@ -1,7 +1,14 @@
 'use client';
 
-import { useCallback } from 'react';
-import { ShoppingListWithCreator } from '@/types/shopping';
+import { useMemo, useCallback, useTransition } from 'react';
+import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
+import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { ShoppingListWithCreator, ShoppingListWithItems } from '@/types/shopping';
+import { useContextMenuState } from '../../hooks/useContextMenuState';
+import { useDndSensors } from '../../hooks/useDndSensors';
+import { reorderShoppingLists } from '@/app/lib/shopping-list-actions';
+import SortableListChip from './SortableListChip';
+import ListContextMenu from '../ListContextMenu/ListContextMenu';
 import styles from './ListSelector.module.scss';
 
 interface ListSelectorProps {
@@ -9,6 +16,9 @@ interface ListSelectorProps {
   selectedListIds: string[];
   onSelectList: (listId: string) => void;
   onOpenCreateModal: () => void;
+  onDeleteList: (listId: string) => void;
+  onDeleteAllItems: (listId: string) => void;
+  onReorderLists?: (lists: ShoppingListWithItems[]) => void;
 }
 
 export default function ListSelector({
@@ -16,47 +26,99 @@ export default function ListSelector({
   selectedListIds,
   onSelectList,
   onOpenCreateModal,
+  onDeleteList,
+  onDeleteAllItems,
+  onReorderLists,
 }: ListSelectorProps) {
-  const handleToggleList = useCallback(
-    (listId: string) => {
-      onSelectList(listId);
+  const { menuState, openMenu, closeMenu } = useContextMenuState();
+  const sensors = useDndSensors({ touchDelay: 200 });
+  const [, startTransition] = useTransition();
+
+  // Sort lists with selected ones first
+  const sortedLists = useMemo(() => {
+    const selected = lists.filter((l) => selectedListIds.includes(l.id));
+    const unselected = lists.filter((l) => !selectedListIds.includes(l.id));
+    return [...selected, ...unselected];
+  }, [lists, selectedListIds]);
+
+  const selectedList = lists.find((list) => list.id === menuState.targetId);
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      const oldIndex = sortedLists.findIndex((list) => list.id === active.id);
+      const newIndex = sortedLists.findIndex((list) => list.id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const reorderedLists = arrayMove(sortedLists, oldIndex, newIndex) as ShoppingListWithItems[];
+
+      // Update UI optimistically
+      onReorderLists?.(reorderedLists);
+
+      // Persist to server
+      const listIds = reorderedLists.map((list) => list.id);
+      startTransition(async () => {
+        const result = await reorderShoppingLists(listIds);
+        if (!result.success) {
+          console.error('Failed to reorder lists:', result.error);
+        }
+      });
     },
-    [onSelectList]
+    [sortedLists, onReorderLists]
   );
 
   return (
-    <div className={styles.container}>
-      <div className={styles.scroller}>
-        {lists.map((list) => (
-          <button
-            key={list.id}
-            onClick={() => handleToggleList(list.id)}
-            className={`${styles.chip} ${
-              selectedListIds.includes(list.id) ? styles.selected : ''
-            }`}
-            style={
-              selectedListIds.includes(list.id) && list.color
-                ? { backgroundColor: list.color }
-                : undefined
-            }
-            type="button"
+    <>
+      <div className={styles.container}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={sortedLists.map((list) => list.id)}
+            strategy={horizontalListSortingStrategy}
           >
-            {list.emoji && <span className={styles.emoji}>{list.emoji}</span>}
-            <span className={styles.name}>{list.name}</span>
-            <span className={styles.count}>({list._count.items})</span>
-          </button>
-        ))}
+            <div className={styles.scroller}>
+              {sortedLists.map((list) => (
+                <SortableListChip
+                  key={list.id}
+                  list={list}
+                  isSelected={selectedListIds.includes(list.id)}
+                  onSelect={onSelectList}
+                  onContextMenu={openMenu}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+
+        <button
+          onClick={onOpenCreateModal}
+          className={styles.addButton}
+          type="button"
+          title="Create new shopping list"
+          aria-label="Create new shopping list"
+        >
+          +
+        </button>
       </div>
 
-      <button
-        onClick={onOpenCreateModal}
-        className={styles.addButton}
-        type="button"
-        title="Create new shopping list"
-        aria-label="Create new shopping list"
-      >
-        +
-      </button>
-    </div>
+      {selectedList && (
+        <ListContextMenu
+          isOpen={menuState.isOpen}
+          position={menuState.position}
+          listId={selectedList.id}
+          listName={selectedList.name}
+          itemCount={selectedList._count.items}
+          onClearAll={onDeleteAllItems}
+          onDelete={onDeleteList}
+          onClose={closeMenu}
+        />
+      )}
+    </>
   );
 }

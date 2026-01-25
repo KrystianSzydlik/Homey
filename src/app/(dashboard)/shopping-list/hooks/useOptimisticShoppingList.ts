@@ -16,6 +16,7 @@ import {
 type OptimisticAction =
   | { type: 'ADD_LIST'; payload: ShoppingListWithCreator }
   | { type: 'DELETE_LIST'; payload: string }
+  | { type: 'REORDER_LISTS'; payload: ShoppingListWithItems[] }
   | { type: 'ADD_ITEM'; payload: ShoppingItemWithCreator }
   | { type: 'DELETE_ITEM'; payload: string }
   | {
@@ -28,7 +29,7 @@ type OptimisticAction =
       payload: { listId: string; items: ShoppingItemWithCreator[] };
     }
   | { type: 'DELETE_ALL_ITEMS'; payload: string }
-  | { type: 'CLEAR_CHECKED_ITEMS'; payload: { listId: string } }; // Added listId for clarity, though action might be global or list-specific
+  | { type: 'CLEAR_CHECKED_ITEMS'; payload: { listId: string } };
 
 export function useOptimisticShoppingList(
   initialLists: ShoppingListWithItems[]
@@ -47,6 +48,9 @@ export function useOptimisticShoppingList(
 
       case 'DELETE_LIST':
         return currentState.filter((list) => list.id !== action.payload);
+
+      case 'REORDER_LISTS':
+        return action.payload;
 
       case 'ADD_ITEM':
         return currentState.map((list) =>
@@ -272,6 +276,14 @@ export function useOptimisticShoppingList(
     [optimisticLists, dispatchOptimistic, baseState, showToast]
   );
 
+  const reorderListsOptimistic = useCallback(
+    (lists: ShoppingListWithItems[]) => {
+      dispatchOptimistic({ type: 'REORDER_LISTS', payload: lists });
+      baseState.reorderLists(lists);
+    },
+    [dispatchOptimistic, baseState]
+  );
+
   return {
     ...baseState,
     lists: optimisticLists, // Override base lists with optimistic ones
@@ -280,5 +292,6 @@ export function useOptimisticShoppingList(
     toggleItemOptimistic,
     deleteItemOptimistic,
     updateItemOptimistic,
+    reorderListsOptimistic,
   };
 }
