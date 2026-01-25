@@ -7,14 +7,16 @@ import {
 
 type ShoppingListState = {
   lists: ShoppingListWithItems[];
-  selectedListId: string | null;
+  selectedListIds: string[];
 };
 
 type ShoppingListAction =
   | { type: 'SET_LISTS'; payload: ShoppingListWithItems[] }
   | { type: 'ADD_LIST'; payload: ShoppingListWithCreator }
   | { type: 'DELETE_LIST'; payload: string }
-  | { type: 'SELECT_LIST'; payload: string | null }
+  | { type: 'SELECT_LIST'; payload: string }
+  | { type: 'CLEAR_SELECTION' }
+  | { type: 'REORDER_LISTS'; payload: ShoppingListWithItems[] }
   | { type: 'ADD_ITEM'; payload: ShoppingItemWithCreator }
   | { type: 'DELETE_ITEM'; payload: string }
   | {
@@ -42,22 +44,37 @@ function shoppingListReducer(
     case 'ADD_LIST':
       return {
         lists: [...state.lists, { ...action.payload, items: [] }],
-        selectedListId: action.payload.id,
+        selectedListIds: [...state.selectedListIds, action.payload.id],
       };
 
     case 'DELETE_LIST': {
       const newLists = state.lists.filter((list) => list.id !== action.payload);
       return {
         lists: newLists,
-        selectedListId:
-          state.selectedListId === action.payload ? null : state.selectedListId,
+        selectedListIds: state.selectedListIds.filter((id) => id !== action.payload),
       };
     }
 
-    case 'SELECT_LIST':
+    case 'SELECT_LIST': {
+      const isSelected = state.selectedListIds.includes(action.payload);
       return {
         ...state,
-        selectedListId: action.payload,
+        selectedListIds: isSelected
+          ? state.selectedListIds.filter((id) => id !== action.payload)
+          : [...state.selectedListIds, action.payload],
+      };
+    }
+
+    case 'CLEAR_SELECTION':
+      return {
+        ...state,
+        selectedListIds: [],
+      };
+
+    case 'REORDER_LISTS':
+      return {
+        ...state,
+        lists: action.payload,
       };
 
     case 'ADD_ITEM':
@@ -131,7 +148,7 @@ function shoppingListReducer(
 export function useShoppingListState(initialLists: ShoppingListWithItems[]) {
   const [state, dispatch] = useReducer(shoppingListReducer, {
     lists: initialLists,
-    selectedListId: null,
+    selectedListIds: [],
   });
 
   const addList = useCallback((list: ShoppingListWithCreator) => {
@@ -142,8 +159,16 @@ export function useShoppingListState(initialLists: ShoppingListWithItems[]) {
     dispatch({ type: 'DELETE_LIST', payload: listId });
   }, []);
 
-  const selectList = useCallback((listId: string | null) => {
+  const selectList = useCallback((listId: string) => {
     dispatch({ type: 'SELECT_LIST', payload: listId });
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    dispatch({ type: 'CLEAR_SELECTION' });
+  }, []);
+
+  const reorderLists = useCallback((lists: ShoppingListWithItems[]) => {
+    dispatch({ type: 'REORDER_LISTS', payload: lists });
   }, []);
 
   const addItem = useCallback((item: ShoppingItemWithCreator) => {
@@ -178,10 +203,12 @@ export function useShoppingListState(initialLists: ShoppingListWithItems[]) {
 
   return {
     lists: state.lists,
-    selectedListId: state.selectedListId,
+    selectedListIds: state.selectedListIds,
     addList,
     deleteList,
     selectList,
+    clearSelection,
+    reorderLists,
     addItem,
     deleteItem,
     updateItem,

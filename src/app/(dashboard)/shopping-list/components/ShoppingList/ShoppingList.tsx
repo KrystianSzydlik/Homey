@@ -10,10 +10,12 @@ import {
   ShoppingListWithCreator,
 } from '@/types/shopping';
 import { useOptimisticShoppingList } from '@/app/(dashboard)/shopping-list/hooks/useOptimisticShoppingList';
+import { useCombinedListItems } from '../../hooks/useCombinedListItems';
 import { useProductCacheContext } from '../../contexts/ProductCacheContext';
 import { useShoppingListModals } from '../../hooks/useShoppingListModals';
 import { createOptimisticItem } from '../../utils/createOptimisticItem';
 import ShoppingListSection from '../ShoppingListSection/ShoppingListSection';
+import CombinedListSection from '../CombinedListSection/CombinedListSection';
 import ListSelector from '../ListSelector/ListSelector';
 import CreateListModal from '../CreateListModal/CreateListModal';
 import ConfirmModal from '../ConfirmModal/ConfirmModal';
@@ -27,10 +29,11 @@ interface ShoppingListProps {
 export default function ShoppingList({ initialLists }: ShoppingListProps) {
   const {
     lists,
-    selectedListId,
+    selectedListIds,
     addList,
     deleteList,
     selectList,
+
     addItemOptimistic,
     deleteItemOptimistic,
     updateItemOptimistic,
@@ -38,6 +41,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     reorderItems,
     deleteAllItems,
     clearCheckedItems,
+    reorderListsOptimistic,
   } = useOptimisticShoppingList(initialLists);
 
   const { refreshIfStale } = useProductCacheContext();
@@ -48,10 +52,23 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     refreshIfStale();
   }, [refreshIfStale]);
 
-  const selectedList = useMemo(
-    () => lists.find((list) => list.id === selectedListId) ?? null,
-    [lists, selectedListId]
+  // Combined items from all selected lists
+  const { items: combinedItems, availableCategories } = useCombinedListItems(
+    lists,
+    selectedListIds
   );
+
+  // Single list when only one is selected
+  const selectedList = useMemo(
+    () =>
+      selectedListIds.length === 1
+        ? (lists.find((list) => list.id === selectedListIds[0]) ?? null)
+        : null,
+    [lists, selectedListIds]
+  );
+
+  // Default list for adding items (first selected)
+  const defaultListId = selectedListIds[0] ?? '';
 
   const handleListCreated = useCallback(
     (newList: ShoppingListWithCreator) => {
@@ -77,28 +94,36 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
         productId,
         product,
       });
-      await addItemOptimistic(newItem);
+      startTransition(async () => {
+        await addItemOptimistic(newItem);
+      });
     },
     [addItemOptimistic]
   );
 
   const handleDeleteItem = useCallback(
     async (itemId: string) => {
-      await deleteItemOptimistic(itemId);
+      startTransition(async () => {
+        await deleteItemOptimistic(itemId);
+      });
     },
     [deleteItemOptimistic]
   );
 
   const handleItemUpdate = useCallback(
     async (itemId: string, updates: Partial<ShoppingItemWithCreator>) => {
-      await updateItemOptimistic(itemId, updates);
+      startTransition(async () => {
+        await updateItemOptimistic(itemId, updates);
+      });
     },
     [updateItemOptimistic]
   );
 
   const handleToggleItem = useCallback(
     async (itemId: string, checked: boolean) => {
-      await toggleItemOptimistic(itemId, checked);
+      startTransition(async () => {
+        await toggleItemOptimistic(itemId, checked);
+      });
     },
     [toggleItemOptimistic]
   );
@@ -144,41 +169,60 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       );
     }
 
-    if (!selectedListId) {
+    if (selectedListIds.length === 0) {
       return (
         <ListGrid
           lists={lists}
           onSelectList={selectList}
           onOpenCreateModal={modals.openCreateModal}
+          onDeleteList={modals.openDeleteListModal}
+          onDeleteAllItems={modals.openDeleteAllModal}
+          onReorderLists={reorderListsOptimistic}
         />
       );
     }
 
-    if (!selectedList) return null;
+    // Single list selected - use standard section with reordering
+    if (selectedList) {
+      return (
+        <ShoppingListSection
+          list={selectedList}
+          onAddItem={handleAddItem}
+          onDeleteItem={handleDeleteItem}
+          onUpdateItem={handleItemUpdate}
+          onToggleItem={handleToggleItem}
+          onReorderItems={reorderItems}
+          onClearCheckedItems={clearCheckedItems}
+        />
+      );
+    }
 
+    // Multiple lists selected - use combined view
     return (
-      <ShoppingListSection
-        list={selectedList}
+      <CombinedListSection
+        items={combinedItems}
+        availableCategories={availableCategories}
+        defaultListId={defaultListId}
         onAddItem={handleAddItem}
         onDeleteItem={handleDeleteItem}
         onUpdateItem={handleItemUpdate}
         onToggleItem={handleToggleItem}
-        onReorderItems={reorderItems}
         onClearCheckedItems={clearCheckedItems}
-        onDeleteList={modals.openDeleteListModal}
-        onDeleteAllItems={modals.openDeleteAllModal}
       />
     );
   };
 
   return (
     <div className={styles.container}>
-      {lists.length > 0 && selectedListId && (
+      {lists.length > 0 && selectedListIds.length > 0 && (
         <ListSelector
           lists={lists}
-          selectedListIds={[selectedListId]}
+          selectedListIds={selectedListIds}
           onSelectList={selectList}
           onOpenCreateModal={modals.openCreateModal}
+          onDeleteList={modals.openDeleteListModal}
+          onDeleteAllItems={modals.openDeleteAllModal}
+          onReorderLists={reorderListsOptimistic}
         />
       )}
 

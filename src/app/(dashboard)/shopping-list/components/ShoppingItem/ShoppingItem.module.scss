@@ -157,6 +157,17 @@
   color: var(--text-secondary);
 }
 
+.sourceList {
+  flex-shrink: 0;
+  font-size: 1rem;
+  opacity: 0.6;
+  margin-left: auto;
+  padding: 0.25rem 0.5rem;
+  background: rgba(139, 92, 246, 0.2);
+  border-radius: 12px;
+  cursor: help;
+}
+
 .actions {
   display: flex;
   gap: 0.5rem;

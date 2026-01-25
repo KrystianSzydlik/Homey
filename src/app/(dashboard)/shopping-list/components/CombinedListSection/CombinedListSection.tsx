@@ -1,30 +1,20 @@
 'use client';
 
-import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { ShoppingCategory } from '@prisma/client';
 import { useState, useMemo, useCallback, useTransition } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  ShoppingListWithItems,
-  ShoppingItemWithCreator,
-} from '@/types/shopping';
-import {
-  clearCheckedItems as clearCheckedItemsAction,
-  reorderShoppingItems,
-} from '@/app/lib/shopping-actions';
-import { useDndSensors } from '../../hooks/useDndSensors';
+import { ShoppingItemWithCreator } from '@/types/shopping';
+import { clearCheckedItems as clearCheckedItemsAction } from '@/app/lib/shopping-actions';
+import { CombinedItem } from '../../hooks/useCombinedListItems';
 import ShoppingItem from '../ShoppingItem/ShoppingItem';
 import AddItemForm from '../AddItemForm/AddItemForm';
 import CategoryFilter from '../CategoryFilter/CategoryFilter';
 import styles from '../ShoppingList/ShoppingList.module.scss';
 
-interface ShoppingListSectionProps {
-  list: ShoppingListWithItems;
+interface CombinedListSectionProps {
+  items: CombinedItem[];
+  availableCategories: ShoppingCategory[];
+  defaultListId: string;
   onAddItem: (
     listId: string,
     name: string,
@@ -41,29 +31,28 @@ interface ShoppingListSectionProps {
     updates: Partial<ShoppingItemWithCreator>
   ) => Promise<void>;
   onToggleItem: (itemId: string, checked: boolean) => Promise<void>;
-  onReorderItems: (listId: string, items: ShoppingItemWithCreator[]) => void;
   onClearCheckedItems: () => void;
 }
 
-export default function ShoppingListSection({
-  list,
+export default function CombinedListSection({
+  items,
+  availableCategories,
+  defaultListId,
   onAddItem,
   onDeleteItem,
   onUpdateItem,
   onToggleItem,
-  onReorderItems,
   onClearCheckedItems,
-}: ShoppingListSectionProps) {
+}: CombinedListSectionProps) {
   const [selectedCategory, setSelectedCategory] = useState<
     ShoppingCategory | 'ALL'
   >('ALL');
   const [isPending, startTransition] = useTransition();
-  const sensors = useDndSensors();
 
   const filteredItems = useMemo(() => {
-    if (selectedCategory === 'ALL') return list.items;
-    return list.items.filter((item) => item.category === selectedCategory);
-  }, [list.items, selectedCategory]);
+    if (selectedCategory === 'ALL') return items;
+    return items.filter((item) => item.category === selectedCategory);
+  }, [items, selectedCategory]);
 
   const { uncheckedItems, checkedItems } = useMemo(
     () => ({
@@ -71,11 +60,6 @@ export default function ShoppingListSection({
       checkedItems: filteredItems.filter((item) => item.checked),
     }),
     [filteredItems]
-  );
-
-  const availableCategories = useMemo(
-    () => Array.from(new Set(list.items.map((item) => item.category))),
-    [list.items]
   );
 
   const handleAddItem = useCallback(
@@ -87,38 +71,8 @@ export default function ShoppingListSection({
         defaultUnit?: string | null;
         category?: ShoppingCategory;
       }
-    ) => onAddItem(list.id, name, productId, product),
-    [list.id, onAddItem]
-  );
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (!over || active.id === over.id) return;
-
-      const oldIndex = uncheckedItems.findIndex(
-        (item) => item.id === active.id
-      );
-      const newIndex = uncheckedItems.findIndex((item) => item.id === over.id);
-
-      if (oldIndex === -1 || newIndex === -1) return;
-
-      const reorderedUnchecked = [...uncheckedItems];
-      const [movedItem] = reorderedUnchecked.splice(oldIndex, 1);
-      reorderedUnchecked.splice(newIndex, 0, movedItem);
-
-      const newItems = [...reorderedUnchecked, ...checkedItems];
-      onReorderItems(list.id, newItems);
-
-      const itemIds = reorderedUnchecked.map((item) => item.id);
-      startTransition(async () => {
-        const result = await reorderShoppingItems(list.id, itemIds);
-        if (!result.success) {
-          console.error('Failed to reorder:', result.error);
-        }
-      });
-    },
-    [list.id, uncheckedItems, checkedItems, onReorderItems]
+    ) => onAddItem(defaultListId, name, productId, product),
+    [defaultListId, onAddItem]
   );
 
   const handleClearCompleted = useCallback(() => {
@@ -134,7 +88,7 @@ export default function ShoppingListSection({
     <div className={styles.listSection}>
       <AddItemForm onAddItem={handleAddItem} />
 
-      {list.items.length > 0 && (
+      {items.length > 0 && (
         <CategoryFilter
           selectedCategory={selectedCategory}
           onCategoryChange={setSelectedCategory}
@@ -144,54 +98,43 @@ export default function ShoppingListSection({
 
       {isEmpty ? (
         <div className={styles.emptyState}>
-          <p>Brak produktów na liście</p>
+          <p>Brak produktów na wybranych listach</p>
           <p className={styles.emptyStateHint}>Dodaj pierwszy produkt</p>
         </div>
       ) : (
         <>
           {uncheckedItems.length > 0 && (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-              modifiers={[restrictToVerticalAxis]}
+            <motion.ul
+              className={styles.list}
+              layout
+              transition={{ duration: 0.2 }}
             >
-              <SortableContext
-                items={uncheckedItems.map((item) => item.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <motion.ul
-                  className={styles.list}
-                  layout
-                  transition={{ duration: 0.2 }}
-                >
-                  <AnimatePresence mode="popLayout">
-                    {uncheckedItems.map((item) => (
-                      <motion.div
-                        key={item.id}
-                        layout
-                        layoutId={item.id}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{
-                          opacity: 0,
-                          scale: 0.9,
-                          transition: { duration: 0.2 },
-                        }}
-                        transition={{ duration: 0.3, ease: 'easeOut' }}
-                      >
-                        <ShoppingItem
-                          item={item}
-                          onDelete={onDeleteItem}
-                          onUpdate={onUpdateItem}
-                          onToggle={onToggleItem}
-                        />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </motion.ul>
-              </SortableContext>
-            </DndContext>
+              <AnimatePresence mode="popLayout">
+                {uncheckedItems.map((item) => (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    layoutId={item.id}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.9,
+                      transition: { duration: 0.2 },
+                    }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                  >
+                    <ShoppingItem
+                      item={item}
+                      onDelete={onDeleteItem}
+                      onUpdate={onUpdateItem}
+                      onToggle={onToggleItem}
+                      sourceList={item.sourceList}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.ul>
           )}
 
           {checkedItems.length > 0 && (
@@ -234,6 +177,7 @@ export default function ShoppingListSection({
                         onDelete={onDeleteItem}
                         onUpdate={onUpdateItem}
                         onToggle={onToggleItem}
+                        sourceList={item.sourceList}
                       />
                     </motion.div>
                   ))}

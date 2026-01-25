@@ -10,6 +10,12 @@ import InlineQuantityEdit from '../InlineQuantityEdit/InlineQuantityEdit';
 import styles from './ShoppingItem.module.scss';
 import { ShoppingItemWithCreator } from '@/types/shopping';
 
+interface SourceListInfo {
+  id: string;
+  name: string;
+  emoji: string | null;
+}
+
 interface ShoppingItemProps {
   item: ShoppingItemWithCreator;
   onDelete: (itemId: string) => void;
@@ -18,6 +24,7 @@ interface ShoppingItemProps {
     updatedItem: Partial<ShoppingItemWithCreator>
   ) => void;
   onToggle: (itemId: string, checked: boolean) => void;
+  sourceList?: SourceListInfo;
 }
 
 export default function ShoppingItem({
@@ -25,6 +32,7 @@ export default function ShoppingItem({
   onDelete,
   onUpdate,
   onToggle,
+  sourceList,
 }: ShoppingItemProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -109,6 +117,11 @@ export default function ShoppingItem({
           initialUnit={item.unit}
           onUpdate={handleUpdate}
         />
+        {sourceList && (
+          <span className={styles.sourceList} title={sourceList.name}>
+            {sourceList.emoji || '📋'}
+          </span>
+        )}
       </div>
       <div
         className={styles.actions}
