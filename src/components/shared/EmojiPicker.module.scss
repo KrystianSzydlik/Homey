@@ -1,0 +1,47 @@
+.emojiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+  gap: 0.5rem;
+}
+
+.emojiOption {
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: rgba(139, 92, 246, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.75rem;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+
+  &:hover:not(:disabled) {
+    background: rgba(139, 92, 246, 0.2);
+  }
+
+  &.selected {
+    border-color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.3);
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #8b5cf6;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Mobile responsive
+@media (max-width: 640px) {
+  .emojiGrid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
