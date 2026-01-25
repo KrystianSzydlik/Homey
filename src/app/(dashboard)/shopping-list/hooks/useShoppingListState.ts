@@ -7,23 +7,31 @@ import {
 
 type ShoppingListState = {
   lists: ShoppingListWithItems[];
-  selectedListIds: string[];
+  selectedListId: string | null;
 };
 
 type ShoppingListAction =
   | { type: 'SET_LISTS'; payload: ShoppingListWithItems[] }
   | { type: 'ADD_LIST'; payload: ShoppingListWithCreator }
   | { type: 'DELETE_LIST'; payload: string }
-  | { type: 'SET_SELECTED_LIST_IDS'; payload: string[] }
-  | { type: 'TOGGLE_LIST_SELECTION'; payload: string }
+  | { type: 'SELECT_LIST'; payload: string | null }
   | { type: 'ADD_ITEM'; payload: ShoppingItemWithCreator }
   | { type: 'DELETE_ITEM'; payload: string }
-  | { type: 'UPDATE_ITEM'; payload: { itemId: string; updatedItem: ShoppingItemWithCreator } }
-  | { type: 'REORDER_ITEMS'; payload: { listId: string; items: ShoppingItemWithCreator[] } }
+  | {
+      type: 'UPDATE_ITEM';
+      payload: { itemId: string; updatedItem: ShoppingItemWithCreator };
+    }
+  | {
+      type: 'REORDER_ITEMS';
+      payload: { listId: string; items: ShoppingItemWithCreator[] };
+    }
   | { type: 'CLEAR_CHECKED_ITEMS' }
   | { type: 'DELETE_ALL_ITEMS'; payload: string };
 
-function shoppingListReducer(state: ShoppingListState, action: ShoppingListAction): ShoppingListState {
+function shoppingListReducer(
+  state: ShoppingListState,
+  action: ShoppingListAction
+): ShoppingListState {
   switch (action.type) {
     case 'SET_LISTS':
       return {
@@ -34,31 +42,23 @@ function shoppingListReducer(state: ShoppingListState, action: ShoppingListActio
     case 'ADD_LIST':
       return {
         lists: [...state.lists, { ...action.payload, items: [] }],
-        selectedListIds: [action.payload.id],
+        selectedListId: action.payload.id,
       };
 
-    case 'DELETE_LIST':
+    case 'DELETE_LIST': {
+      const newLists = state.lists.filter((list) => list.id !== action.payload);
       return {
-        lists: state.lists.filter((list) => list.id !== action.payload),
-        selectedListIds: state.selectedListIds.filter((id) => id !== action.payload),
-      };
-
-    case 'SET_SELECTED_LIST_IDS':
-      return {
-        ...state,
-        selectedListIds: action.payload,
-      };
-
-    case 'TOGGLE_LIST_SELECTION': {
-      const listId = action.payload;
-      const isSelected = state.selectedListIds.includes(listId);
-      return {
-        ...state,
-        selectedListIds: isSelected
-          ? state.selectedListIds.filter((id) => id !== listId)
-          : [...state.selectedListIds, listId],
+        lists: newLists,
+        selectedListId:
+          state.selectedListId === action.payload ? null : state.selectedListId,
       };
     }
+
+    case 'SELECT_LIST':
+      return {
+        ...state,
+        selectedListId: action.payload,
+      };
 
     case 'ADD_ITEM':
       return {
@@ -87,7 +87,9 @@ function shoppingListReducer(state: ShoppingListState, action: ShoppingListActio
             ? {
                 ...list,
                 items: list.items.map((item) =>
-                  item.id === action.payload.itemId ? action.payload.updatedItem : item
+                  item.id === action.payload.itemId
+                    ? action.payload.updatedItem
+                    : item
                 ),
               }
             : list
@@ -129,7 +131,7 @@ function shoppingListReducer(state: ShoppingListState, action: ShoppingListActio
 export function useShoppingListState(initialLists: ShoppingListWithItems[]) {
   const [state, dispatch] = useReducer(shoppingListReducer, {
     lists: initialLists,
-    selectedListIds: [],
+    selectedListId: null,
   });
 
   const addList = useCallback((list: ShoppingListWithCreator) => {
@@ -140,8 +142,8 @@ export function useShoppingListState(initialLists: ShoppingListWithItems[]) {
     dispatch({ type: 'DELETE_LIST', payload: listId });
   }, []);
 
-  const toggleListSelection = useCallback((listId: string) => {
-    dispatch({ type: 'TOGGLE_LIST_SELECTION', payload: listId });
+  const selectList = useCallback((listId: string | null) => {
+    dispatch({ type: 'SELECT_LIST', payload: listId });
   }, []);
 
   const addItem = useCallback((item: ShoppingItemWithCreator) => {
@@ -152,13 +154,19 @@ export function useShoppingListState(initialLists: ShoppingListWithItems[]) {
     dispatch({ type: 'DELETE_ITEM', payload: itemId });
   }, []);
 
-  const updateItem = useCallback((itemId: string, updatedItem: ShoppingItemWithCreator) => {
-    dispatch({ type: 'UPDATE_ITEM', payload: { itemId, updatedItem } });
-  }, []);
+  const updateItem = useCallback(
+    (itemId: string, updatedItem: ShoppingItemWithCreator) => {
+      dispatch({ type: 'UPDATE_ITEM', payload: { itemId, updatedItem } });
+    },
+    []
+  );
 
-  const reorderItems = useCallback((listId: string, items: ShoppingItemWithCreator[]) => {
-    dispatch({ type: 'REORDER_ITEMS', payload: { listId, items } });
-  }, []);
+  const reorderItems = useCallback(
+    (listId: string, items: ShoppingItemWithCreator[]) => {
+      dispatch({ type: 'REORDER_ITEMS', payload: { listId, items } });
+    },
+    []
+  );
 
   const clearCheckedItems = useCallback(() => {
     dispatch({ type: 'CLEAR_CHECKED_ITEMS' });
@@ -170,10 +178,10 @@ export function useShoppingListState(initialLists: ShoppingListWithItems[]) {
 
   return {
     lists: state.lists,
-    selectedListIds: state.selectedListIds,
+    selectedListId: state.selectedListId,
     addList,
     deleteList,
-    toggleListSelection,
+    selectList,
     addItem,
     deleteItem,
     updateItem,
