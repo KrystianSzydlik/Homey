@@ -4,7 +4,6 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useCallback, useState } from 'react';
 import DropdownMenu from '@/components/shared/DropdownMenu';
-import InlineNameEdit from '../InlineNameEdit/InlineNameEdit';
 import ConfirmModal from '../ConfirmModal/ConfirmModal';
 import InlineQuantityEdit from '../InlineQuantityEdit/InlineQuantityEdit';
 import styles from './ShoppingItem.module.scss';
@@ -35,7 +34,6 @@ export default function ShoppingItem({
   sourceList,
 }: ShoppingItemProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
 
   const {
     attributes,
@@ -101,14 +99,7 @@ export default function ShoppingItem({
         <div className={styles.itemDetails}>
           <span className={styles.emoji}>{emoji}</span>
           <div className={styles.text}>
-            <InlineNameEdit
-              itemId={item.id}
-              initialName={item.name}
-              onUpdate={handleUpdate}
-              isCompleted={item.checked}
-              isEditing={isEditing}
-              onCancel={() => setIsEditing(false)}
-            />
+            <span className={styles.name}>{item.name}</span>
           </div>
         </div>
         <InlineQuantityEdit
@@ -131,11 +122,6 @@ export default function ShoppingItem({
         <DropdownMenu
           align="right"
           items={[
-            {
-              label: 'Edytuj',
-              onClick: () => setIsEditing(true),
-              icon: <span>✏️</span>,
-            },
             {
               label: 'Usuń',
               onClick: handleDeleteClick,

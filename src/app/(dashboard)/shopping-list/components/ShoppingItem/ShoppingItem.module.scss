@@ -151,6 +151,16 @@
   line-height: 1.4;
 }
 
+.name {
+  font-size: 1rem;
+  color: var(--text-primary);
+
+  .completed & {
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+}
+
 .quantity {
   margin: 0.25rem 0 0;
   font-size: 0.8rem;
