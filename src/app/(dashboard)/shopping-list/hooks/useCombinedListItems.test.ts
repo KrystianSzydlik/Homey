@@ -25,6 +25,8 @@ const createMockItem = (
   updatedAt: new Date(),
   productId: 'product-1',
   price: null,
+  currency: 'PLN',
+  purchasedAt: null,
   purchaseCount: 0,
   lastPurchasedAt: null,
   averageDaysBetweenPurchases: null,
@@ -57,7 +59,9 @@ const createMockList = (
 describe('useCombinedListItems', () => {
   it('should return empty items when no lists selected', () => {
     const lists = [
-      createMockList('a', 'List A', '🛒', [createMockItem('item-1', 'Milk', 'a')]),
+      createMockList('a', 'List A', '🛒', [
+        createMockItem('item-1', 'Milk', 'a'),
+      ]),
     ];
 
     const { result } = renderHook(() => useCombinedListItems(lists, []));

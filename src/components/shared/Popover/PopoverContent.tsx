@@ -25,6 +25,7 @@ export function PopoverContent({
   align = 'center',
   side = 'bottom',
   sideOffset = 8,
+  matchTriggerWidth = false,
   className,
   children,
 }: PopoverContentProps) {
@@ -39,6 +40,11 @@ export function PopoverContent({
     side,
     sideOffset,
   });
+
+  const triggerWidth =
+    matchTriggerWidth && triggerRef.current
+      ? triggerRef.current.offsetWidth
+      : undefined;
 
   // Handle click outside
   useEffect(() => {
@@ -108,6 +114,7 @@ export function PopoverContent({
             position: 'fixed',
             top: position.top,
             left: position.left,
+            ...(triggerWidth && { minWidth: `${triggerWidth}px` }),
           }}
         >
           {children}

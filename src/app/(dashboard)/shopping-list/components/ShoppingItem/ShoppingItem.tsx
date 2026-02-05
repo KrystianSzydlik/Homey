@@ -5,7 +5,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { useCallback, useState } from 'react';
 import DropdownMenu from '@/components/shared/DropdownMenu';
 import ConfirmModal from '../ConfirmModal/ConfirmModal';
-import InlineQuantityEdit from '../InlineQuantityEdit/InlineQuantityEdit';
+import { Meta } from './Item.Meta';
+import EditItemSheet from '../EditItemSheet/EditItemSheet';
 import styles from './ShoppingItem.module.scss';
 import { ShoppingItemWithCreator } from '@/types/shopping';
 
@@ -34,6 +35,7 @@ export default function ShoppingItem({
   sourceList,
 }: ShoppingItemProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditSheet, setShowEditSheet] = useState(false);
 
   const {
     attributes,
@@ -53,7 +55,6 @@ export default function ShoppingItem({
   }, []);
 
   const handleDeleteConfirm = useCallback(() => {
-    // No transition needed, modal closes instantly
     setShowDeleteConfirm(false);
     onDelete(item.id);
   }, [item.id, onDelete]);
@@ -71,22 +72,21 @@ export default function ShoppingItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const emoji = item.product?.emoji || '✨';
+  const emoji = item.product?.emoji || item.emoji || '✨'; // Fallback logic
 
   return (
-    <li
-      ref={setNodeRef}
-      style={style}
-      className={`${styles.item} ${item.checked ? styles.completed : ''} ${
-        isDragging ? styles.dragging : ''
-      }`}
-    >
-      {!item.checked && (
+    <>
+      <li
+        ref={setNodeRef}
+        style={style}
+        className={`${styles.item} ${item.checked ? styles.completed : ''} ${
+          isDragging ? styles.dragging : ''
+        }`}
+      >
         <div className={styles.dragHandle} {...attributes} {...listeners}>
-          <span className={styles.dragIcon}>⋮⋮</span>
+          {!item.checked && <span className={styles.dragIcon}>⋮⋮</span>}
         </div>
-      )}
-      <div className={styles.content}>
+
         <input
           type="checkbox"
           checked={item.checked}
@@ -96,41 +96,51 @@ export default function ShoppingItem({
             item.checked ? 'unchecked' : 'checked'
           }`}
         />
-        <div className={styles.itemDetails}>
-          <span className={styles.emoji}>{emoji}</span>
-          <div className={styles.text}>
-            <span className={styles.name}>{item.name}</span>
-          </div>
+
+        <div className={styles.emoji}>{emoji}</div>
+
+        <div className={styles.content} onClick={() => setShowEditSheet(true)}>
+          <div className={styles.name}>{item.name}</div>
+          <Meta
+            quantity={item.quantity}
+            unit={item.unit}
+            price={item.price}
+            checked={item.checked}
+            currency={item.currency || 'PLN'}
+          />
         </div>
-        <InlineQuantityEdit
-          itemId={item.id}
-          initialQuantity={item.quantity}
-          initialUnit={item.unit}
-          onUpdate={handleUpdate}
-        />
-        {sourceList && (
-          <span className={styles.sourceList} title={sourceList.name}>
-            {sourceList.emoji || '📋'}
-          </span>
-        )}
-      </div>
-      <div
-        className={styles.actions}
-        onPointerDown={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
-      >
-        <DropdownMenu
-          align="right"
-          items={[
-            {
-              label: 'Usuń',
-              onClick: handleDeleteClick,
-              variant: 'danger',
-              icon: <span>🗑️</span>,
-            },
-          ]}
-        />
-      </div>
+
+        <div
+          className={`${styles.listBadge} ${sourceList ? styles.visible : ''}`}
+        >
+          {sourceList && (
+            <span title={sourceList.name}>{sourceList.emoji || '📋'}</span>
+          )}
+        </div>
+
+        <div
+          className={styles.actions}
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
+          <DropdownMenu
+            align="right"
+            items={[
+              {
+                label: 'Edytuj',
+                onClick: () => setShowEditSheet(true),
+                icon: <span>✏️</span>,
+              },
+              {
+                label: 'Usuń',
+                onClick: handleDeleteClick,
+                variant: 'danger',
+                icon: <span>🗑️</span>,
+              },
+            ]}
+          />
+        </div>
+      </li>
 
       {showDeleteConfirm && (
         <ConfirmModal
@@ -144,6 +154,13 @@ export default function ShoppingItem({
           variant="danger"
         />
       )}
-    </li>
+
+      <EditItemSheet
+        item={item}
+        isOpen={showEditSheet}
+        onClose={() => setShowEditSheet(false)}
+        onSave={handleUpdate}
+      />
+    </>
   );
 }

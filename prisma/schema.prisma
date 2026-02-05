@@ -118,6 +118,8 @@ model ShoppingItem {
 
   // Purchase price tracking for finances analytics
   price       Decimal?  @db.Decimal(10, 2)
+  currency    String    @default("PLN")
+  purchasedAt DateTime?
 
   // Statystyki dla smart suggestions
   purchaseCount              Int       @default(0)

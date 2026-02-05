@@ -29,6 +29,8 @@ export function createOptimisticItem({
     shoppingListId: listId,
     emoji: null,
     price: null,
+    currency: 'PLN',
+    purchasedAt: null,
     purchaseCount: 0,
     lastPurchasedAt: null,
     averageDaysBetweenPurchases: null,

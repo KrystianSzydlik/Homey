@@ -7,7 +7,9 @@ import { createProduct, updateProduct } from '@/app/lib/product-actions';
 import { getSmartProductDefaults } from '@/app/lib/product-utils';
 import { ProductCallbackData } from '@/types/shopping';
 import EmojiPicker from '../EmojiPicker/EmojiPicker';
-import CategoryPicker from '../CategoryPicker/CategoryPicker';
+import { Dropdown } from '@/components/shared/Dropdown';
+import { CATEGORIES } from '@/config/shopping';
+import { UNITS } from '@/lib/constants/shopping-units';
 import styles from './CreateProductModal.module.scss';
 import ConfirmModal from '../ConfirmModal/ConfirmModal';
 
@@ -222,19 +224,63 @@ export default function CreateProductModal({
 
               <div className={styles.field}>
                 <label>Kategoria</label>
-                <CategoryPicker
-                  currentCategory={category}
-                  onSelect={setCategory}
+                <Dropdown
+                  value={category}
+                  onChange={(value) => setCategory(value as ShoppingCategory)}
+                  options={CATEGORIES.filter((c) => c.value !== 'ALL').map(
+                    (c) => ({
+                      value: c.value,
+                      label: c.label,
+                      icon: <span>{c.emoji}</span>,
+                    })
+                  )}
                 />
               </div>
 
               <div className={styles.field}>
                 <label>Jednostka (opcjonalnie)</label>
-                <input
-                  type="text"
+                <Dropdown
                   value={unit}
-                  onChange={(e) => setUnit(e.target.value)}
-                  placeholder="np. kg, szt"
+                  onChange={(value) => setUnit(value)}
+                  groups={[
+                    {
+                      label: 'Waga',
+                      options: UNITS.filter((u) => u.category === 'weight').map(
+                        (u) => ({
+                          value: u.id,
+                          label: `${u.short} (${u.full.one})`,
+                        })
+                      ),
+                    },
+                    {
+                      label: 'Objętość',
+                      options: UNITS.filter((u) => u.category === 'volume').map(
+                        (u) => ({
+                          value: u.id,
+                          label: `${u.short} (${u.full.one})`,
+                        })
+                      ),
+                    },
+                    {
+                      label: 'Ilość',
+                      options: UNITS.filter((u) => u.category === 'count').map(
+                        (u) => ({
+                          value: u.id,
+                          label: `${u.short} (${u.full.one})`,
+                        })
+                      ),
+                    },
+                    {
+                      label: 'Pojemniki',
+                      options: UNITS.filter(
+                        (u) => u.category === 'container'
+                      ).map((u) => ({
+                        value: u.id,
+                        label: `${u.short} (${u.full.one})`,
+                      })),
+                    },
+                  ]}
+                  placeholder="Wybierz jednostkę..."
                 />
               </div>
 
