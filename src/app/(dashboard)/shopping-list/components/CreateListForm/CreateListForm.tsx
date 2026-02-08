@@ -38,7 +38,6 @@ export function CreateListForm({
     handleSubmit,
     control,
     setError,
-    watch,
     formState: { errors },
   } = useForm<CreateListFormData>({
     resolver: zodResolver(createShoppingListSchema),
@@ -48,8 +47,6 @@ export function CreateListForm({
       color: DEFAULT_LIST_COLOR,
     },
   });
-
-  const nameValue = watch('name');
 
   const onSubmit = (data: CreateListFormData) => {
     startTransition(async () => {
@@ -80,15 +77,9 @@ export function CreateListForm({
           disabled={isPending}
           {...register('name')}
         />
-        <div className={styles.inputFooter}>
-          {errors.name ? (
-            <span className={styles.errorMessage}>{errors.name.message}</span>
-          ) : (
-            <span className={styles.charCount}>
-              {nameValue?.length || 0}/50
-            </span>
-          )}
-        </div>
+        {errors.name && (
+          <span className={styles.errorMessage}>{errors.name.message}</span>
+        )}
       </div>
 
       <div className={styles.formGroup}>
@@ -143,7 +134,7 @@ export function CreateListForm({
         </button>
         <motion.button
           type="submit"
-          disabled={isPending || !nameValue?.trim()}
+          disabled={isPending}
           className={styles.submitButton}
           whileHover={{ y: -2 }}
           whileTap={{ y: 0 }}
