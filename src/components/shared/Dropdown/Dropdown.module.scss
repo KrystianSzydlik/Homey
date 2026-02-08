@@ -1,0 +1,121 @@
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(139, 92, 246, 0.4);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.triggerContent {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.triggerIcon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.label {
+  color: white;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.chevron {
+  font-size: 0.6rem;
+  opacity: 0.5;
+  transition: transform 0.2s;
+}
+
+.popover {
+  min-width: 200px;
+}
+
+.content {
+  padding: 0.5rem;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.group {
+  margin-bottom: 1rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.groupLabel {
+  padding: 0.5rem 0.875rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.15s ease;
+  position: relative;
+  text-align: left;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+  }
+
+  &.active {
+    background: rgba(139, 92, 246, 0.1);
+    color: #a78bfa;
+    font-weight: 600;
+  }
+}
+
+.optionIcon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.optionLabel {
+  font-size: 0.9375rem;
+  flex: 1;
+}
+
+.check {
+  margin-left: auto;
+  font-size: 1rem;
+  color: #8b5cf6;
+}

@@ -53,6 +53,8 @@ export interface PopoverContentProps extends HTMLAttributes<HTMLDivElement> {
   side?: PopoverSide;
   /** Offset from trigger in pixels (default: 8) */
   sideOffset?: number;
+  /** Match the width of the trigger element (default: false) */
+  matchTriggerWidth?: boolean;
   /** Custom class name */
   className?: string;
   /** Content children */
@@ -66,8 +68,7 @@ export interface PopoverHeaderProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
 }
 
-export interface PopoverTitleProps
-  extends HTMLAttributes<HTMLHeadingElement> {
+export interface PopoverTitleProps extends HTMLAttributes<HTMLHeadingElement> {
   /** Custom class name */
   className?: string;
   /** Title text or content */

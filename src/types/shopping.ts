@@ -10,6 +10,8 @@ export type ShoppingItemWithCreator = ShoppingItem & {
   createdBy: { name: string };
   shoppingList?: { name: string; emoji?: string | null };
   product?: { name: string; emoji?: string | null } | null;
+  currency: string;
+  purchasedAt: Date | null;
 };
 
 export type ShoppingListWithItems = ShoppingList & {

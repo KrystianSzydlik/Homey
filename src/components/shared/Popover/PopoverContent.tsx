@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { usePopoverContext } from './PopoverContext';
@@ -25,6 +25,7 @@ export function PopoverContent({
   align = 'center',
   side = 'bottom',
   sideOffset = 8,
+  matchTriggerWidth = false,
   className,
   children,
 }: PopoverContentProps) {
@@ -39,6 +40,18 @@ export function PopoverContent({
     side,
     sideOffset,
   });
+
+  const [triggerWidth, setTriggerWidth] = useState<number | undefined>(
+    undefined
+  );
+
+  useLayoutEffect(() => {
+    if (isOpen && matchTriggerWidth && triggerRef.current) {
+      setTriggerWidth(triggerRef.current.offsetWidth);
+    } else {
+      setTriggerWidth(undefined);
+    }
+  }, [isOpen, matchTriggerWidth, triggerRef]);
 
   // Handle click outside
   useEffect(() => {
@@ -108,6 +121,7 @@ export function PopoverContent({
             position: 'fixed',
             top: position.top,
             left: position.left,
+            ...(triggerWidth && { minWidth: `${triggerWidth}px` }),
           }}
         >
           {children}
