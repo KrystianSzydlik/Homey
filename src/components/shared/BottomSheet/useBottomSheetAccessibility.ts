@@ -6,7 +6,7 @@ interface UseBottomSheetAccessibilityProps {
   isOpen: boolean;
   onClose: () => void;
   closeOnEscape: boolean;
-  contentRef: RefObject<HTMLDivElement>;
+  contentRef: RefObject<HTMLDivElement | null>;
 }
 
 export function useBottomSheetAccessibility({
@@ -41,20 +41,17 @@ export function useBottomSheetAccessibility({
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
 
-    // Focus first element
     firstElement?.focus();
 
     const handleTabKey = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
 
       if (e.shiftKey) {
-        // Shift + Tab
         if (document.activeElement === firstElement) {
           e.preventDefault();
           lastElement?.focus();
         }
       } else {
-        // Tab
         if (document.activeElement === lastElement) {
           e.preventDefault();
           firstElement?.focus();

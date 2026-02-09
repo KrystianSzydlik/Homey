@@ -18,7 +18,7 @@ export interface BottomSheetContextValue {
   closeOnEscape: boolean;
   closeOnSwipeDown: boolean;
   maxHeight: string;
-  contentRef: RefObject<HTMLDivElement>;
+  contentRef: RefObject<HTMLDivElement | null>;
 }
 
 export interface BottomSheetContentProps {
@@ -34,7 +34,7 @@ export interface BottomSheetBaseProps {
 
 export interface BottomSheetButtonProps {
   children: ReactNode;
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
   className?: string;
   type?: 'button' | 'submit' | 'reset';

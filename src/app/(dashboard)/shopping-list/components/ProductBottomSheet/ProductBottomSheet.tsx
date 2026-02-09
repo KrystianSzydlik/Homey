@@ -25,8 +25,46 @@ interface ProductBottomSheetProps {
 
 // Common food emojis organized by category
 const EMOJI_CATEGORIES = {
-  FRUITS_VEGGIES: ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🥑', '🍆', '🥦', '🥬', '🥒', '🌽', '🥕', '🫑', '🥔'],
-  MEAT_FISH: ['🥩', '🍗', '🍖', '🥓', '🍤', '🦐', '🦞', '🦀', '🐟', '🐠', '🦑', '🍳'],
+  FRUITS_VEGGIES: [
+    '🍎',
+    '🍊',
+    '🍋',
+    '🍌',
+    '🍉',
+    '🍇',
+    '🍓',
+    '🫐',
+    '🍒',
+    '🍑',
+    '🥭',
+    '🍍',
+    '🥥',
+    '🥝',
+    '🍅',
+    '🥑',
+    '🍆',
+    '🥦',
+    '🥬',
+    '🥒',
+    '🌽',
+    '🥕',
+    '🫑',
+    '🥔',
+  ],
+  MEAT_FISH: [
+    '🥩',
+    '🍗',
+    '🍖',
+    '🥓',
+    '🍤',
+    '🦐',
+    '🦞',
+    '🦀',
+    '🐟',
+    '🐠',
+    '🦑',
+    '🍳',
+  ],
   DAIRY: ['🥛', '🧀', '🧈', '🥚'],
   BAKERY: ['🍞', '🥐', '🥖', '🥨', '🥯', '🧇', '🥞'],
   SNACKS: ['🍿', '🍪', '🍩', '🍰', '🎂', '🧁', '🍫', '🍬', '🍭'],
@@ -53,7 +91,9 @@ export default function ProductBottomSheet({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [duplicateProduct, setDuplicateProduct] = useState<Product | null>(null);
+  const [duplicateProduct, setDuplicateProduct] = useState<Product | null>(
+    null
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -70,7 +110,14 @@ export default function ProductBottomSheet({
         setUnit('');
       }
     }
-  }, [isOpen, initialName, productId, initialCategory, initialEmoji, initialUnit]);
+  }, [
+    isOpen,
+    initialName,
+    productId,
+    initialCategory,
+    initialEmoji,
+    initialUnit,
+  ]);
 
   const handleNameChange = (newName: string) => {
     setName(newName);
@@ -95,8 +142,20 @@ export default function ProductBottomSheet({
     });
 
     if (result.success && result.product) {
-      const { id, name: productName, emoji: productEmoji, defaultCategory, defaultUnit } = result.product;
-      onProductCreated({ id, name: productName, emoji: productEmoji, defaultCategory, defaultUnit });
+      const {
+        id,
+        name: productName,
+        emoji: productEmoji,
+        defaultCategory,
+        defaultUnit,
+      } = result.product;
+      onProductCreated({
+        id,
+        name: productName,
+        emoji: productEmoji,
+        defaultCategory,
+        defaultUnit,
+      });
       onClose();
     } else {
       setError(result.error || 'Failed to update product');
@@ -124,8 +183,20 @@ export default function ProductBottomSheet({
         });
 
         if (result.success && result.product) {
-          const { id, name: productName, emoji: productEmoji, defaultCategory, defaultUnit } = result.product;
-          onProductCreated({ id, name: productName, emoji: productEmoji, defaultCategory, defaultUnit });
+          const {
+            id,
+            name: productName,
+            emoji: productEmoji,
+            defaultCategory,
+            defaultUnit,
+          } = result.product;
+          onProductCreated({
+            id,
+            name: productName,
+            emoji: productEmoji,
+            defaultCategory,
+            defaultUnit,
+          });
           onClose();
         } else {
           setError(result.error || 'Failed to save product');
@@ -139,8 +210,20 @@ export default function ProductBottomSheet({
         });
 
         if (result.success && result.product) {
-          const { id, name: productName, emoji: productEmoji, defaultCategory, defaultUnit } = result.product;
-          onProductCreated({ id, name: productName, emoji: productEmoji, defaultCategory, defaultUnit });
+          const {
+            id,
+            name: productName,
+            emoji: productEmoji,
+            defaultCategory,
+            defaultUnit,
+          } = result.product;
+          onProductCreated({
+            id,
+            name: productName,
+            emoji: productEmoji,
+            defaultCategory,
+            defaultUnit,
+          });
           onClose();
         } else if (result.existingProduct) {
           setDuplicateProduct(result.existingProduct);
@@ -174,8 +257,10 @@ export default function ProductBottomSheet({
             <form onSubmit={handleSubmit} className={styles.form}>
               {/* Basic Info Section */}
               <section className={styles.section}>
-                <label className={styles.sectionLabel}>Podstawowe informacje</label>
-                
+                <label className={styles.sectionLabel}>
+                  Podstawowe informacje
+                </label>
+
                 <div className={styles.nameRow}>
                   <div className={styles.emojiPreview}>{emoji}</div>
                   <input
@@ -194,66 +279,80 @@ export default function ProductBottomSheet({
               <section className={styles.section}>
                 <label className={styles.sectionLabel}>Wybierz ikonę</label>
                 <div className={styles.emojiGrid}>
-                  {Object.values(EMOJI_CATEGORIES).flat().map((e) => (
-                    <button
-                      key={e}
-                      type="button"
-                      className={`${styles.emojiButton} ${emoji === e ? styles.selected : ''}`}
-                      onClick={() => setEmoji(e)}
-                    >
-                      {e}
-                    </button>
-                  ))}
+                  {Object.values(EMOJI_CATEGORIES)
+                    .flat()
+                    .map((e) => (
+                      <button
+                        key={e}
+                        type="button"
+                        className={`${styles.emojiButton} ${emoji === e ? styles.selected : ''}`}
+                        onClick={() => setEmoji(e)}
+                      >
+                        {e}
+                      </button>
+                    ))}
                 </div>
               </section>
 
               {/* Details Section */}
               <section className={styles.section}>
                 <label className={styles.sectionLabel}>Szczegóły</label>
-                
+
                 <div className={styles.field}>
                   <label className={styles.fieldLabel}>Kategoria</label>
                   <Dropdown
                     value={category}
                     onChange={(value) => setCategory(value as ShoppingCategory)}
-                    options={CATEGORIES.filter((c) => c.value !== 'ALL').map((c) => ({
-                      value: c.value,
-                      label: c.label,
-                      icon: <span>{c.emoji}</span>,
-                    }))}
+                    options={CATEGORIES.filter((c) => c.value !== 'ALL').map(
+                      (c) => ({
+                        value: c.value,
+                        label: c.label,
+                        icon: <span>{c.emoji}</span>,
+                      })
+                    )}
                   />
                 </div>
 
                 <div className={styles.field}>
-                  <label className={styles.fieldLabel}>Jednostka (opcjonalnie)</label>
+                  <label className={styles.fieldLabel}>
+                    Jednostka (opcjonalnie)
+                  </label>
                   <Dropdown
                     value={unit}
                     onChange={(value) => setUnit(value)}
                     groups={[
                       {
                         label: 'Waga',
-                        options: UNITS.filter((u) => u.category === 'weight').map((u) => ({
+                        options: UNITS.filter(
+                          (u) => u.category === 'weight'
+                        ).map((u) => ({
                           value: u.id,
                           label: `${u.short} (${u.full.one})`,
                         })),
                       },
                       {
                         label: 'Objętość',
-                        options: UNITS.filter((u) => u.category === 'volume').map((u) => ({
+                        options: UNITS.filter(
+                          (u) => u.category === 'volume'
+                        ).map((u) => ({
                           value: u.id,
                           label: `${u.short} (${u.full.one})`,
                         })),
                       },
                       {
                         label: 'Ilość',
-                        options: UNITS.filter((u) => u.category === 'count').map((u) => ({
+                        options: UNITS.filter(
+                          (u) => u.category === 'count'
+                        ).map((u) => ({
                           value: u.id,
                           label: `${u.short} (${u.full.one})`,
                         })),
                       },
                       {
                         label: 'Pojemniki',
-                        options: UNITS.filter((u) => u.category === 'container').map((u) => ({
+                        options: UNITS.filter(
+                          (u) => u.category === 'container'
+                        ).map((u) => ({
                           value: u.id,
                           label: `${u.short} (${u.full.one})`,
                         })),
@@ -273,9 +372,7 @@ export default function ProductBottomSheet({
               Anuluj
             </BottomSheet.CancelButton>
             <BottomSheet.ConfirmButton
-              type="submit"
-              disabled={isLoading || !name.trim()}
-              onClick={handleSubmit}
+              onClick={() => handleSubmit({} as React.FormEvent)}
             >
               {isLoading ? 'Zapisywanie...' : productId ? 'Zapisz' : 'Dodaj'}
             </BottomSheet.ConfirmButton>

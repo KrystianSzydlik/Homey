@@ -8,7 +8,9 @@ const BottomSheetContext = createContext<BottomSheetContextValue | null>(null);
 export function useBottomSheetContext() {
   const context = useContext(BottomSheetContext);
   if (!context) {
-    throw new Error('BottomSheet components must be used within BottomSheet.Root');
+    throw new Error(
+      'BottomSheet components must be used within BottomSheet.Root'
+    );
   }
   return context;
 }
@@ -32,7 +34,7 @@ export function BottomSheetProvider({
   maxHeight,
   children,
 }: BottomSheetProviderProps) {
-  const contentRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
 
   return (
     <BottomSheetContext.Provider
