@@ -75,8 +75,8 @@ vi.mock('../ProductAutocomplete/ProductAutocomplete', () => ({
   ),
 }));
 
-// Mock the CreateProductModal
-vi.mock('../CreateProductModal/CreateProductModal', () => ({
+// Mock the ProductBottomSheet
+vi.mock('../ProductBottomSheet/ProductBottomSheet', () => ({
   default: ({
     isOpen,
     onClose,
@@ -125,7 +125,7 @@ describe('AddItemForm', () => {
       expect(screen.getByTestId('product-autocomplete')).toBeInTheDocument();
     });
 
-    it('should not show CreateProductModal initially', () => {
+    it('should not show ProductBottomSheet initially', () => {
       render(<AddItemForm onAddItem={mockOnAddItem} />);
       expect(
         screen.queryByTestId('create-product-modal')
@@ -162,7 +162,7 @@ describe('AddItemForm', () => {
   });
 
   describe('History Product Selection (Opens Create Modal)', () => {
-    it('should open CreateProductModal when selecting a history item', async () => {
+    it('should open ProductBottomSheet when selecting a history item', async () => {
       const user = userEvent.setup();
       render(<AddItemForm onAddItem={mockOnAddItem} />);
 

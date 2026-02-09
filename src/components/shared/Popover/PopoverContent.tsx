@@ -123,6 +123,9 @@ export function PopoverContent({
             left: position.left,
             ...(triggerWidth && { minWidth: `${triggerWidth}px` }),
           }}
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
         >
           {children}
         </motion.div>

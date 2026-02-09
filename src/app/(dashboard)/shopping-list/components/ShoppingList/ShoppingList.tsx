@@ -17,8 +17,8 @@ import { createOptimisticItem } from '../../utils/createOptimisticItem';
 import ShoppingListSection from '../ShoppingListSection/ShoppingListSection';
 import CombinedListSection from '../CombinedListSection/CombinedListSection';
 import ListSelector from '../ListSelector/ListSelector';
-import CreateListModal from '../CreateListModal/CreateListModal';
-import ConfirmModal from '../ConfirmModal/ConfirmModal';
+import ListBottomSheet from '../ListBottomSheet/ListBottomSheet';
+import { AlertModal } from '@/components/shared/Modal';
 import ListGrid from '../ListGrid/ListGrid';
 import styles from './ShoppingList.module.scss';
 
@@ -226,7 +226,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
         />
       )}
 
-      <CreateListModal
+      <ListBottomSheet
         isOpen={modals.isCreateModalOpen}
         onClose={modals.closeCreateModal}
         onListCreated={handleListCreated}
@@ -235,7 +235,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       <div className={styles.content}>{renderContent()}</div>
 
       {modals.deleteListId && (
-        <ConfirmModal
+        <AlertModal
           isOpen={true}
           title="Delete Shopping List"
           message="Are you sure you want to delete this shopping list? All items will be permanently removed."
@@ -249,7 +249,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       )}
 
       {modals.deleteAllListId && (
-        <ConfirmModal
+        <AlertModal
           isOpen={true}
           title="Clear All Items"
           message="Are you sure you want to delete all items from this list? This action cannot be undone."

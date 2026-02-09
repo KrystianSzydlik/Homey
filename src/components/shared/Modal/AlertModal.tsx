@@ -5,7 +5,7 @@ import type { AlertModalProps } from './types';
 
 /**
  * AlertModal - A preset modal for confirmation dialogs.
- * Drop-in replacement for ConfirmModal with the same API.
+ * Provides a simplified API for common confirmation patterns.
  */
 export function AlertModal({
   isOpen,

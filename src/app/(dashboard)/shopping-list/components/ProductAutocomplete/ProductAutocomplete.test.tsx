@@ -68,8 +68,8 @@ vi.mock('@/app/lib/product-actions', () => ({
   getProductSuggestions: vi.fn().mockResolvedValue([]),
 }));
 
-// Mock CreateProductModal
-vi.mock('../CreateProductModal/CreateProductModal', () => ({
+// Mock ProductBottomSheet
+vi.mock('../ProductBottomSheet/ProductBottomSheet', () => ({
   default: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
     isOpen ? (
       <div data-testid="create-product-modal">
@@ -78,9 +78,9 @@ vi.mock('../CreateProductModal/CreateProductModal', () => ({
     ) : null,
 }));
 
-// Mock ConfirmModal
-vi.mock('../ConfirmModal/ConfirmModal', () => ({
-  default: ({
+// Mock AlertModal
+vi.mock('@/components/shared/Modal', () => ({
+  AlertModal: ({
     isOpen,
     onCancel,
   }: {

@@ -8,8 +8,9 @@ import { getSmartProductDefaults } from '@/app/lib/product-utils';
 import { ProductCallbackData } from '@/types/shopping';
 import { CATEGORIES } from '@/config/shopping';
 import { UNITS } from '@/lib/constants/shopping-units';
+import { FOOD_EMOJIS } from '@/config/emojis';
 import { Dropdown } from '@/components/shared/Dropdown';
-import ConfirmModal from '../ConfirmModal/ConfirmModal';
+import { AlertModal } from '@/components/shared/Modal';
 import styles from './ProductBottomSheet.module.scss';
 
 interface ProductBottomSheetProps {
@@ -22,55 +23,6 @@ interface ProductBottomSheetProps {
   initialUnit?: string;
   onProductCreated: (product: ProductCallbackData) => void;
 }
-
-// Common food emojis organized by category
-const EMOJI_CATEGORIES = {
-  FRUITS_VEGGIES: [
-    '🍎',
-    '🍊',
-    '🍋',
-    '🍌',
-    '🍉',
-    '🍇',
-    '🍓',
-    '🫐',
-    '🍒',
-    '🍑',
-    '🥭',
-    '🍍',
-    '🥥',
-    '🥝',
-    '🍅',
-    '🥑',
-    '🍆',
-    '🥦',
-    '🥬',
-    '🥒',
-    '🌽',
-    '🥕',
-    '🫑',
-    '🥔',
-  ],
-  MEAT_FISH: [
-    '🥩',
-    '🍗',
-    '🍖',
-    '🥓',
-    '🍤',
-    '🦐',
-    '🦞',
-    '🦀',
-    '🐟',
-    '🐠',
-    '🦑',
-    '🍳',
-  ],
-  DAIRY: ['🥛', '🧀', '🧈', '🥚'],
-  BAKERY: ['🍞', '🥐', '🥖', '🥨', '🥯', '🧇', '🥞'],
-  SNACKS: ['🍿', '🍪', '🍩', '🍰', '🎂', '🧁', '🍫', '🍬', '🍭'],
-  DRINKS: ['☕', '🍵', '🧃', '🥤', '🍷', '🍺', '🍻'],
-  OTHER: ['🛒', '📦', '🏠', '🧴', '🧻', '🧽', '🧹'],
-};
 
 export default function ProductBottomSheet({
   isOpen,
@@ -279,18 +231,19 @@ export default function ProductBottomSheet({
               <section className={styles.section}>
                 <label className={styles.sectionLabel}>Wybierz ikonę</label>
                 <div className={styles.emojiGrid}>
-                  {Object.values(EMOJI_CATEGORIES)
-                    .flat()
-                    .map((e) => (
+                  {FOOD_EMOJIS.map((group) =>
+                    group.emojis.map((e, idx) => (
                       <button
-                        key={e}
+                        key={`${group.category}-${e}-${idx}`}
                         type="button"
                         className={`${styles.emojiButton} ${emoji === e ? styles.selected : ''}`}
                         onClick={() => setEmoji(e)}
+                        title={group.category}
                       >
                         {e}
                       </button>
-                    ))}
+                    ))
+                  )}
                 </div>
               </section>
 
@@ -381,7 +334,7 @@ export default function ProductBottomSheet({
       </BottomSheet>
 
       {showConfirmation && (
-        <ConfirmModal
+        <AlertModal
           title="Produkt już istnieje"
           message={`Produkt "${duplicateProduct?.name}" już istnieje. Zaktualizować go?`}
           onConfirm={handleConfirmUpdate}
