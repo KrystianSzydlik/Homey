@@ -1,0 +1,196 @@
+@import '@/styles/variables.scss';
+
+.wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+// Overlay
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  pointer-events: auto;
+  z-index: 1001;
+}
+
+// Content
+.content {
+  position: relative;
+  background: var(--item-bg);
+  backdrop-filter: blur(20px);
+  border-radius: 20px 20px 0 0;
+  pointer-events: auto;
+  overflow: hidden;
+  box-shadow: 
+    0 -4px 24px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  z-index: 1002;
+  
+  // Size variants
+  &.sm {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  
+  &.md {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  &.lg {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  &.full {
+    width: 100%;
+  }
+
+  @include mobile {
+    max-width: 100% !important;
+  }
+}
+
+// Drag handle
+.handleContainer {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 8px;
+  touch-action: none;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.handle {
+  width: 40px;
+  height: 4px;
+  background: var(--text-secondary);
+  opacity: 0.3;
+  border-radius: 2px;
+  transition: opacity 0.2s;
+
+  .handleContainer:hover & {
+    opacity: 0.5;
+  }
+}
+
+// Header
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.closeButton {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Body
+.body {
+  padding: 20px;
+  overflow-y: auto;
+  max-height: calc(90vh - 180px); // Account for header + footer
+  
+  @include vertical-scrollbar(
+    $width: 6px,
+    $thumb-color: rgba(255, 255, 255, 0.1),
+    $thumb-hover-color: rgba(255, 255, 255, 0.2)
+  );
+
+  // Smooth scroll on iOS
+  -webkit-overflow-scrolling: touch;
+}
+
+// Footer
+.footer {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+// Buttons
+.cancelButton,
+.confirmButton {
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+}
+
+.cancelButton {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.confirmButton {
+  background: var(--primary);
+  color: white;
+  box-shadow: var(--glow-rose);
+
+  &:hover:not(:disabled) {
+    background: var(--rose);
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+  }
+}
