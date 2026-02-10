@@ -120,7 +120,7 @@ export default function DropdownMenu({
             style={{
               top: position.top,
               left: position.left,
-              position: 'fixed', // Since we use getBoundingClientRect (viewport relative)
+              position: 'fixed',
               zIndex: 9999,
             }}
           >

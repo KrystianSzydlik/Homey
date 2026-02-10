@@ -2,18 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { ShoppingCategory, Product } from '@prisma/client';
-import { Modal } from '@/components/shared/Modal';
+import { BottomSheet } from '@/components/shared/BottomSheet';
 import { createProduct, updateProduct } from '@/app/lib/product-actions';
 import { getSmartProductDefaults } from '@/app/lib/product-utils';
 import { ProductCallbackData } from '@/types/shopping';
-import EmojiPicker from '../EmojiPicker/EmojiPicker';
-import { Dropdown } from '@/components/shared/Dropdown';
 import { CATEGORIES } from '@/config/shopping';
 import { UNITS } from '@/lib/constants/shopping-units';
-import styles from './CreateProductModal.module.scss';
-import ConfirmModal from '../ConfirmModal/ConfirmModal';
+import { FOOD_EMOJIS } from '@/config/emojis';
+import { Dropdown } from '@/components/shared/Dropdown';
+import { AlertModal } from '@/components/shared/Modal';
+import styles from './ProductBottomSheet.module.scss';
 
-interface CreateProductModalProps {
+interface ProductBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
   productId?: string;
@@ -24,7 +24,7 @@ interface CreateProductModalProps {
   onProductCreated: (product: ProductCallbackData) => void;
 }
 
-export default function CreateProductModal({
+export default function ProductBottomSheet({
   isOpen,
   onClose,
   productId,
@@ -33,7 +33,7 @@ export default function CreateProductModal({
   initialEmoji,
   initialUnit = '',
   onProductCreated,
-}: CreateProductModalProps) {
+}: ProductBottomSheetProps) {
   const [name, setName] = useState(initialName);
   const [category, setCategory] = useState<ShoppingCategory>(
     initialCategory || 'OTHER'
@@ -193,129 +193,154 @@ export default function CreateProductModal({
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <Modal.Overlay />
-        <Modal.Content size="md">
-          <Modal.Header>
-            <Modal.Title>
-              {productId ? 'Edytuj produkt' : 'Dodaj nowy produkt'}
-            </Modal.Title>
-            <Modal.CloseButton />
-          </Modal.Header>
+      <BottomSheet isOpen={isOpen} onClose={onClose} closeOnSwipeDown>
+        <BottomSheet.Overlay />
+        <BottomSheet.Content size="md">
+          <BottomSheet.Handle />
 
-          <Modal.Body>
+          <BottomSheet.Header>
+            <BottomSheet.Title>
+              {productId ? 'Edytuj produkt' : 'Dodaj produkt'}
+            </BottomSheet.Title>
+            <BottomSheet.CloseButton />
+          </BottomSheet.Header>
+
+          <BottomSheet.Body>
             <form onSubmit={handleSubmit} className={styles.form}>
-              <div className={styles.field}>
-                <label>Nazwa produktu</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => handleNameChange(e.target.value)}
-                  placeholder="np. Pomidory malinowe"
-                  required
-                  autoFocus
-                />
-              </div>
+              {/* Basic Info Section */}
+              <section className={styles.section}>
+                <label className={styles.sectionLabel}>
+                  Podstawowe informacje
+                </label>
 
-              <div className={styles.field}>
-                <label>Ikona (Emoji)</label>
-                <EmojiPicker currentEmoji={emoji} onSelect={setEmoji} />
-              </div>
+                <div className={styles.nameRow}>
+                  <div className={styles.emojiPreview}>{emoji}</div>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => handleNameChange(e.target.value)}
+                    placeholder="Nazwa produktu"
+                    className={styles.nameInput}
+                    required
+                    autoFocus
+                  />
+                </div>
+              </section>
 
-              <div className={styles.field}>
-                <label>Kategoria</label>
-                <Dropdown
-                  value={category}
-                  onChange={(value) => setCategory(value as ShoppingCategory)}
-                  options={CATEGORIES.filter((c) => c.value !== 'ALL').map(
-                    (c) => ({
-                      value: c.value,
-                      label: c.label,
-                      icon: <span>{c.emoji}</span>,
-                    })
+              {/* Emoji Section */}
+              <section className={styles.section}>
+                <label className={styles.sectionLabel}>Wybierz ikonę</label>
+                <div className={styles.emojiGrid}>
+                  {FOOD_EMOJIS.map((group) =>
+                    group.emojis.map((e, idx) => (
+                      <button
+                        key={`${group.category}-${e}-${idx}`}
+                        type="button"
+                        className={`${styles.emojiButton} ${emoji === e ? styles.selected : ''}`}
+                        onClick={() => setEmoji(e)}
+                        title={group.category}
+                      >
+                        {e}
+                      </button>
+                    ))
                   )}
-                />
-              </div>
+                </div>
+              </section>
 
-              <div className={styles.field}>
-                <label>Jednostka (opcjonalnie)</label>
-                <Dropdown
-                  value={unit}
-                  onChange={(value) => setUnit(value)}
-                  groups={[
-                    {
-                      label: 'Waga',
-                      options: UNITS.filter((u) => u.category === 'weight').map(
-                        (u) => ({
+              {/* Details Section */}
+              <section className={styles.section}>
+                <label className={styles.sectionLabel}>Szczegóły</label>
+
+                <div className={styles.field}>
+                  <label className={styles.fieldLabel}>Kategoria</label>
+                  <Dropdown
+                    value={category}
+                    onChange={(value) => setCategory(value as ShoppingCategory)}
+                    options={CATEGORIES.filter((c) => c.value !== 'ALL').map(
+                      (c) => ({
+                        value: c.value,
+                        label: c.label,
+                        icon: <span>{c.emoji}</span>,
+                      })
+                    )}
+                  />
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.fieldLabel}>
+                    Jednostka (opcjonalnie)
+                  </label>
+                  <Dropdown
+                    value={unit}
+                    onChange={(value) => setUnit(value)}
+                    groups={[
+                      {
+                        label: 'Waga',
+                        options: UNITS.filter(
+                          (u) => u.category === 'weight'
+                        ).map((u) => ({
                           value: u.id,
                           label: `${u.short} (${u.full.one})`,
-                        })
-                      ),
-                    },
-                    {
-                      label: 'Objętość',
-                      options: UNITS.filter((u) => u.category === 'volume').map(
-                        (u) => ({
+                        })),
+                      },
+                      {
+                        label: 'Objętość',
+                        options: UNITS.filter(
+                          (u) => u.category === 'volume'
+                        ).map((u) => ({
                           value: u.id,
                           label: `${u.short} (${u.full.one})`,
-                        })
-                      ),
-                    },
-                    {
-                      label: 'Ilość',
-                      options: UNITS.filter((u) => u.category === 'count').map(
-                        (u) => ({
+                        })),
+                      },
+                      {
+                        label: 'Ilość',
+                        options: UNITS.filter(
+                          (u) => u.category === 'count'
+                        ).map((u) => ({
                           value: u.id,
                           label: `${u.short} (${u.full.one})`,
-                        })
-                      ),
-                    },
-                    {
-                      label: 'Pojemniki',
-                      options: UNITS.filter(
-                        (u) => u.category === 'container'
-                      ).map((u) => ({
-                        value: u.id,
-                        label: `${u.short} (${u.full.one})`,
-                      })),
-                    },
-                  ]}
-                  placeholder="Wybierz jednostkę..."
-                />
-              </div>
+                        })),
+                      },
+                      {
+                        label: 'Pojemniki',
+                        options: UNITS.filter(
+                          (u) => u.category === 'container'
+                        ).map((u) => ({
+                          value: u.id,
+                          label: `${u.short} (${u.full.one})`,
+                        })),
+                      },
+                    ]}
+                    placeholder="Wybierz jednostkę..."
+                  />
+                </div>
+              </section>
 
               {error && <div className={styles.error}>{error}</div>}
             </form>
-          </Modal.Body>
+          </BottomSheet.Body>
 
-          <Modal.Footer>
-            <Modal.CancelButton disabled={isLoading}>Anuluj</Modal.CancelButton>
-            <button
-              type="submit"
-              className={styles.submitButton}
-              disabled={isLoading}
-              onClick={handleSubmit}
+          <BottomSheet.Footer>
+            <BottomSheet.CancelButton disabled={isLoading}>
+              Anuluj
+            </BottomSheet.CancelButton>
+            <BottomSheet.ConfirmButton
+              onClick={() => handleSubmit({} as React.FormEvent)}
             >
-              {isLoading
-                ? 'Zapisywanie...'
-                : productId
-                  ? 'Zapisz zmiany'
-                  : 'Zapisz produkt'}
-            </button>
-          </Modal.Footer>
-        </Modal.Content>
-      </Modal>
+              {isLoading ? 'Zapisywanie...' : productId ? 'Zapisz' : 'Dodaj'}
+            </BottomSheet.ConfirmButton>
+          </BottomSheet.Footer>
+        </BottomSheet.Content>
+      </BottomSheet>
 
       {showConfirmation && (
-        <ConfirmModal
+        <AlertModal
           title="Produkt już istnieje"
-          message={`Produkt o nazwie "${
-            duplicateProduct?.name
-          }" już istnieje. Czy chcesz go zaktualizować danymi, które wprowadziłeś?`}
+          message={`Produkt "${duplicateProduct?.name}" już istnieje. Zaktualizować go?`}
           onConfirm={handleConfirmUpdate}
           onCancel={() => setShowConfirmation(false)}
           confirmText="Tak, zaktualizuj"
-          cancelText="Nie, anuluj"
+          cancelText="Nie"
           isOpen={showConfirmation}
           variant="warning"
           isLoading={isLoading}

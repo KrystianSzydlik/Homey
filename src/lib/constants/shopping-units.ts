@@ -107,28 +107,28 @@ export function getUnitGroups() {
       label: 'Waga',
       options: UNITS.filter((u) => u.category === 'weight').map((u) => ({
         value: u.id,
-        label: `${u.short} (${u.full.one})`,
+        label: `${u.short}`,
       })),
     },
     {
       label: 'Objętość',
       options: UNITS.filter((u) => u.category === 'volume').map((u) => ({
         value: u.id,
-        label: `${u.short} (${u.full.one})`,
+        label: `${u.short}`,
       })),
     },
     {
       label: 'Ilość',
       options: UNITS.filter((u) => u.category === 'count').map((u) => ({
         value: u.id,
-        label: `${u.short} (${u.full.one})`,
+        label: `${u.short}`,
       })),
     },
     {
       label: 'Pojemniki',
       options: UNITS.filter((u) => u.category === 'container').map((u) => ({
         value: u.id,
-        label: `${u.short} (${u.full.one})`,
+        label: `${u.short}`,
       })),
     },
   ];

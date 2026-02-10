@@ -8,8 +8,8 @@ import { deleteProduct } from '@/app/lib/product-actions';
 import DropdownMenu, {
   DropdownMenuItem,
 } from '@/components/shared/DropdownMenu';
-import CreateProductModal from '../CreateProductModal/CreateProductModal';
-import ConfirmModal from '../ConfirmModal/ConfirmModal';
+import ProductBottomSheet from '../ProductBottomSheet/ProductBottomSheet';
+import { AlertModal } from '@/components/shared/Modal';
 import styles from './ProductAutocomplete.module.scss';
 
 interface ProductAutocompleteProps {
@@ -234,7 +234,7 @@ export default function ProductAutocomplete({
       )}
 
       {editingProduct && isCatalogSuggestion(editingProduct) && (
-        <CreateProductModal
+        <ProductBottomSheet
           isOpen={true}
           onClose={() => setEditingProduct(null)}
           productId={editingProduct.id}
@@ -250,7 +250,7 @@ export default function ProductAutocomplete({
       )}
 
       {deleteConfirmProduct && isCatalogSuggestion(deleteConfirmProduct) && (
-        <ConfirmModal
+        <AlertModal
           isOpen={true}
           title="Usuń produkt z bazy"
           message={`Czy na pewno chcesz usunąć "${deleteConfirmProduct.name}" z katalogu produktów? Ta operacja jest nieodwracalna.`}

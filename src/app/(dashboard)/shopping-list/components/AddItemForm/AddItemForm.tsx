@@ -5,7 +5,7 @@ import { ShoppingCategory } from '@prisma/client';
 import { ProductSuggestion, ProductCallbackData } from '@/types/shopping';
 import { useProductCacheContext } from '../../contexts/ProductCacheContext';
 import ProductAutocomplete from '../ProductAutocomplete/ProductAutocomplete';
-import CreateProductModal from '../CreateProductModal/CreateProductModal';
+import ProductBottomSheet from '../ProductBottomSheet/ProductBottomSheet';
 import styles from './AddItemForm.module.scss';
 
 interface AddItemFormProps {
@@ -67,7 +67,7 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
         />
       </div>
 
-      <CreateProductModal
+      <ProductBottomSheet
         isOpen={showCreateProduct}
         onClose={() => setShowCreateProduct(false)}
         initialName={newProductName}

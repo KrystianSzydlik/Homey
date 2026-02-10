@@ -4,9 +4,9 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useCallback, useState } from 'react';
 import DropdownMenu from '@/components/shared/DropdownMenu';
-import ConfirmModal from '../ConfirmModal/ConfirmModal';
+import { AlertModal } from '@/components/shared/Modal';
 import { Meta } from './Item.Meta';
-import EditItemSheet from '../EditItemSheet/EditItemSheet';
+import ItemBottomSheet from '../ItemBottomSheet/ItemBottomSheet';
 import styles from './ShoppingItem.module.scss';
 import { ShoppingItemWithCreator } from '@/types/shopping';
 
@@ -143,7 +143,7 @@ export default function ShoppingItem({
       </li>
 
       {showDeleteConfirm && (
-        <ConfirmModal
+        <AlertModal
           isOpen={true}
           title="Delete Item"
           message={`Are you sure you want to delete "${item.name}"?`}
@@ -155,7 +155,7 @@ export default function ShoppingItem({
         />
       )}
 
-      <EditItemSheet
+      <ItemBottomSheet
         item={item}
         isOpen={showEditSheet}
         onClose={() => setShowEditSheet(false)}
