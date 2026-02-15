@@ -1,14 +1,13 @@
 import { UNITS } from '@/lib/constants/shopping-units';
+import { formatPlnPrice } from '@/lib/pln-validation';
 import styles from './ShoppingItem.module.scss';
 import React from 'react';
-import { Decimal } from '@prisma/client/runtime/library';
 
 interface MetaProps {
   quantity: string;
   unit: string | null;
-  price: Decimal | null;
+  price: number | null;
   checked: boolean;
-  currency?: string;
 }
 
 export const Meta = ({
@@ -16,7 +15,6 @@ export const Meta = ({
   unit,
   price,
   checked,
-  currency = 'PLN',
 }: MetaProps) => {
   const unitObj = UNITS.find((u) => u.id === unit);
   const unitShort = unitObj?.short || unit || '';
@@ -24,15 +22,14 @@ export const Meta = ({
   let priceDisplay: React.ReactNode = null;
 
   if (price !== null && price !== undefined) {
-    const priceFormatted = price.toFixed(2);
+    const priceFormatted = formatPlnPrice(price);
 
     if (checked) {
-      priceDisplay = `${priceFormatted} ${currency}`;
+      priceDisplay = priceFormatted;
     } else {
-      priceDisplay = `~${priceFormatted} ${currency}`;
+      priceDisplay = `~${priceFormatted}`;
     }
   } else if (checked) {
-    // Placeholder for "Add price" - in the future this could be a button/link working with the parent
     priceDisplay = <span className={styles.addPriceHint}>Dodaj cenę</span>;
   }
 

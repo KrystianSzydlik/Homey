@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { serializeDecimals } from '@/lib/serializers';
 import { ShoppingCategory } from '@prisma/client';
 import { ShoppingItemActionResult } from '@/types/shopping';
 import { z } from 'zod';
@@ -82,7 +83,7 @@ export async function createShoppingItem(
       },
     });
 
-    return { success: true, item };
+    return { success: true, item: serializeDecimals(item) };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
@@ -157,7 +158,7 @@ export async function updateShoppingItem(
       },
     });
 
-    return { success: true, item: updatedItem };
+    return { success: true, item: serializeDecimals(updatedItem) };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
@@ -265,7 +266,7 @@ export async function toggleShoppingItemChecked(
       },
     });
 
-    return { success: true, item: updatedItem };
+    return { success: true, item: serializeDecimals(updatedItem) };
   } catch (error) {
     console.error('Error toggling shopping item:', error);
     return { success: false, error: 'Failed to toggle item' };
@@ -364,7 +365,7 @@ export async function getShoppingItems() {
       },
     });
 
-    return { success: true, items };
+    return { success: true, items: serializeDecimals(items) };
   } catch (error) {
     console.error('Error fetching shopping items:', error);
     return { success: false, error: 'Failed to fetch items' };
@@ -418,7 +419,7 @@ export async function getSuggestedItems() {
       )
       .sort((a, b) => b.urgencyScore - a.urgencyScore);
 
-    return { success: true, items: suggestedItems };
+    return { success: true, items: serializeDecimals(suggestedItems) };
   } catch (error) {
     console.error('Error fetching suggested items:', error);
     return { success: false, error: 'Failed to fetch suggestions' };

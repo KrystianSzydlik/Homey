@@ -6,8 +6,8 @@ import { deleteAllShoppingItems } from '@/app/lib/shopping-actions';
 import { deleteShoppingList } from '@/app/lib/shopping-list-actions';
 import {
   ShoppingItemWithCreator,
-  ShoppingListWithItems,
   ShoppingListWithCreator,
+  ShoppingListWithItems,
 } from '@/types/shopping';
 import { useOptimisticShoppingList } from '@/app/(dashboard)/shopping-list/hooks/useOptimisticShoppingList';
 import { useCombinedListItems } from '../../hooks/useCombinedListItems';

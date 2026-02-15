@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { updateShoppingItem } from '../update-item';
+import { updateShoppingItemDetails } from '../update-item';
 import { Decimal } from '@prisma/client/runtime/library';
 
 // Mock dependencies
@@ -73,13 +73,13 @@ describe('updateShoppingItem', () => {
       updatedAt: new Date(),
     });
 
-    const result = await updateShoppingItem({
+    const result = await updateShoppingItemDetails({
       itemId: 'cld1234567890abc',
       price: 12.99,
       checked: false,
     });
 
-    expect(result.data.price?.toNumber()).toBe(12.99);
+    expect(result.data.price).toBe(12.99);
     expect(result.data.purchasedAt).toBeNull();
   });
 
@@ -132,7 +132,7 @@ describe('updateShoppingItem', () => {
       updatedAt: new Date(),
     } as any);
 
-    const result = await updateShoppingItem({
+    const result = await updateShoppingItemDetails({
       itemId: 'cld1234567890abc',
       checked: true,
     });
@@ -187,7 +187,7 @@ describe('updateShoppingItem', () => {
       updatedAt: new Date(),
     } as any);
 
-    const result = await updateShoppingItem({
+    const result = await updateShoppingItemDetails({
       itemId: 'cld9876543210xyz',
       checked: false,
     });
@@ -197,7 +197,7 @@ describe('updateShoppingItem', () => {
 
   it('should reject negative prices', async () => {
     await expect(
-      updateShoppingItem({ itemId: 'cld1234567890abc', price: -5 })
+      updateShoppingItemDetails({ itemId: 'cld1234567890abc', price: -5 })
     ).rejects.toThrow();
   });
 });

@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { serializeDecimals } from '@/lib/serializers';
 import {
   ShoppingListActionResult,
   ShoppingListWithItems,
@@ -25,7 +26,7 @@ interface UpdateShoppingListInput {
 }
 
 export async function createShoppingList(
-  input: CreateShoppingListInput,
+  input: CreateShoppingListInput
 ): Promise<ShoppingListActionResult> {
   try {
     const { householdId, userId } = await getSessionData();
@@ -63,7 +64,10 @@ export async function createShoppingList(
     return { success: true, list };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.issues[0]?.message || 'Validation failed' };
+      return {
+        success: false,
+        error: error.issues[0]?.message || 'Validation failed',
+      };
     }
     console.error('Error creating shopping list:', error);
     return { success: false, error: 'Failed to create list' };
@@ -72,7 +76,7 @@ export async function createShoppingList(
 
 export async function updateShoppingList(
   listId: string,
-  input: UpdateShoppingListInput,
+  input: UpdateShoppingListInput
 ): Promise<ShoppingListActionResult> {
   try {
     const householdId = await getHouseholdId();
@@ -93,9 +97,12 @@ export async function updateShoppingList(
       emoji: string | null;
       color: string | null;
     }> = {};
-    if (validatedInput.name !== undefined) updateData.name = validatedInput.name;
-    if (validatedInput.emoji !== undefined) updateData.emoji = validatedInput.emoji;
-    if (validatedInput.color !== undefined) updateData.color = validatedInput.color;
+    if (validatedInput.name !== undefined)
+      updateData.name = validatedInput.name;
+    if (validatedInput.emoji !== undefined)
+      updateData.emoji = validatedInput.emoji;
+    if (validatedInput.color !== undefined)
+      updateData.color = validatedInput.color;
 
     const updatedList = await prisma.shoppingList.update({
       where: { id: listId },
@@ -113,7 +120,10 @@ export async function updateShoppingList(
     return { success: true, list: updatedList };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.issues[0]?.message || 'Validation failed' };
+      return {
+        success: false,
+        error: error.issues[0]?.message || 'Validation failed',
+      };
     }
     console.error('Error updating shopping list:', error);
     return { success: false, error: 'Failed to update list' };
@@ -121,7 +131,7 @@ export async function updateShoppingList(
 }
 
 export async function deleteShoppingList(
-  listId: string,
+  listId: string
 ): Promise<ShoppingListActionResult> {
   try {
     const householdId = await getHouseholdId();
@@ -170,7 +180,7 @@ export async function getShoppingLists(): Promise<GetShoppingListsResult> {
               select: { name: true, emoji: true },
             },
             product: {
-              select: { name: true },
+              select: { name: true, emoji: true },
             },
           },
         },
@@ -183,7 +193,7 @@ export async function getShoppingLists(): Promise<GetShoppingListsResult> {
       },
     });
 
-    return { success: true, lists };
+    return { success: true, lists: serializeDecimals(lists) };
   } catch (error) {
     console.error('Error fetching shopping lists:', error);
     return { success: false, error: 'Failed to fetch lists' };
@@ -191,7 +201,7 @@ export async function getShoppingLists(): Promise<GetShoppingListsResult> {
 }
 
 export async function reorderShoppingLists(
-  listIds: string[],
+  listIds: string[]
 ): Promise<ShoppingListActionResult> {
   try {
     const householdId = await getHouseholdId();
@@ -210,7 +220,7 @@ export async function reorderShoppingLists(
       prisma.shoppingList.update({
         where: { id },
         data: { position: index },
-      }),
+      })
     );
 
     await Promise.all(updatePromises);

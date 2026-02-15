@@ -106,7 +106,6 @@ export default function ShoppingItem({
             unit={item.unit}
             price={item.price}
             checked={item.checked}
-            currency={item.currency || 'PLN'}
           />
         </div>
 

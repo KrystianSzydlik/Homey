@@ -6,12 +6,13 @@ import {
   ShoppingCategory,
 } from '@prisma/client';
 
-export type ShoppingItemWithCreator = ShoppingItem & {
+export type ShoppingItemWithCreator = Omit<ShoppingItem, 'price'> & {
   createdBy: { name: string };
   shoppingList?: { name: string; emoji?: string | null };
   product?: { name: string; emoji?: string | null } | null;
   currency: string;
   purchasedAt: Date | null;
+  price: number | null;
 };
 
 export type ShoppingListWithItems = ShoppingList & {
@@ -81,6 +82,10 @@ export function isHistorySuggestion(
 ): suggestion is HistorySuggestion {
   return suggestion.source === 'history' || suggestion.source === 'smart';
 }
+
+export type SerializedShoppingItem = Omit<ShoppingItem, 'price'> & {
+  price: number | null;
+};
 
 export interface ShoppingItemInput {
   name: string;
