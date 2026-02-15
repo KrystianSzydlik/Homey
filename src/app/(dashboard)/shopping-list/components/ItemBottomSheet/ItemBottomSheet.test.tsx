@@ -82,11 +82,22 @@ vi.mock('@/lib/constants/shopping-units', () => ({
   ],
 }));
 
-// Mock updateShoppingItem
-const mockUpdateShoppingItem = vi.fn();
+// Mock updateShoppingItemDetails
+const mockUpdateShoppingItemDetails = vi.fn();
 vi.mock('@/lib/actions/shopping/update-item', () => ({
-  updateShoppingItem: (...args: unknown[]) =>
-    mockUpdateShoppingItem(...args),
+  updateShoppingItemDetails: (...args: unknown[]) =>
+    mockUpdateShoppingItemDetails(...args),
+}));
+
+// Mock parsePlnPrice
+vi.mock('@/lib/pln-validation', () => ({
+  parsePlnPrice: (input: string) => {
+    if (!input) return null;
+    const cleaned = input.replace(/zł|PLN/gi, '').replace(/\s/g, '').replace(',', '.').trim();
+    const num = parseFloat(cleaned);
+    if (isNaN(num) || num < 0) return null;
+    return Math.round(num * 100) / 100;
+  },
 }));
 
 describe('ItemBottomSheet', () => {
@@ -96,7 +107,7 @@ describe('ItemBottomSheet', () => {
     emoji: '🥛',
     quantity: '1',
     unit: 'l',
-    price: 4.5 as any, // Prisma Decimal type - simplified for testing
+    price: 4.5,
     checked: false,
     shoppingListId: 'list-1',
     productId: 'product-1',
@@ -155,7 +166,7 @@ describe('ItemBottomSheet', () => {
     it('should show price input with initial value', () => {
       render(<ItemBottomSheet {...defaultProps} />);
       const priceInput = screen.getByPlaceholderText('0,00');
-      expect(priceInput).toHaveValue(4.5);
+      expect(priceInput).toHaveValue('4.5');
     });
 
     it('should show checked checkbox when item is checked', () => {
@@ -184,14 +195,14 @@ describe('ItemBottomSheet', () => {
     it('should show price input when price exists', () => {
       render(<ItemBottomSheet {...defaultProps} />);
       const priceInput = screen.getByPlaceholderText('0,00');
-      expect(priceInput).toHaveValue(4.5);
+      expect(priceInput).toHaveValue('4.5');
     });
 
     it('should allow clearing price', () => {
-      const itemWithoutPrice = { ...mockItem, price: null as any };
+      const itemWithoutPrice = { ...mockItem, price: null };
       render(<ItemBottomSheet {...defaultProps} item={itemWithoutPrice} />);
       const priceInput = screen.getByPlaceholderText('0,00');
-      expect(priceInput).toHaveValue(null);
+      expect(priceInput).toHaveValue('');
     });
   });
 
@@ -215,7 +226,7 @@ describe('ItemBottomSheet', () => {
       await user.clear(priceInput);
       await user.type(priceInput, '5.99');
 
-      expect(priceInput).toHaveValue(5.99);
+      expect(priceInput).toHaveValue('5.99');
     });
 
     it('should toggle checkbox', async () => {
@@ -246,19 +257,19 @@ describe('ItemBottomSheet', () => {
       const priceInput = screen.getByPlaceholderText('0,00');
       await user.clear(priceInput);
 
-      expect(priceInput).toHaveValue(null);
+      expect(priceInput).toHaveValue('');
     });
   });
 
   describe('Save functionality', () => {
-    it('should call updateShoppingItem on save', async () => {
+    it('should call updateShoppingItemDetails on save', async () => {
       const user = userEvent.setup();
-      mockUpdateShoppingItem.mockResolvedValue({
+      mockUpdateShoppingItemDetails.mockResolvedValue({
         success: true,
         data: {
           quantity: '2',
           unit: 'kg',
-          price: 5.99 as any,
+          price: 5.99,
           checked: true,
         },
       });
@@ -273,7 +284,7 @@ describe('ItemBottomSheet', () => {
       await user.click(saveButton);
 
       await waitFor(() => {
-        expect(mockUpdateShoppingItem).toHaveBeenCalledWith({
+        expect(mockUpdateShoppingItemDetails).toHaveBeenCalledWith({
           itemId: 'item-123',
           quantity: '2',
           unit: 'l',
@@ -285,12 +296,12 @@ describe('ItemBottomSheet', () => {
 
     it('should call onSave and onClose after successful update', async () => {
       const user = userEvent.setup();
-      mockUpdateShoppingItem.mockResolvedValue({
+      mockUpdateShoppingItemDetails.mockResolvedValue({
         success: true,
         data: {
           quantity: '2',
           unit: 'l',
-          price: 4.5 as any,
+          price: 4.5,
           checked: false,
         },
       });
@@ -314,14 +325,14 @@ describe('ItemBottomSheet', () => {
       await user.clear(priceInput);
       await user.type(priceInput, '5.50');
 
-      expect(priceInput).toHaveValue(5.5);
+      expect(priceInput).toHaveValue('5.50');
     });
   });
 
   describe('Error handling', () => {
     it('should display error message on save failure', async () => {
       const user = userEvent.setup();
-      mockUpdateShoppingItem.mockRejectedValue(new Error('Network error'));
+      mockUpdateShoppingItemDetails.mockRejectedValue(new Error('Network error'));
 
       render(<ItemBottomSheet {...defaultProps} />);
 
@@ -339,7 +350,7 @@ describe('ItemBottomSheet', () => {
   describe('Loading states', () => {
     it('should disable buttons while saving', async () => {
       const user = userEvent.setup();
-      mockUpdateShoppingItem.mockImplementation(
+      mockUpdateShoppingItemDetails.mockImplementation(
         () => new Promise((resolve) => setTimeout(resolve, 100))
       );
 
@@ -362,14 +373,14 @@ describe('ItemBottomSheet', () => {
         <ItemBottomSheet {...defaultProps} isOpen={false} />
       );
 
-      const updatedItem = { ...mockItem, quantity: '5', price: 10.0 as any };
+      const updatedItem = { ...mockItem, quantity: '5', price: 10.0 };
       rerender(<ItemBottomSheet {...defaultProps} item={updatedItem} />);
 
       const quantityInput = screen.getByPlaceholderText('1');
       const priceInput = screen.getByPlaceholderText('0,00');
 
       expect(quantityInput).toHaveValue('5');
-      expect(priceInput).toHaveValue(10.0);
+      expect(priceInput).toHaveValue('10');
     });
   });
 });

@@ -5,7 +5,8 @@ import { BottomSheet } from '@/components/shared/BottomSheet';
 import { ShoppingItemWithCreator } from '@/types/shopping';
 import { Dropdown } from '@/components/shared/Dropdown';
 import { getUnitGroups } from '@/lib/constants/shopping-units';
-import { updateShoppingItem } from '@/lib/actions/shopping/update-item';
+import { updateShoppingItemDetails } from '@/lib/actions/shopping/update-item';
+import { parsePlnPrice } from '@/lib/pln-validation';
 import styles from './ItemBottomSheet.module.scss';
 
 interface ItemBottomSheetProps {
@@ -45,9 +46,9 @@ export default function ItemBottomSheet({
     setError(null);
 
     try {
-      const priceNum = price ? parseFloat(price.replace(',', '.')) : null;
+      const priceNum = price ? parsePlnPrice(price) : null;
 
-      const result = await updateShoppingItem({
+      const result = await updateShoppingItemDetails({
         itemId: item.id,
         quantity,
         unit: unit || undefined,
@@ -73,10 +74,6 @@ export default function ItemBottomSheet({
     }
   };
 
-  const handleDeletePrice = () => {
-    setPrice('');
-  };
-
   const helperText = checked
     ? 'Ta cena trafi do statystyk.'
     : 'Cena robocza — nie liczymy jej w statystykach.';
@@ -99,8 +96,9 @@ export default function ItemBottomSheet({
           <form className={styles.form}>
             <div className={styles.fieldRow}>
               <div className={styles.field}>
-                <label className={styles.label}>Ilość</label>
+                <label htmlFor="item-quantity" className={styles.label}>Ilość</label>
                 <input
+                  id="item-quantity"
                   type="text"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
@@ -120,10 +118,11 @@ export default function ItemBottomSheet({
               </div>
 
               <div className={styles.field}>
-                <label className={styles.label}>Cena (PLN)</label>
+                <label htmlFor="item-price" className={styles.label}>Cena (PLN)</label>
                 <input
-                  type="number"
-                  step="0.01"
+                  id="item-price"
+                  type="text"
+                  inputMode="decimal"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder="0,00"

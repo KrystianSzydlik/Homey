@@ -27,10 +27,13 @@ export default defineConfig({
       '@/hooks': path.resolve(__dirname, './src/hooks'),
       '@/config': path.resolve(__dirname, './src/config'),
       '@/styles': path.resolve(__dirname, './src/styles'),
-      // More specific lib paths first
+      // More specific lib paths first (src/lib/)
       '@/lib/constants': path.resolve(__dirname, './src/lib/constants'),
       '@/lib/actions': path.resolve(__dirname, './src/lib/actions'),
       '@/lib/utils': path.resolve(__dirname, './src/lib/utils'),
+      '@/lib/pln-validation.server': path.resolve(__dirname, './src/lib/pln-validation.server'),
+      '@/lib/pln-validation': path.resolve(__dirname, './src/lib/pln-validation'),
+      '@/lib/serializers': path.resolve(__dirname, './src/lib/serializers'),
       // Root-level paths
       '@/lib': path.resolve(__dirname, './lib'),
       '@/auth': path.resolve(__dirname, './auth'),
