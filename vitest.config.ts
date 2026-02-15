@@ -31,6 +31,7 @@ export default defineConfig({
       '@/lib/constants': path.resolve(__dirname, './src/lib/constants'),
       '@/lib/actions': path.resolve(__dirname, './src/lib/actions'),
       '@/lib/utils': path.resolve(__dirname, './src/lib/utils'),
+      '@/lib/pln-validation.server': path.resolve(__dirname, './src/lib/pln-validation.server'),
       '@/lib/pln-validation': path.resolve(__dirname, './src/lib/pln-validation'),
       '@/lib/serializers': path.resolve(__dirname, './src/lib/serializers'),
       // Root-level paths

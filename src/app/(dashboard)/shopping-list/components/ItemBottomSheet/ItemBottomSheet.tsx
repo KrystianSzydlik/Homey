@@ -46,8 +46,7 @@ export default function ItemBottomSheet({
     setError(null);
 
     try {
-      const parsedPrice = price ? parsePlnPrice(price) : null;
-      const priceNum = parsedPrice ? Number(parsedPrice.toFixed(2)) : null;
+      const priceNum = price ? parsePlnPrice(price) : null;
 
       const result = await updateShoppingItemDetails({
         itemId: item.id,

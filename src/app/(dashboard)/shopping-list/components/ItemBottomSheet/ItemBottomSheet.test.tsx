@@ -96,7 +96,7 @@ vi.mock('@/lib/pln-validation', () => ({
     const cleaned = input.replace(/zł|PLN/gi, '').replace(/\s/g, '').replace(',', '.').trim();
     const num = parseFloat(cleaned);
     if (isNaN(num) || num < 0) return null;
-    return { toFixed: (dp: number) => num.toFixed(dp) };
+    return Math.round(num * 100) / 100;
   },
 }));
 
