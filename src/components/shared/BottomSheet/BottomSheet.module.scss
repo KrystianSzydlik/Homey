@@ -1,4 +1,4 @@
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as v;
 
 .wrapper {
   position: fixed;
@@ -23,6 +23,8 @@
 // Content
 .content {
   position: relative;
+  display: flex;
+  flex-direction: column;
   background: var(--item-bg);
   backdrop-filter: blur(20px);
   border-radius: 20px 20px 0 0;
@@ -53,7 +55,7 @@
     width: 100%;
   }
 
-  @include mobile {
+  @include v.mobile {
     max-width: 100% !important;
   }
 }
@@ -131,10 +133,12 @@
 // Body
 .body {
   padding: 20px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   max-height: calc(90vh - 180px); // Account for header + footer
   
-  @include vertical-scrollbar(
+  @include v.vertical-scrollbar(
     $width: 6px,
     $thumb-color: rgba(255, 255, 255, 0.1),
     $thumb-hover-color: rgba(255, 255, 255, 0.2)

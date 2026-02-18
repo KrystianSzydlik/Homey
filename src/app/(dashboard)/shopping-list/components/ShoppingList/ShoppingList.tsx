@@ -33,6 +33,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     addList,
     deleteList,
     selectList,
+    clearSelection,
 
     addItemOptimistic,
     deleteItemOptimistic,
@@ -53,22 +54,42 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   }, [refreshIfStale]);
 
   // Combined items from all selected lists
+  const listsWithItems = useMemo(
+    () => lists.filter((list) => list.items.length > 0),
+    [lists]
+  );
+  const listsWithItemsIds = useMemo(
+    () => new Set(listsWithItems.map((list) => list.id)),
+    [listsWithItems]
+  );
+  const effectiveSelectedListIds = useMemo(
+    () => selectedListIds.filter((id) => listsWithItemsIds.has(id)),
+    [selectedListIds, listsWithItemsIds]
+  );
+
+  useEffect(() => {
+    if (selectedListIds.length > 0 && effectiveSelectedListIds.length === 0) {
+      clearSelection();
+    }
+  }, [selectedListIds, effectiveSelectedListIds, clearSelection]);
+
+  // Combined items from all selected lists
   const { items: combinedItems, availableCategories } = useCombinedListItems(
     lists,
-    selectedListIds
+    effectiveSelectedListIds
   );
 
   // Single list when only one is selected
   const selectedList = useMemo(
     () =>
-      selectedListIds.length === 1
-        ? (lists.find((list) => list.id === selectedListIds[0]) ?? null)
+      effectiveSelectedListIds.length === 1
+        ? (lists.find((list) => list.id === effectiveSelectedListIds[0]) ?? null)
         : null,
-    [lists, selectedListIds]
+    [lists, effectiveSelectedListIds]
   );
 
   // Default list for adding items (first selected)
-  const defaultListId = selectedListIds[0] ?? '';
+  const defaultListId = effectiveSelectedListIds[0] ?? '';
 
   const handleListCreated = useCallback(
     (newList: ShoppingListWithCreator) => {
@@ -169,7 +190,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       );
     }
 
-    if (selectedListIds.length === 0) {
+    if (effectiveSelectedListIds.length === 0) {
       return (
         <ListGrid
           lists={lists}
@@ -212,14 +233,13 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     );
   };
 
-  return (
+      return (
     <div className={styles.container}>
-      {lists.length > 0 && selectedListIds.length > 0 && (
+      {listsWithItems.length > 0 && effectiveSelectedListIds.length > 0 && (
         <ListSelector
-          lists={lists}
-          selectedListIds={selectedListIds}
+          lists={listsWithItems}
+          selectedListIds={effectiveSelectedListIds}
           onSelectList={selectList}
-          onOpenCreateModal={modals.openCreateModal}
           onDeleteList={modals.openDeleteListModal}
           onDeleteAllItems={modals.openDeleteAllModal}
           onReorderLists={reorderListsOptimistic}

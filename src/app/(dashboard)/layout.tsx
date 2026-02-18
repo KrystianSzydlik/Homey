@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import Header from '@/components/shared/Header';
+import styles from './layout.module.scss';
 
 export default async function DashboardLayout({
   children,
@@ -16,9 +17,9 @@ export default async function DashboardLayout({
   const avatarFallback = session.user.name?.[0]?.toUpperCase() || 'U';
 
   return (
-    <>
+    <div className={styles.wrapper}>
       <Header avatarFallback={avatarFallback} />
-      <main>{children}</main>
-    </>
+      <main className={styles.main}>{children}</main>
+    </div>
   );
 }

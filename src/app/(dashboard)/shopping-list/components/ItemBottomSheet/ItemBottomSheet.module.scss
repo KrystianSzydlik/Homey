@@ -1,4 +1,4 @@
-@import '@/styles/variables';
+@use '@/styles/variables' as v;
 
 .form {
   display: flex;
@@ -58,8 +58,8 @@
     box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
   }
 
-  // Better mobile keyboard handling
-  @include mobile {
+  // Better v.mobile keyboard handling
+  @include v.mobile {
     font-size: 16px; // Prevents zoom on iOS
   }
 
@@ -141,7 +141,7 @@
     }
   }
 
-  @include mobile {
+  @include v.mobile {
     width: 22px;
     height: 22px;
     min-width: 22px;

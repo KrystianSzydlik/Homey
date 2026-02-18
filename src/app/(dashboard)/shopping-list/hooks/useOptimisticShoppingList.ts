@@ -10,6 +10,7 @@ import {
   toggleShoppingItemChecked,
   deleteShoppingItem,
   addShoppingItem,
+  clearCheckedItems as clearCheckedItemsAction,
   updateShoppingItem,
 } from '@/app/lib/shopping-actions';
 
@@ -29,7 +30,7 @@ type OptimisticAction =
       payload: { listId: string; items: ShoppingItemWithCreator[] };
     }
   | { type: 'DELETE_ALL_ITEMS'; payload: string }
-  | { type: 'CLEAR_CHECKED_ITEMS'; payload: { listId: string } };
+  | { type: 'CLEAR_CHECKED_ITEMS'; payload: { itemIds: string[] } };
 
 export function useOptimisticShoppingList(
   initialLists: ShoppingListWithItems[]
@@ -125,18 +126,17 @@ export function useOptimisticShoppingList(
 
       case 'CLEAR_CHECKED_ITEMS':
         return currentState.map((list) => {
-          if (list.id === action.payload.listId) {
-            const uncheckedItems = list.items.filter((item) => !item.checked);
-            return {
-              ...list,
-              items: uncheckedItems,
-              _count: {
-                ...list._count,
-                items: uncheckedItems.length,
-              },
-            };
-          }
-          return list;
+          const remainingItems = list.items.filter(
+            (item) => !action.payload.itemIds.includes(item.id)
+          );
+          return {
+            ...list,
+            items: remainingItems,
+            _count: {
+              ...list._count,
+              items: remainingItems.length,
+            },
+          };
         });
 
       default:
@@ -284,6 +284,25 @@ export function useOptimisticShoppingList(
     [dispatchOptimistic, baseState]
   );
 
+  const clearCheckedItems = useCallback(
+    async (itemIds: string[]) => {
+      if (itemIds.length === 0) return;
+
+      dispatchOptimistic({ type: 'CLEAR_CHECKED_ITEMS', payload: { itemIds } });
+      try {
+        const result = await clearCheckedItemsAction({ itemIds });
+        if (result.success) {
+          baseState.clearCheckedItems(itemIds);
+        } else {
+          showToast(result.error || 'Failed to clear items', 'error');
+        }
+      } catch {
+        showToast('Failed to clear items', 'error');
+      }
+    },
+    [dispatchOptimistic, baseState, showToast]
+  );
+
   return {
     ...baseState,
     lists: optimisticLists, // Override base lists with optimistic ones
@@ -293,5 +312,6 @@ export function useOptimisticShoppingList(
     deleteItemOptimistic,
     updateItemOptimistic,
     reorderListsOptimistic,
+    clearCheckedItems,
   };
 }

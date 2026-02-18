@@ -1,4 +1,4 @@
-@import '@/styles/variables';
+@use '@/styles/variables' as v;
 
 .item {
   display: grid;
@@ -10,7 +10,7 @@
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border-color);
   user-select: none;
-  touch-action: none; // For drag and drop
+  touch-action: pan-y;
   transition: background 0.2s;
 
   &.completed {
@@ -36,6 +36,7 @@
   cursor: grab;
   color: var(--text-secondary);
   opacity: 0.5;
+  touch-action: none;
 
   &:active {
     cursor: grabbing;
