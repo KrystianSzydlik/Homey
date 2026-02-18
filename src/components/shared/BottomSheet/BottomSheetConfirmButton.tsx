@@ -9,10 +9,12 @@ export function BottomSheetConfirmButton({
   disabled = false,
   className = '',
   type = 'button',
+  form,
 }: BottomSheetButtonProps) {
   return (
     <button
       type={type}
+      form={form}
       onClick={onClick}
       disabled={disabled}
       className={`${styles.confirmButton} ${className}`}

@@ -27,7 +27,7 @@ type ShoppingListAction =
       type: 'REORDER_ITEMS';
       payload: { listId: string; items: ShoppingItemWithCreator[] };
     }
-  | { type: 'CLEAR_CHECKED_ITEMS' }
+  | { type: 'CLEAR_CHECKED_ITEMS'; payload: { itemIds: string[] } }
   | { type: 'DELETE_ALL_ITEMS'; payload: string };
 
 function shoppingListReducer(
@@ -128,7 +128,9 @@ function shoppingListReducer(
         ...state,
         lists: state.lists.map((list) => ({
           ...list,
-          items: list.items.filter((item) => !item.checked),
+          items: list.items.filter(
+            (item) => !action.payload.itemIds.includes(item.id)
+          ),
         })),
       };
 
@@ -193,8 +195,8 @@ export function useShoppingListState(initialLists: ShoppingListWithItems[]) {
     []
   );
 
-  const clearCheckedItems = useCallback(() => {
-    dispatch({ type: 'CLEAR_CHECKED_ITEMS' });
+  const clearCheckedItems = useCallback((itemIds: string[]) => {
+    dispatch({ type: 'CLEAR_CHECKED_ITEMS', payload: { itemIds } });
   }, []);
 
   const deleteAllItems = useCallback((listId: string) => {

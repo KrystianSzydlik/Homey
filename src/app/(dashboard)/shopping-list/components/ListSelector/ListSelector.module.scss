@@ -94,35 +94,6 @@
   margin-left: 0.25rem;
 }
 
-.addButton {
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  border: 2px solid rgba(139, 92, 246, 0.3);
-  background: transparent;
-  color: #8b5cf6;
-  font-size: 1.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-  line-height: 1;
-
-  &:hover {
-    border-color: #8b5cf6;
-    background: rgba(139, 92, 246, 0.1);
-    transform: scale(1.05);
-  }
-
-  &:focus-visible {
-    outline: 2px solid #8b5cf6;
-    outline-offset: 2px;
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-}
-
 // Mobile responsive
 @media (max-width: 640px) {
   .container {
@@ -142,10 +113,5 @@
 
   .count {
     display: none;
-  }
-
-  .addButton {
-    padding: 0.5rem 0.6rem;
-    font-size: 1.25rem;
   }
 }

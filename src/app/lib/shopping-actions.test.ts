@@ -270,10 +270,12 @@ describe('Shopping Actions - Additional Tests', () => {
   });
 
   describe('clearCheckedItems', () => {
+    const input = { itemIds: ['item-1', 'item-2'] };
+
     it('should delete all checked items for household', async () => {
       (prisma.shoppingItem.deleteMany as any).mockResolvedValue({ count: 5 });
 
-      const result = await clearCheckedItems();
+      const result = await clearCheckedItems(input);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -283,6 +285,7 @@ describe('Shopping Actions - Additional Tests', () => {
         where: {
           householdId: mockHouseholdId,
           checked: true,
+          id: { in: input.itemIds },
         },
       });
     });
@@ -290,7 +293,7 @@ describe('Shopping Actions - Additional Tests', () => {
     it('should return zero if no checked items found', async () => {
       (prisma.shoppingItem.deleteMany as any).mockResolvedValue({ count: 0 });
 
-      const result = await clearCheckedItems();
+      const result = await clearCheckedItems(input);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -301,7 +304,7 @@ describe('Shopping Actions - Additional Tests', () => {
     it('should scope deletion to household', async () => {
       (prisma.shoppingItem.deleteMany as any).mockResolvedValue({ count: 3 });
 
-      await clearCheckedItems();
+      await clearCheckedItems(input);
 
       expect(prisma.shoppingItem.deleteMany).toHaveBeenCalledWith({
         where: expect.objectContaining({
@@ -313,7 +316,7 @@ describe('Shopping Actions - Additional Tests', () => {
     it('should only delete checked items', async () => {
       (prisma.shoppingItem.deleteMany as any).mockResolvedValue({ count: 2 });
 
-      await clearCheckedItems();
+      await clearCheckedItems(input);
 
       expect(prisma.shoppingItem.deleteMany).toHaveBeenCalledWith({
         where: expect.objectContaining({
@@ -327,12 +330,22 @@ describe('Shopping Actions - Additional Tests', () => {
         new Error('DB error')
       );
 
-      const result = await clearCheckedItems();
+      const result = await clearCheckedItems(input);
 
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toBe('Failed to clear items');
       }
+    });
+
+    it('should return validation error when itemIds is empty', async () => {
+      const result = await clearCheckedItems({ itemIds: [] });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBeDefined();
+      }
+      expect(prisma.shoppingItem.deleteMany).not.toHaveBeenCalled();
     });
   });
 

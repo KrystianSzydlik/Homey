@@ -15,8 +15,8 @@ interface DndSensorOptions {
 
 const DEFAULT_OPTIONS: Required<DndSensorOptions> = {
   mouseDistance: 10,
-  touchDelay: 0,
-  touchTolerance: 5,
+  touchDelay: 150,
+  touchTolerance: 8,
 };
 
 export function useDndSensors(options: DndSensorOptions = {}) {

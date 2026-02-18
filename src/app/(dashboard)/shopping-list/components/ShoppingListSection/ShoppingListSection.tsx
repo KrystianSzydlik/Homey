@@ -13,10 +13,8 @@ import {
   ShoppingListWithItems,
   ShoppingItemWithCreator,
 } from '@/types/shopping';
-import {
-  clearCheckedItems as clearCheckedItemsAction,
-  reorderShoppingItems,
-} from '@/app/lib/shopping-actions';
+import { AlertModal } from '@/components/shared/Modal';
+import { reorderShoppingItems } from '@/app/lib/shopping-actions';
 import { useDndSensors } from '../../hooks/useDndSensors';
 import ShoppingItem from '../ShoppingItem/ShoppingItem';
 import AddItemForm from '../AddItemForm/AddItemForm';
@@ -42,7 +40,7 @@ interface ShoppingListSectionProps {
   ) => Promise<void>;
   onToggleItem: (itemId: string, checked: boolean) => Promise<void>;
   onReorderItems: (listId: string, items: ShoppingItemWithCreator[]) => void;
-  onClearCheckedItems: () => void;
+  onClearCheckedItems: (itemIds: string[]) => Promise<void>;
 }
 
 export default function ShoppingListSection({
@@ -57,6 +55,7 @@ export default function ShoppingListSection({
   const [selectedCategory, setSelectedCategory] = useState<
     ShoppingCategory | 'ALL'
   >('ALL');
+  const [showClearWarning, setShowClearWarning] = useState(false);
   const [isPending, startTransition] = useTransition();
   const sensors = useDndSensors();
 
@@ -71,6 +70,15 @@ export default function ShoppingListSection({
       checkedItems: filteredItems.filter((item) => item.checked),
     }),
     [filteredItems]
+  );
+
+  const checkedIds = useMemo(
+    () => checkedItems.map((item) => item.id),
+    [checkedItems]
+  );
+  const missingPriceCount = useMemo(
+    () => checkedItems.filter((item) => item.price === null).length,
+    [checkedItems]
   );
 
   const availableCategories = useMemo(
@@ -121,62 +129,126 @@ export default function ShoppingListSection({
     [list.id, uncheckedItems, checkedItems, onReorderItems]
   );
 
-  const handleClearCompleted = useCallback(() => {
+  const runClearCompleted = useCallback(() => {
+    if (checkedIds.length === 0) return;
+
     startTransition(async () => {
-      await clearCheckedItemsAction();
-      onClearCheckedItems();
+      await onClearCheckedItems(checkedIds);
+      setShowClearWarning(false);
     });
-  }, [onClearCheckedItems]);
+  }, [checkedIds, onClearCheckedItems]);
+
+  const handleClearCompleted = useCallback(() => {
+    if (checkedIds.length === 0) return;
+
+    if (missingPriceCount > 0) {
+      setShowClearWarning(true);
+      return;
+    }
+
+    runClearCompleted();
+  }, [checkedIds, missingPriceCount, runClearCompleted]);
 
   const isEmpty = uncheckedItems.length === 0 && checkedItems.length === 0;
 
   return (
-    <div className={styles.listSection}>
-      <AddItemForm onAddItem={handleAddItem} />
+    <>
+      <div className={styles.listSection}>
+        <AddItemForm onAddItem={handleAddItem} />
 
-      {list.items.length > 0 && (
-        <CategoryFilter
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          availableCategories={availableCategories}
-        />
-      )}
+        {list.items.length > 0 && (
+          <CategoryFilter
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            availableCategories={availableCategories}
+          />
+        )}
 
-      {isEmpty ? (
-        <div className={styles.emptyState}>
-          <p>Brak produktów na liście</p>
-          <p className={styles.emptyStateHint}>Dodaj pierwszy produkt</p>
-        </div>
-      ) : (
-        <>
-          {uncheckedItems.length > 0 && (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-              modifiers={[restrictToVerticalAxis]}
-            >
-              <SortableContext
-                items={uncheckedItems.map((item) => item.id)}
-                strategy={verticalListSortingStrategy}
+        {isEmpty ? (
+          <div className={styles.emptyState}>
+            <p>Brak produktów na liście</p>
+            <p className={styles.emptyStateHint}>Dodaj pierwszy produkt</p>
+          </div>
+        ) : (
+          <div className={styles.uncheckedViewport}>
+            {uncheckedItems.length > 0 && (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+                modifiers={[restrictToVerticalAxis]}
               >
+                <SortableContext
+                  items={uncheckedItems.map((item) => item.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <motion.ul
+                    className={styles.list}
+                    layout
+                    transition={{ duration: 0.2 }}
+                  >
+                    <AnimatePresence mode="popLayout">
+                      {uncheckedItems.map((item) => (
+                        <motion.div
+                          key={item.id}
+                          layout
+                          layoutId={item.id}
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{
+                            opacity: 0,
+                            scale: 0.9,
+                            transition: { duration: 0.2 },
+                          }}
+                          transition={{ duration: 0.3, ease: 'easeOut' }}
+                        >
+                          <ShoppingItem
+                            item={item}
+                            onDelete={onDeleteItem}
+                            onUpdate={onUpdateItem}
+                            onToggle={onToggleItem}
+                          />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </motion.ul>
+                </SortableContext>
+              </DndContext>
+            )}
+
+            {checkedItems.length > 0 && (
+              <div className={styles.completedSection}>
+                <div className={styles.completedHeader}>
+                  <h2 className={styles.completedTitle}>
+                    Completed ({checkedItems.length})
+                  </h2>
+                  <button
+                    className={styles.clearButton}
+                    onClick={handleClearCompleted}
+                    disabled={isPending}
+                    type="button"
+                  >
+                    {isPending ? 'Clearing...' : 'Clear'}
+                  </button>
+                </div>
+
                 <motion.ul
-                  className={styles.list}
+                  className={styles.completedList}
                   layout
                   transition={{ duration: 0.2 }}
                 >
                   <AnimatePresence mode="popLayout">
-                    {uncheckedItems.map((item) => (
+                    {checkedItems.map((item) => (
                       <motion.div
                         key={item.id}
                         layout
                         layoutId={item.id}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         exit={{
                           opacity: 0,
-                          scale: 0.9,
-                          transition: { duration: 0.2 },
+                          x: -20,
+                          transition: { duration: 0.15 },
                         }}
                         transition={{ duration: 0.3, ease: 'easeOut' }}
                       >
@@ -190,59 +262,25 @@ export default function ShoppingListSection({
                     ))}
                   </AnimatePresence>
                 </motion.ul>
-              </SortableContext>
-            </DndContext>
-          )}
-
-          {checkedItems.length > 0 && (
-            <div className={styles.completedSection}>
-              <div className={styles.completedHeader}>
-                <h2 className={styles.completedTitle}>
-                  Completed ({checkedItems.length})
-                </h2>
-                <button
-                  className={styles.clearButton}
-                  onClick={handleClearCompleted}
-                  disabled={isPending}
-                  type="button"
-                >
-                  {isPending ? 'Clearing...' : 'Clear'}
-                </button>
               </div>
-              <motion.ul
-                className={styles.completedList}
-                layout
-                transition={{ duration: 0.2 }}
-              >
-                <AnimatePresence mode="popLayout">
-                  {checkedItems.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      layout
-                      layoutId={item.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{
-                        opacity: 0,
-                        x: -20,
-                        transition: { duration: 0.15 },
-                      }}
-                      transition={{ duration: 0.3, ease: 'easeOut' }}
-                    >
-                      <ShoppingItem
-                        item={item}
-                        onDelete={onDeleteItem}
-                        onUpdate={onUpdateItem}
-                        onToggle={onToggleItem}
-                      />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </motion.ul>
-            </div>
-          )}
-        </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {showClearWarning && (
+        <AlertModal
+          isOpen={true}
+          title="Brakujące ceny"
+          message={`Masz ${missingPriceCount} kupionych produktów bez ceny. Wyczyścić mimo to?`}
+          onConfirm={runClearCompleted}
+          onCancel={() => setShowClearWarning(false)}
+          confirmText="Wyczyść mimo braków"
+          cancelText="Uzupełnij ceny"
+          variant="warning"
+          isLoading={isPending}
+        />
       )}
-    </div>
+    </>
   );
 }

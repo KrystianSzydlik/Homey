@@ -22,7 +22,6 @@ interface ListSelectorProps {
   lists: ShoppingListWithCreator[];
   selectedListIds: string[];
   onSelectList: (listId: string) => void;
-  onOpenCreateModal: () => void;
   onDeleteList: (listId: string) => void;
   onDeleteAllItems: (listId: string) => void;
   onReorderLists?: (lists: ShoppingListWithItems[]) => void;
@@ -32,7 +31,6 @@ export default function ListSelector({
   lists,
   selectedListIds,
   onSelectList,
-  onOpenCreateModal,
   onDeleteList,
   onDeleteAllItems,
   onReorderLists,
@@ -109,15 +107,6 @@ export default function ListSelector({
           </SortableContext>
         </DndContext>
 
-        <button
-          onClick={onOpenCreateModal}
-          className={styles.addButton}
-          type="button"
-          title="Create new shopping list"
-          aria-label="Create new shopping list"
-        >
-          +
-        </button>
       </div>
 
       {selectedList && (

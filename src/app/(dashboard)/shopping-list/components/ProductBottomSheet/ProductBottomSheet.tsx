@@ -193,7 +193,11 @@ export default function ProductBottomSheet({
 
   return (
     <>
-      <BottomSheet isOpen={isOpen} onClose={onClose} closeOnSwipeDown>
+      <BottomSheet
+        isOpen={isOpen}
+        onClose={onClose}
+        closeOnSwipeDown={false}
+      >
         <BottomSheet.Overlay />
         <BottomSheet.Content size="md">
           <BottomSheet.Handle />
@@ -206,7 +210,11 @@ export default function ProductBottomSheet({
           </BottomSheet.Header>
 
           <BottomSheet.Body>
-            <form onSubmit={handleSubmit} className={styles.form}>
+            <form
+              id="product-bottom-sheet-form"
+              onSubmit={handleSubmit}
+              className={styles.form}
+            >
               {/* Basic Info Section */}
               <section className={styles.section}>
                 <label className={styles.sectionLabel}>
@@ -325,7 +333,9 @@ export default function ProductBottomSheet({
               Anuluj
             </BottomSheet.CancelButton>
             <BottomSheet.ConfirmButton
-              onClick={() => handleSubmit({} as React.FormEvent)}
+              type="submit"
+              form="product-bottom-sheet-form"
+              disabled={isLoading}
             >
               {isLoading ? 'Zapisywanie...' : productId ? 'Zapisz' : 'Dodaj'}
             </BottomSheet.ConfirmButton>

@@ -1,4 +1,4 @@
-@use '@/styles/variables' as *;
+@use '@/styles/variables' as v;
 
 // ============================================================================
 // Popover Content
@@ -87,7 +87,7 @@
 // Mobile Responsive
 // ============================================================================
 
-@include mobile {
+@include v.mobile {
   .content {
     max-width: calc(100vw - 2rem);
   }

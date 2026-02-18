@@ -1,8 +1,14 @@
+@use '@/styles/variables' as v;
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 1rem;
   padding: 2rem;
+  height: 100%;
+  overflow-y: auto;
+  align-content: start;
+  @include v.vertical-scrollbar;
 }
 
 .card {
