@@ -1,3 +1,29 @@
+@use '@/styles/variables' as v;
+
+.groupedContainer {
+  max-height: 280px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  @include v.vertical-scrollbar;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
 .emojiGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
@@ -18,8 +44,10 @@
   justify-content: center;
   font-weight: 500;
 
-  &:hover:not(:disabled) {
-    background: rgba(139, 92, 246, 0.2);
+  @include v.hover-capable {
+    &:hover:not(:disabled) {
+      background: rgba(139, 92, 246, 0.2);
+    }
   }
 
   &.selected {
@@ -42,6 +70,16 @@
 // Mobile responsive
 @media (max-width: 640px) {
   .emojiGrid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.375rem;
+  }
+
+  .emojiOption {
+    font-size: 1.5rem;
+    height: 40px;
+  }
+
+  .groupedContainer {
+    max-height: 240px;
   }
 }
