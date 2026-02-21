@@ -20,10 +20,12 @@
   cursor: pointer;
   transition: all 0.2s ease;
 
-  &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.2);
-    transform: scale(1.05);
+  @include v.hover-capable {
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
   }
 
   &:active:not(:disabled) {
@@ -53,8 +55,10 @@
   border-radius: 50%;
   transition: background 0.2s ease;
 
-  .trigger:hover:not(:disabled) & {
-    background: rgba(255, 255, 255, 1);
+  @include v.hover-capable {
+    .trigger:hover:not(:disabled) & {
+      background: rgba(255, 255, 255, 1);
+    }
   }
 
   .trigger:disabled & {
@@ -124,9 +128,11 @@
   transition: all 0.15s ease;
   white-space: nowrap;
 
-  &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 1);
+  @include v.hover-capable {
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 1);
+    }
   }
 
   &:active:not(:disabled) {
@@ -141,18 +147,22 @@
   &.warning {
     color: rgba(251, 191, 36, 0.9);
 
-    &:hover:not(:disabled) {
-      background: rgba(251, 191, 36, 0.15);
-      color: rgb(251, 191, 36);
+    @include v.hover-capable {
+      &:hover:not(:disabled) {
+        background: rgba(251, 191, 36, 0.15);
+        color: rgb(251, 191, 36);
+      }
     }
   }
 
   &.danger {
     color: rgba(239, 68, 68, 0.9);
 
-    &:hover:not(:disabled) {
-      background: rgba(239, 68, 68, 0.15);
-      color: rgb(239, 68, 68);
+    @include v.hover-capable {
+      &:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.15);
+        color: rgb(239, 68, 68);
+      }
     }
   }
 
