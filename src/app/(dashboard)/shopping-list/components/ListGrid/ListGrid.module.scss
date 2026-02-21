@@ -50,9 +50,11 @@
     color: #888;
   }
 
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--glow-rose);
+  @include v.hover-capable {
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--glow-rose);
+    }
   }
 
   &.dragging {

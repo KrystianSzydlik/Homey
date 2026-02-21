@@ -33,8 +33,6 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     addList,
     deleteList,
     selectList,
-    clearSelection,
-
     addItemOptimistic,
     deleteItemOptimistic,
     updateItemOptimistic,
@@ -53,43 +51,38 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     refreshIfStale();
   }, [refreshIfStale]);
 
-  // Combined items from all selected lists
+  // Lists with items — used only for ListSelector chips
   const listsWithItems = useMemo(
     () => lists.filter((list) => list.items.length > 0),
     [lists]
   );
-  const listsWithItemsIds = useMemo(
-    () => new Set(listsWithItems.map((list) => list.id)),
-    [listsWithItems]
-  );
-  const effectiveSelectedListIds = useMemo(
-    () => selectedListIds.filter((id) => listsWithItemsIds.has(id)),
-    [selectedListIds, listsWithItemsIds]
-  );
 
-  useEffect(() => {
-    if (selectedListIds.length > 0 && effectiveSelectedListIds.length === 0) {
-      clearSelection();
-    }
-  }, [selectedListIds, effectiveSelectedListIds, clearSelection]);
+  // ListSelector shows only selected lists that have items (for chip filtering)
+  const selectorListIds = useMemo(
+    () => {
+      const withItemsSet = new Set(listsWithItems.map((list) => list.id));
+      return selectedListIds.filter((id) => withItemsSet.has(id));
+    },
+    [selectedListIds, listsWithItems]
+  );
 
   // Combined items from all selected lists
   const { items: combinedItems, availableCategories } = useCombinedListItems(
     lists,
-    effectiveSelectedListIds
+    selectedListIds
   );
 
   // Single list when only one is selected
   const selectedList = useMemo(
     () =>
-      effectiveSelectedListIds.length === 1
-        ? (lists.find((list) => list.id === effectiveSelectedListIds[0]) ?? null)
+      selectedListIds.length === 1
+        ? (lists.find((list) => list.id === selectedListIds[0]) ?? null)
         : null,
-    [lists, effectiveSelectedListIds]
+    [lists, selectedListIds]
   );
 
   // Default list for adding items (first selected)
-  const defaultListId = effectiveSelectedListIds[0] ?? '';
+  const defaultListId = selectedListIds[0] ?? '';
 
   const handleListCreated = useCallback(
     (newList: ShoppingListWithCreator) => {
@@ -190,7 +183,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       );
     }
 
-    if (effectiveSelectedListIds.length === 0) {
+    if (selectedListIds.length === 0) {
       return (
         <ListGrid
           lists={lists}
@@ -235,10 +228,10 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
 
       return (
     <div className={styles.container}>
-      {listsWithItems.length > 0 && effectiveSelectedListIds.length > 0 && (
+      {selectorListIds.length > 0 && (
         <ListSelector
           lists={listsWithItems}
-          selectedListIds={effectiveSelectedListIds}
+          selectedListIds={selectorListIds}
           onSelectList={selectList}
           onDeleteList={modals.openDeleteListModal}
           onDeleteAllItems={modals.openDeleteAllModal}

@@ -61,6 +61,12 @@
 
 $mobile-breakpoint: 768px;
 
+@mixin hover-capable {
+  @media (hover: hover) and (pointer: fine) {
+    @content;
+  }
+}
+
 @mixin mobile {
   @media (max-width: $mobile-breakpoint) {
     @content;

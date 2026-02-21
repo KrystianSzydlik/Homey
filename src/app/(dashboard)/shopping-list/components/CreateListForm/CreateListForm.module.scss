@@ -3,76 +3,76 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
-.formGroup {
+// Section
+.section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
-.label {
-  color: var(--text);
-  font-weight: 500;
-  font-size: 14px;
+.sectionLabel {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin: 0;
 }
 
-.input {
-  padding: 12px 16px;
+// Name input with emoji preview
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  color: var(--text);
-  font-size: 16px;
-  font-family: inherit;
+  border-radius: 12px;
+  padding: 12px 16px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
-  &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.15);
-  }
-
-  &:focus {
-    outline: none;
+  &:focus-within {
     background: rgba(255, 255, 255, 0.05);
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
   }
+}
+
+.emojiPreview {
+  font-size: 32px;
+  line-height: 1;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.nameInput {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 500;
+  font-family: inherit;
+  min-width: 0;
 
   &::placeholder {
     color: var(--text-secondary);
     opacity: 0.6;
   }
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  // Better v.mobile keyboard handling
   @include v.mobile {
     font-size: 16px; // Prevents zoom on iOS
   }
 }
 
-.inputFooter {
-  display: flex;
-  justify-content: flex-end;
-  min-height: 1.2em;
-}
-
+// Error messages
 .errorMessage {
   color: var(--error);
   font-size: 13px;
   line-height: 1.4;
-  width: 100%;
-}
-
-.charCount {
-  font-size: 13px;
-  color: var(--text-secondary);
-  opacity: 0.7;
 }
 
 .error {
@@ -97,11 +97,12 @@
   }
 }
 
+// Actions
 .actions {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .cancelButton,
@@ -115,6 +116,7 @@
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
+  min-height: 44px;
   -webkit-tap-highlight-color: transparent;
 
   &:focus-visible {
@@ -136,8 +138,10 @@
   background: rgba(255, 255, 255, 0.05);
   color: var(--text);
 
-  &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.1);
+  @include v.hover-capable {
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+    }
   }
 }
 
@@ -146,16 +150,18 @@
   color: white;
   box-shadow: var(--glow-rose);
 
-  &:hover:not(:disabled) {
-    background: var(--rose);
-    box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+  @include v.hover-capable {
+    &:hover:not(:disabled) {
+      background: var(--rose);
+      box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+    }
   }
 }
 
 // Mobile responsive
 @include v.mobile {
   .form {
-    gap: 18px;
+    gap: 20px;
   }
 
   .actions {

@@ -215,6 +215,107 @@ describe('DropdownMenu', () => {
     });
   });
 
+  describe('Viewport-aware Positioning', () => {
+    it('should open menu below trigger when there is enough space', async () => {
+      const user = userEvent.setup();
+      render(<DropdownMenu items={mockItems} />);
+
+      const trigger = screen.getByRole('button', { name: /more actions/i });
+
+      // Mock trigger near top of viewport
+      vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+        top: 50,
+        bottom: 82,
+        left: 100,
+        right: 132,
+        width: 32,
+        height: 32,
+        x: 100,
+        y: 50,
+        toJSON: () => ({}),
+      });
+
+      await user.click(trigger);
+
+      await waitFor(() => {
+        const menu = screen.getByRole('menu');
+        expect(menu).toBeInTheDocument();
+        // Menu should be positioned below trigger (top = bottom + 8)
+        expect(menu.style.top).toBe('90px');
+      });
+    });
+
+    it('should open menu above trigger when near bottom of viewport', async () => {
+      const user = userEvent.setup();
+
+      // Set viewport height
+      Object.defineProperty(window, 'innerHeight', { value: 600, writable: true });
+
+      render(<DropdownMenu items={mockItems} />);
+
+      const trigger = screen.getByRole('button', { name: /more actions/i });
+
+      // Mock trigger near bottom of viewport
+      vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+        top: 560,
+        bottom: 592,
+        left: 100,
+        right: 132,
+        width: 32,
+        height: 32,
+        x: 100,
+        y: 560,
+        toJSON: () => ({}),
+      });
+
+      await user.click(trigger);
+
+      await waitFor(() => {
+        const menu = screen.getByRole('menu');
+        expect(menu).toBeInTheDocument();
+        // With trigger at bottom=592 and viewport height=600, only 0px below.
+        // spaceAbove=552 > spaceBelow=0, so menu opens upward.
+        // top = triggerTop(560) - gap(8) - menuHeight(defaulted to 200 since jsdom offsetHeight=0 but computePosition uses default 200)
+        // = 560 - 8 - 200 = 352
+        const menuTop = parseInt(menu.style.top);
+        expect(menuTop).toBeLessThan(560);
+      });
+    });
+
+    it('should clamp menu horizontally when near right edge', async () => {
+      const user = userEvent.setup();
+
+      Object.defineProperty(window, 'innerWidth', { value: 400, writable: true });
+
+      render(<DropdownMenu items={mockItems} align="left" />);
+
+      const trigger = screen.getByRole('button', { name: /more actions/i });
+
+      // Mock trigger near right edge
+      vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+        top: 50,
+        bottom: 82,
+        left: 360,
+        right: 392,
+        width: 32,
+        height: 32,
+        x: 360,
+        y: 50,
+        toJSON: () => ({}),
+      });
+
+      await user.click(trigger);
+
+      await waitFor(() => {
+        const menu = screen.getByRole('menu');
+        expect(menu).toBeInTheDocument();
+        // Menu left should be clamped so it doesn't exceed viewport
+        const menuLeft = parseInt(menu.style.left);
+        expect(menuLeft).toBeLessThanOrEqual(400 - 8); // viewport - padding
+      });
+    });
+  });
+
   describe('Alignment', () => {
     it('should align menu to the right by default', () => {
       render(<DropdownMenu items={mockItems} />);

@@ -20,10 +20,12 @@
   cursor: pointer;
   transition: all 0.2s ease;
 
-  &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.2);
-    transform: scale(1.05);
+  @include v.hover-capable {
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
   }
 
   &:active:not(:disabled) {
@@ -53,8 +55,10 @@
   border-radius: 50%;
   transition: background 0.2s ease;
 
-  .trigger:hover:not(:disabled) & {
-    background: rgba(255, 255, 255, 1);
+  @include v.hover-capable {
+    .trigger:hover:not(:disabled) & {
+      background: rgba(255, 255, 255, 1);
+    }
   }
 
   .trigger:disabled & {
@@ -73,38 +77,6 @@
     0 0 0 1px rgba(255, 255, 255, 0.05);
   overflow: hidden;
   padding: 4px;
-
-  &.right {
-    transform: translateX(
-      25%
-    ) !important; // Force right alignment relative to the point using CSS
-    // Wait, framer motion handles transform. This might conflict.
-    // Better to handle position in JS or wrap in a positioned div.
-    // We wrapped in .portalContainer in JS, let's use that.
-  }
-}
-
-.portalContainer {
-  pointer-events: auto;
-  // If 'right' aligned, we want the menu to expand to the left of the point.
-  // The JS sets left/top to the button's position.
-
-  // If we want the menu's top-right corner to be at the point:
-  // .menu needs to translate -100% on X.
-
-  // Actually, let's just use a wrapper div that handles the "anchor" logic.
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start; // Default left align
-
-  &:has(.right) {
-    align-items: flex-end; // If child has .right class, align to end
-    transform: translateX(
-      -100%
-    ); // Move the whole container to the left so the "point" is the top-right corner
-    // But wait, the point in JS is Rect.left.
-    // If align=right, JS should probably pass Rect.right.
-  }
 }
 
 .menuItem {
@@ -124,9 +96,11 @@
   transition: all 0.15s ease;
   white-space: nowrap;
 
-  &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 1);
+  @include v.hover-capable {
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 1);
+    }
   }
 
   &:active:not(:disabled) {
@@ -141,18 +115,22 @@
   &.warning {
     color: rgba(251, 191, 36, 0.9);
 
-    &:hover:not(:disabled) {
-      background: rgba(251, 191, 36, 0.15);
-      color: rgb(251, 191, 36);
+    @include v.hover-capable {
+      &:hover:not(:disabled) {
+        background: rgba(251, 191, 36, 0.15);
+        color: rgb(251, 191, 36);
+      }
     }
   }
 
   &.danger {
     color: rgba(239, 68, 68, 0.9);
 
-    &:hover:not(:disabled) {
-      background: rgba(239, 68, 68, 0.15);
-      color: rgb(239, 68, 68);
+    @include v.hover-capable {
+      &:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.15);
+        color: rgb(239, 68, 68);
+      }
     }
   }
 
