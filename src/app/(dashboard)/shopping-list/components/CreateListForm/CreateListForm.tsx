@@ -4,19 +4,16 @@ import { useTransition } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
+import { z } from 'zod';
 import { createShoppingListSchema } from '@/app/lib/validation/shopping-schemas';
 import { EmojiPicker } from '@/components/shared/EmojiPicker';
 import { ColorPicker } from '@/components/shared/ColorPicker';
-import { ShoppingListActionResult } from '@/types/shopping';
-import styles from './CreateListForm.module.scss';
+import { ShoppingListActionResult, ShoppingListWithCreator } from '@/types/shopping';
+import { LIST_EMOJI_GROUPS } from '@/config/emojis';
 import { DEFAULT_LIST_EMOJI, DEFAULT_LIST_COLOR } from '@/config/shopping';
-import React from 'react';
+import styles from './CreateListForm.module.scss';
 
-// Re-using the types from the schema
-import { z } from 'zod';
 type CreateListFormData = z.infer<typeof createShoppingListSchema>;
-
-import { ShoppingListWithCreator } from '@/types/shopping';
 
 interface CreateListFormProps {
   onSubmitAction: (
@@ -37,6 +34,7 @@ export function CreateListForm({
     register,
     handleSubmit,
     control,
+    watch,
     setError,
     formState: { errors },
   } = useForm<CreateListFormData>({
@@ -47,6 +45,8 @@ export function CreateListForm({
       color: DEFAULT_LIST_COLOR,
     },
   });
+
+  const currentEmoji = watch('emoji') || DEFAULT_LIST_EMOJI;
 
   const onSubmit = (data: CreateListFormData) => {
     startTransition(async () => {
@@ -64,26 +64,29 @@ export function CreateListForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-      <div className={styles.formGroup}>
-        <label htmlFor="list-name" className={styles.label}>
-          List Name
-        </label>
-        <input
-          id="list-name"
-          type="text"
-          placeholder="e.g., Groceries, Hardware Store..."
-          className={styles.input}
-          autoFocus
-          disabled={isPending}
-          {...register('name')}
-        />
+      {/* Name section with emoji preview */}
+      <div className={styles.section}>
+        <h4 className={styles.sectionLabel}>Nazwa listy</h4>
+        <div className={styles.nameRow}>
+          <div className={styles.emojiPreview}>{currentEmoji}</div>
+          <input
+            id="list-name"
+            type="text"
+            placeholder="np. Biedronka, Castorama..."
+            className={styles.nameInput}
+            autoFocus
+            disabled={isPending}
+            {...register('name')}
+          />
+        </div>
         {errors.name && (
           <span className={styles.errorMessage}>{errors.name.message}</span>
         )}
       </div>
 
-      <div className={styles.formGroup}>
-        <label className={styles.label}>Emoji (Optional)</label>
+      {/* Emoji section */}
+      <div className={styles.section}>
+        <h4 className={styles.sectionLabel}>Emoji</h4>
         <Controller
           control={control}
           name="emoji"
@@ -91,14 +94,16 @@ export function CreateListForm({
             <EmojiPicker
               value={field.value || DEFAULT_LIST_EMOJI}
               onChange={field.onChange}
+              groups={LIST_EMOJI_GROUPS}
               disabled={isPending}
             />
           )}
         />
       </div>
 
-      <div className={styles.formGroup}>
-        <label className={styles.label}>Color (Optional)</label>
+      {/* Color section */}
+      <div className={styles.section}>
+        <h4 className={styles.sectionLabel}>Kolor</h4>
         <Controller
           control={control}
           name="color"
@@ -130,7 +135,7 @@ export function CreateListForm({
           disabled={isPending}
           className={styles.cancelButton}
         >
-          Cancel
+          Anuluj
         </button>
         <motion.button
           type="submit"
@@ -139,7 +144,7 @@ export function CreateListForm({
           whileHover={{ y: -2 }}
           whileTap={{ y: 0 }}
         >
-          {isPending ? 'Creating...' : 'Create List'}
+          {isPending ? 'Tworzenie...' : 'Utwórz listę'}
         </motion.button>
       </div>
     </form>
