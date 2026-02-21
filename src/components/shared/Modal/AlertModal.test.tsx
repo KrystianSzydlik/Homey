@@ -182,6 +182,26 @@ describe('AlertModal', () => {
       const title = screen.getByRole('heading', { level: 2 });
       expect(title).toHaveTextContent('Confirm Action');
     });
+
+    it('should render both buttons side by side and both enabled', () => {
+      render(<AlertModal {...defaultProps} />);
+
+      const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+      const confirmButton = screen.getByRole('button', { name: 'Confirm' });
+
+      expect(cancelButton).toBeEnabled();
+      expect(confirmButton).toBeEnabled();
+    });
+
+    it('should disable both buttons when loading', () => {
+      render(<AlertModal {...defaultProps} isLoading={true} />);
+
+      const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+      const confirmButton = screen.getByRole('button', { name: /Confirm/i });
+
+      expect(cancelButton).toBeDisabled();
+      expect(confirmButton).toBeDisabled();
+    });
   });
 
   describe('Animation', () => {
