@@ -36,6 +36,8 @@ model User {
   products         Product[]
   habits           Habit[]
   habitCompletions HabitCompletion[]
+
+  @@index([householdId])
 }
 
 model Recipe {
@@ -50,6 +52,8 @@ model Recipe {
   createdById String
   createdBy   User      @relation(fields: [createdById], references: [id])
   createdAt   DateTime  @default(now())
+
+  @@index([householdId])
 }
 
 model Todo {
@@ -61,6 +65,8 @@ model Todo {
   createdById String
   createdBy   User      @relation(fields: [createdById], references: [id])
   createdAt   DateTime  @default(now())
+
+  @@index([householdId, completed])
 }
 
 model ShoppingList {
