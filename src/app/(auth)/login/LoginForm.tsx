@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useActionState, useState, useRef } from 'react';
+import { useActionState, useState, useRef, useId } from 'react';
 import { authenticate } from '@/app/lib/actions';
 import styles from './login.module.scss';
 
@@ -17,6 +17,7 @@ export default function LoginForm() {
   );
   const [isAnimating, setIsAnimating] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const errorId = useId();
 
   const triggerAnimation = () => {
     setIsAnimating(false); // Reset first
@@ -44,6 +45,8 @@ export default function LoginForm() {
               name="email"
               placeholder="Enter your email"
               required
+              aria-invalid={!!errorMessage}
+              aria-describedby={errorMessage ? errorId : undefined}
             />
           </div>
           <div className={styles.inputGroup}>
@@ -56,6 +59,8 @@ export default function LoginForm() {
               placeholder="Enter password"
               required
               minLength={6}
+              aria-invalid={!!errorMessage}
+              aria-describedby={errorMessage ? errorId : undefined}
             />
           </div>
           <button
@@ -69,6 +74,7 @@ export default function LoginForm() {
             {isPending ? 'Logging in...' : 'Log in'}
           </button>
           <div
+            id={errorId}
             className={styles.error}
             aria-live="polite"
             aria-atomic="true"

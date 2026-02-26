@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { ShoppingCategory, Product } from '@prisma/client';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { createProduct, updateProduct } from '@/app/lib/product-actions';
@@ -47,6 +47,8 @@ export default function ProductBottomSheet({
   const [duplicateProduct, setDuplicateProduct] = useState<Product | null>(
     null
   );
+  const errorId = useId();
+  const nameInputId = useId();
 
   useEffect(() => {
     if (isOpen) {
@@ -178,14 +180,15 @@ export default function ProductBottomSheet({
               className={styles.form}
             >
               {/* Basic Info Section */}
-              <section className={styles.section}>
-                <label className={styles.sectionLabel}>
+              <section className={styles.section} aria-labelledby="basic-info-label">
+                <h3 id="basic-info-label" className={styles.sectionLabel}>
                   Podstawowe informacje
-                </label>
+                </h3>
 
                 <div className={styles.nameRow}>
                   <div className={styles.emojiPreview}>{emoji}</div>
                   <input
+                    id={nameInputId}
                     type="text"
                     value={name}
                     onChange={(e) => handleNameChange(e.target.value)}
@@ -193,13 +196,15 @@ export default function ProductBottomSheet({
                     className={styles.nameInput}
                     required
                     autoFocus
+                    aria-invalid={!name.trim() && name !== initialName}
+                    aria-describedby={error ? errorId : undefined}
                   />
                 </div>
               </section>
 
               {/* Emoji Section */}
-              <section className={styles.section}>
-                <label className={styles.sectionLabel}>Wybierz ikonę</label>
+              <section className={styles.section} aria-labelledby="emoji-label">
+                <h3 id="emoji-label" className={styles.sectionLabel}>Wybierz ikonę</h3>
                 <div className={styles.emojiGrid}>
                   {FOOD_EMOJIS.map((group) =>
                     group.emojis.map((e, idx) => (
@@ -208,6 +213,8 @@ export default function ProductBottomSheet({
                         type="button"
                         className={`${styles.emojiButton} ${emoji === e ? styles.selected : ''}`}
                         onClick={() => setEmoji(e)}
+                        aria-label={`${group.category} emoji: ${e}`}
+                        aria-pressed={emoji === e}
                         title={group.category}
                       >
                         {e}
@@ -218,8 +225,8 @@ export default function ProductBottomSheet({
               </section>
 
               {/* Details Section */}
-              <section className={styles.section}>
-                <label className={styles.sectionLabel}>Szczegóły</label>
+              <section className={styles.section} aria-labelledby="details-label">
+                <h3 id="details-label" className={styles.sectionLabel}>Szczegóły</h3>
 
                 <div className={styles.field}>
                   <label className={styles.fieldLabel}>Kategoria</label>
@@ -249,7 +256,11 @@ export default function ProductBottomSheet({
                 </div>
               </section>
 
-              {error && <div className={styles.error}>{error}</div>}
+              {error && (
+                <div id={errorId} className={styles.error} role="alert">
+                  {error}
+                </div>
+              )}
             </form>
           </BottomSheet.Body>
 

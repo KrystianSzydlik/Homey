@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useTransition, useId } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
@@ -29,6 +29,7 @@ export function CreateListForm({
   onCancel,
 }: CreateListFormProps) {
   const [isPending, startTransition] = useTransition();
+  const nameErrorId = useId();
 
   const {
     register,
@@ -76,11 +77,15 @@ export function CreateListForm({
             className={styles.nameInput}
             autoFocus
             disabled={isPending}
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? nameErrorId : undefined}
             {...register('name')}
           />
         </div>
         {errors.name && (
-          <span className={styles.errorMessage}>{errors.name.message}</span>
+          <span id={nameErrorId} className={styles.errorMessage} role="alert">
+            {errors.name.message}
+          </span>
         )}
       </div>
 
@@ -134,6 +139,7 @@ export function CreateListForm({
           onClick={onCancel}
           disabled={isPending}
           className={styles.cancelButton}
+          aria-label="Cancel creating shopping list"
         >
           Anuluj
         </button>
