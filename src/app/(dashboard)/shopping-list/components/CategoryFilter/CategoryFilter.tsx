@@ -23,7 +23,6 @@ export default function CategoryFilter({
       )
     : CATEGORIES;
 
-  // Only show the filter if there are categories to show (excluding 'ALL')
   if (availableCategories && availableCategories.length === 0) {
     return null;
   }

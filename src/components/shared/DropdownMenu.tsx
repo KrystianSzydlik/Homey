@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { isNode } from '@/app/lib/utils/dom-type-guards';
 import styles from './DropdownMenu.module.scss';
 
 export interface DropdownMenuItem {
@@ -88,11 +89,13 @@ export default function DropdownMenu({
     if (!isOpen) return;
 
     function handleClickOutside(event: MouseEvent) {
+      const target = isNode(event.target) ? event.target : null;
       if (
+        target &&
         menuRef.current &&
-        !menuRef.current.contains(event.target as Node) &&
+        !menuRef.current.contains(target) &&
         buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
+        !buttonRef.current.contains(target)
       ) {
         setIsOpen(false);
       }

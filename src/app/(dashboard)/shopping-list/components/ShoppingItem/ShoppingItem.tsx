@@ -99,7 +99,19 @@ export default function ShoppingItem({
 
         <div className={styles.emoji}>{emoji}</div>
 
-        <div className={styles.content} onClick={() => setShowEditSheet(true)}>
+        <div
+          className={styles.content}
+          role="button"
+          tabIndex={0}
+          onClick={() => setShowEditSheet(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setShowEditSheet(true);
+            }
+          }}
+          aria-label={`Edytuj ${item.name}`}
+        >
           <div className={styles.name}>{item.name}</div>
           <Meta
             quantity={item.quantity}

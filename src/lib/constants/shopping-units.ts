@@ -101,35 +101,27 @@ export function getUnitLabel(unitId: string, quantity: number): string {
   return unit.full.many;
 }
 
-export function getUnitGroups() {
-  return [
-    {
-      label: 'Waga',
-      options: UNITS.filter((u) => u.category === 'weight').map((u) => ({
-        value: u.id,
-        label: `${u.short}`,
-      })),
-    },
-    {
-      label: 'Objętość',
-      options: UNITS.filter((u) => u.category === 'volume').map((u) => ({
-        value: u.id,
-        label: `${u.short}`,
-      })),
-    },
-    {
-      label: 'Ilość',
-      options: UNITS.filter((u) => u.category === 'count').map((u) => ({
-        value: u.id,
-        label: `${u.short}`,
-      })),
-    },
-    {
-      label: 'Pojemniki',
-      options: UNITS.filter((u) => u.category === 'container').map((u) => ({
-        value: u.id,
-        label: `${u.short}`,
-      })),
-    },
-  ];
+type UnitLabelFormat = 'short' | 'detailed';
+
+const UNIT_GROUP_CONFIG: { label: string; category: UnitCategory }[] = [
+  { label: 'Waga', category: 'weight' },
+  { label: 'Objętość', category: 'volume' },
+  { label: 'Ilość', category: 'count' },
+  { label: 'Pojemniki', category: 'container' },
+];
+
+function formatUnitLabel(unit: Unit, format: UnitLabelFormat): string {
+  return format === 'detailed'
+    ? `${unit.short} (${unit.full.one})`
+    : unit.short;
+}
+
+export function getUnitGroups(format: UnitLabelFormat = 'short') {
+  return UNIT_GROUP_CONFIG.map(({ label, category }) => ({
+    label,
+    options: UNITS.filter((u) => u.category === category).map((u) => ({
+      value: u.id,
+      label: formatUnitLabel(u, format),
+    })),
+  }));
 }

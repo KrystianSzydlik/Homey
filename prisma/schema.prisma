@@ -141,6 +141,8 @@ model ShoppingItem {
 
   @@index([shoppingListId, position])
   @@index([householdId, checked])
+  @@index([householdId, name])
+  @@index([householdId, purchaseCount])
 }
 
 enum ShoppingCategory {

@@ -14,8 +14,7 @@ import { useCombinedListItems } from '../../hooks/useCombinedListItems';
 import { useProductCacheContext } from '../../contexts/ProductCacheContext';
 import { useShoppingListModals } from '../../hooks/useShoppingListModals';
 import { createOptimisticItem } from '../../utils/createOptimisticItem';
-import ShoppingListSection from '../ShoppingListSection/ShoppingListSection';
-import CombinedListSection from '../CombinedListSection/CombinedListSection';
+import ItemListView from '../ItemListView/ItemListView';
 import ListSelector from '../ListSelector/ListSelector';
 import ListBottomSheet from '../ListBottomSheet/ListBottomSheet';
 import { AlertModal } from '@/components/shared/Modal';
@@ -83,6 +82,16 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
 
   // Default list for adding items (first selected)
   const defaultListId = selectedListIds[0] ?? '';
+
+  // Source list map for combined view (item ID → source list info)
+  const sourceListMap = useMemo(() => {
+    if (selectedListIds.length <= 1) return undefined;
+    const map = new Map<string, { id: string; name: string; emoji: string | null }>();
+    for (const item of combinedItems) {
+      map.set(item.id, item.sourceList);
+    }
+    return map;
+  }, [selectedListIds.length, combinedItems]);
 
   const handleListCreated = useCallback(
     (newList: ShoppingListWithCreator) => {
@@ -198,30 +207,38 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
 
     // Single list selected - use standard section with reordering
     if (selectedList) {
+      const singleListCategories = Array.from(
+        new Set(selectedList.items.map((item) => item.category))
+      );
       return (
-        <ShoppingListSection
-          list={selectedList}
+        <ItemListView
+          items={selectedList.items}
+          availableCategories={singleListCategories}
+          listId={selectedList.id}
           onAddItem={handleAddItem}
           onDeleteItem={handleDeleteItem}
           onUpdateItem={handleItemUpdate}
           onToggleItem={handleToggleItem}
-          onReorderItems={reorderItems}
           onClearCheckedItems={clearCheckedItems}
+          enableReorder
+          onReorderItems={reorderItems}
         />
       );
     }
 
     // Multiple lists selected - use combined view
     return (
-      <CombinedListSection
+      <ItemListView
         items={combinedItems}
         availableCategories={availableCategories}
-        defaultListId={defaultListId}
+        listId={defaultListId}
         onAddItem={handleAddItem}
         onDeleteItem={handleDeleteItem}
         onUpdateItem={handleItemUpdate}
         onToggleItem={handleToggleItem}
         onClearCheckedItems={clearCheckedItems}
+        sourceListMap={sourceListMap}
+        emptyMessage="Brak produktów na wybranych listach"
       />
     );
   };

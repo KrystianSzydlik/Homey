@@ -40,14 +40,12 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
 
   const handleProductSelect = useCallback(
     (suggestion: ProductSuggestion) => {
-      // If it's a non-catalog item, open the create product modal
       if (suggestion.source !== 'catalog') {
         setNewProductName(suggestion.name);
         setShowCreateProduct(true);
         return;
       }
 
-      // Otherwise, add the item directly
       onAddItem(suggestion.name, suggestion.id, {
         emoji: suggestion.emoji,
         defaultUnit: suggestion.defaultUnit,

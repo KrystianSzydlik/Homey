@@ -5,9 +5,10 @@ import { ShoppingCategory, Product } from '@prisma/client';
 import { BottomSheet } from '@/components/shared/BottomSheet';
 import { createProduct, updateProduct } from '@/app/lib/product-actions';
 import { getSmartProductDefaults } from '@/app/lib/product-utils';
+import { extractProductCallback } from '@/app/lib/utils/product-callback';
+import { getUnitGroups } from '@/lib/constants/shopping-units';
 import { ProductCallbackData } from '@/types/shopping';
 import { CATEGORIES } from '@/config/shopping';
-import { UNITS } from '@/lib/constants/shopping-units';
 import { FOOD_EMOJIS } from '@/config/emojis';
 import { Dropdown } from '@/components/shared/Dropdown';
 import { AlertModal } from '@/components/shared/Modal';
@@ -94,20 +95,7 @@ export default function ProductBottomSheet({
     });
 
     if (result.success && result.product) {
-      const {
-        id,
-        name: productName,
-        emoji: productEmoji,
-        defaultCategory,
-        defaultUnit,
-      } = result.product;
-      onProductCreated({
-        id,
-        name: productName,
-        emoji: productEmoji,
-        defaultCategory,
-        defaultUnit,
-      });
+      onProductCreated(extractProductCallback(result.product));
       onClose();
     } else {
       setError(result.error || 'Failed to update product');
@@ -135,20 +123,7 @@ export default function ProductBottomSheet({
         });
 
         if (result.success && result.product) {
-          const {
-            id,
-            name: productName,
-            emoji: productEmoji,
-            defaultCategory,
-            defaultUnit,
-          } = result.product;
-          onProductCreated({
-            id,
-            name: productName,
-            emoji: productEmoji,
-            defaultCategory,
-            defaultUnit,
-          });
+          onProductCreated(extractProductCallback(result.product));
           onClose();
         } else {
           setError(result.error || 'Failed to save product');
@@ -162,20 +137,7 @@ export default function ProductBottomSheet({
         });
 
         if (result.success && result.product) {
-          const {
-            id,
-            name: productName,
-            emoji: productEmoji,
-            defaultCategory,
-            defaultUnit,
-          } = result.product;
-          onProductCreated({
-            id,
-            name: productName,
-            emoji: productEmoji,
-            defaultCategory,
-            defaultUnit,
-          });
+          onProductCreated(extractProductCallback(result.product));
           onClose();
         } else if (result.existingProduct) {
           setDuplicateProduct(result.existingProduct);
@@ -281,44 +243,7 @@ export default function ProductBottomSheet({
                   <Dropdown
                     value={unit}
                     onChange={(value) => setUnit(value)}
-                    groups={[
-                      {
-                        label: 'Waga',
-                        options: UNITS.filter(
-                          (u) => u.category === 'weight'
-                        ).map((u) => ({
-                          value: u.id,
-                          label: `${u.short} (${u.full.one})`,
-                        })),
-                      },
-                      {
-                        label: 'Objętość',
-                        options: UNITS.filter(
-                          (u) => u.category === 'volume'
-                        ).map((u) => ({
-                          value: u.id,
-                          label: `${u.short} (${u.full.one})`,
-                        })),
-                      },
-                      {
-                        label: 'Ilość',
-                        options: UNITS.filter(
-                          (u) => u.category === 'count'
-                        ).map((u) => ({
-                          value: u.id,
-                          label: `${u.short} (${u.full.one})`,
-                        })),
-                      },
-                      {
-                        label: 'Pojemniki',
-                        options: UNITS.filter(
-                          (u) => u.category === 'container'
-                        ).map((u) => ({
-                          value: u.id,
-                          label: `${u.short} (${u.full.one})`,
-                        })),
-                      },
-                    ]}
+                    groups={getUnitGroups('detailed')}
                     placeholder="Wybierz jednostkę..."
                   />
                 </div>
