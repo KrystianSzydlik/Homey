@@ -56,16 +56,19 @@ export default function ItemBottomSheet({
         checked,
       });
 
-      if (result.success && result.data) {
-        onSave({
-          ...item,
-          quantity: result.data.quantity,
-          unit: result.data.unit,
-          price: result.data.price,
-          checked: result.data.checked,
-        });
-        onClose();
+      if (!result.success) {
+        setError(result.error);
+        return;
       }
+
+      onSave({
+        ...item,
+        quantity: result.data.quantity,
+        unit: result.data.unit,
+        price: result.data.price,
+        checked: result.data.checked,
+      });
+      onClose();
     } catch (e) {
       console.error(e);
       setError('Nie udało się zapisać. Spróbuj ponownie.');

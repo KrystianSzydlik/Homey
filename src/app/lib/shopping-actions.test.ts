@@ -22,6 +22,7 @@ const { mockPrisma, mockAuth } = vi.hoisted(() => {
     shoppingList: {
       findFirst: vi.fn(),
     },
+    $transaction: vi.fn((promises: Promise<unknown>[]) => Promise.all(promises)),
   };
   return { mockPrisma, mockAuth };
 });
@@ -54,14 +55,14 @@ describe('Shopping Actions - Additional Tests', () => {
     it('should create an item successfully', async () => {
       const input = {
         name: 'Milk',
-        shoppingListId: 'list-1',
+        shoppingListId: 'clh1234567890list1',
         productId: 'prod-1',
       };
 
-      (prisma.shoppingList.findFirst as any).mockResolvedValue({ id: 'list-1' });
+      (prisma.shoppingList.findFirst as any).mockResolvedValue({ id: 'clh1234567890list1' });
       (prisma.shoppingItem.findFirst as any).mockResolvedValue(null);
       (prisma.shoppingItem.create as any).mockResolvedValue({
-        id: 'item-1',
+        id: 'clh1234567890item1',
         ...input,
         position: 0,
         householdId: mockHouseholdId,
@@ -82,7 +83,7 @@ describe('Shopping Actions - Additional Tests', () => {
 
   describe('toggleShoppingItemChecked', () => {
     it('should toggle item to checked and increment purchase count', async () => {
-      const itemId = 'item-1';
+      const itemId = 'clh1234567890item1';
       const mockItem = {
         id: itemId,
         householdId: mockHouseholdId,
@@ -125,7 +126,7 @@ describe('Shopping Actions - Additional Tests', () => {
     });
 
     it('should calculate average days between purchases on subsequent purchase', async () => {
-      const itemId = 'item-1';
+      const itemId = 'clh1234567890item1';
       const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
       const mockItem = {
         id: itemId,
@@ -174,7 +175,7 @@ describe('Shopping Actions - Additional Tests', () => {
     });
 
     it('should toggle item to unchecked without updating statistics', async () => {
-      const itemId = 'item-1';
+      const itemId = 'clh1234567890item1';
       const mockItem = {
         id: itemId,
         householdId: mockHouseholdId,
@@ -213,7 +214,7 @@ describe('Shopping Actions - Additional Tests', () => {
     it('should return error if item not found', async () => {
       (prisma.shoppingItem.findFirst as any).mockResolvedValue(null);
 
-      const result = await toggleShoppingItemChecked('item-999');
+      const result = await toggleShoppingItemChecked('clh123456789item99');
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -223,7 +224,7 @@ describe('Shopping Actions - Additional Tests', () => {
     });
 
     it('should verify household access before toggling', async () => {
-      const itemId = 'item-1';
+      const itemId = 'clh1234567890item1';
 
       (prisma.shoppingItem.findFirst as any).mockResolvedValue({
         id: itemId,
@@ -240,7 +241,7 @@ describe('Shopping Actions - Additional Tests', () => {
     });
 
     it('should return updated item with creator info', async () => {
-      const itemId = 'item-1';
+      const itemId = 'clh1234567890item1';
       const mockItem = {
         id: itemId,
         householdId: mockHouseholdId,
@@ -270,7 +271,7 @@ describe('Shopping Actions - Additional Tests', () => {
   });
 
   describe('clearCheckedItems', () => {
-    const input = { itemIds: ['item-1', 'item-2'] };
+    const input = { itemIds: ['clh1234567890item1', 'clh1234567890item2'] };
 
     it('should delete all checked items for household', async () => {
       (prisma.shoppingItem.deleteMany as any).mockResolvedValue({ count: 5 });
@@ -351,7 +352,7 @@ describe('Shopping Actions - Additional Tests', () => {
 
   describe('deleteAllShoppingItems', () => {
     it('should delete all items in a shopping list', async () => {
-      const listId = 'list-1';
+      const listId = 'clh1234567890list1';
 
       (prisma.shoppingList.findFirst as any).mockResolvedValue({
         id: listId,
@@ -373,7 +374,7 @@ describe('Shopping Actions - Additional Tests', () => {
     it('should return error if shopping list not found', async () => {
       (prisma.shoppingList.findFirst as any).mockResolvedValue(null);
 
-      const result = await deleteAllShoppingItems('list-999');
+      const result = await deleteAllShoppingItems('clh123456789list99');
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -383,7 +384,7 @@ describe('Shopping Actions - Additional Tests', () => {
     });
 
     it('should verify household access before deleting', async () => {
-      const listId = 'list-1';
+      const listId = 'clh1234567890list1';
 
       (prisma.shoppingList.findFirst as any).mockResolvedValue({
         id: listId,
@@ -399,7 +400,7 @@ describe('Shopping Actions - Additional Tests', () => {
     });
 
     it('should delete items regardless of checked status', async () => {
-      const listId = 'list-1';
+      const listId = 'clh1234567890list1';
 
       (prisma.shoppingList.findFirst as any).mockResolvedValue({
         id: listId,
@@ -415,7 +416,7 @@ describe('Shopping Actions - Additional Tests', () => {
     });
 
     it('should return zero if list is empty', async () => {
-      const listId = 'list-1';
+      const listId = 'clh1234567890list1';
 
       (prisma.shoppingList.findFirst as any).mockResolvedValue({
         id: listId,
@@ -432,7 +433,7 @@ describe('Shopping Actions - Additional Tests', () => {
     });
 
     it('should return error on database failure', async () => {
-      const listId = 'list-1';
+      const listId = 'clh1234567890list1';
 
       (prisma.shoppingList.findFirst as any).mockResolvedValue({
         id: listId,
@@ -453,8 +454,8 @@ describe('Shopping Actions - Additional Tests', () => {
 
   describe('reorderShoppingItems', () => {
     it('should update positions for all items', async () => {
-      const listId = 'list-1';
-      const itemIds = ['item-1', 'item-2', 'item-3'];
+      const listId = 'clh1234567890list1';
+      const itemIds = ['clh1234567890item1', 'clh1234567890item2', 'clh1234567890item3'];
 
       const mockItems = itemIds.map((id) => ({
         id,
@@ -479,12 +480,12 @@ describe('Shopping Actions - Additional Tests', () => {
     });
 
     it('should return error if some items not found', async () => {
-      const listId = 'list-1';
-      const itemIds = ['item-1', 'item-2', 'item-3'];
+      const listId = 'clh1234567890list1';
+      const itemIds = ['clh1234567890item1', 'clh1234567890item2', 'clh1234567890item3'];
 
       const mockItems = [
-        { id: 'item-1', householdId: mockHouseholdId, shoppingListId: listId },
-        { id: 'item-2', householdId: mockHouseholdId, shoppingListId: listId },
+        { id: 'clh1234567890item1', householdId: mockHouseholdId, shoppingListId: listId },
+        { id: 'clh1234567890item2', householdId: mockHouseholdId, shoppingListId: listId },
       ];
 
       (prisma.shoppingItem.findMany as any).mockResolvedValue(mockItems);
@@ -499,8 +500,8 @@ describe('Shopping Actions - Additional Tests', () => {
     });
 
     it('should verify all items belong to household and list', async () => {
-      const listId = 'list-1';
-      const itemIds = ['item-1', 'item-2'];
+      const listId = 'clh1234567890list1';
+      const itemIds = ['clh1234567890item1', 'clh1234567890item2'];
 
       (prisma.shoppingItem.findMany as any).mockResolvedValue([]);
 
@@ -515,21 +516,19 @@ describe('Shopping Actions - Additional Tests', () => {
       });
     });
 
-    it('should handle empty item array', async () => {
-      const listId = 'list-1';
+    it('should return validation error for empty item array', async () => {
+      const listId = 'clh1234567890list1';
       const itemIds: string[] = [];
-
-      (prisma.shoppingItem.findMany as any).mockResolvedValue([]);
 
       const result = await reorderShoppingItems(listId, itemIds);
 
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(false);
       expect(prisma.shoppingItem.update).not.toHaveBeenCalled();
     });
 
     it('should maintain position order matching itemIds order', async () => {
-      const listId = 'list-1';
-      const itemIds = ['item-3', 'item-1', 'item-2'];
+      const listId = 'clh1234567890list1';
+      const itemIds = ['clh1234567890item3', 'clh1234567890item1', 'clh1234567890item2'];
 
       const mockItems = itemIds.map((id) => ({
         id,
@@ -543,22 +542,22 @@ describe('Shopping Actions - Additional Tests', () => {
       await reorderShoppingItems(listId, itemIds);
 
       expect(prisma.shoppingItem.update).toHaveBeenNthCalledWith(1, {
-        where: { id: 'item-3' },
+        where: { id: 'clh1234567890item3' },
         data: { position: 0 },
       });
       expect(prisma.shoppingItem.update).toHaveBeenNthCalledWith(2, {
-        where: { id: 'item-1' },
+        where: { id: 'clh1234567890item1' },
         data: { position: 1 },
       });
       expect(prisma.shoppingItem.update).toHaveBeenNthCalledWith(3, {
-        where: { id: 'item-2' },
+        where: { id: 'clh1234567890item2' },
         data: { position: 2 },
       });
     });
 
     it('should return error on database failure', async () => {
-      const listId = 'list-1';
-      const itemIds = ['item-1', 'item-2'];
+      const listId = 'clh1234567890list1';
+      const itemIds = ['clh1234567890item1', 'clh1234567890item2'];
 
       const mockItems = itemIds.map((id) => ({
         id,

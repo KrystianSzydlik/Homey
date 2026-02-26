@@ -79,8 +79,11 @@ describe('updateShoppingItem', () => {
       checked: false,
     });
 
-    expect(result.data.price).toBe(12.99);
-    expect(result.data.purchasedAt).toBeNull();
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.price).toBe(12.99);
+      expect(result.data.purchasedAt).toBeNull();
+    }
   });
 
   it('should set purchasedAt when marking as checked', async () => {
@@ -137,7 +140,10 @@ describe('updateShoppingItem', () => {
       checked: true,
     });
 
-    expect(result.data.purchasedAt).toBeInstanceOf(Date);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.purchasedAt).toBeInstanceOf(Date);
+    }
   });
 
   it('should clear purchasedAt when unchecking', async () => {
@@ -192,12 +198,52 @@ describe('updateShoppingItem', () => {
       checked: false,
     });
 
-    expect(result.data.purchasedAt).toBeNull();
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.purchasedAt).toBeNull();
+    }
   });
 
   it('should reject negative prices', async () => {
-    await expect(
-      updateShoppingItemDetails({ itemId: 'cld1234567890abc', price: -5 })
-    ).rejects.toThrow();
+    const result = await updateShoppingItemDetails({
+      itemId: 'cld1234567890abc',
+      price: -5,
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBeDefined();
+    }
+  });
+
+  it('should return error when item not found', async () => {
+    vi.mocked(prisma.shoppingItem.findUnique).mockResolvedValue(null);
+
+    const result = await updateShoppingItemDetails({
+      itemId: 'cld1234567890abc',
+      quantity: '2',
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBe('Item not found');
+    }
+  });
+
+  it('should return error when item belongs to different household', async () => {
+    vi.mocked(prisma.shoppingItem.findUnique).mockResolvedValue({
+      householdId: 'other-household',
+      checked: false,
+    } as any);
+
+    const result = await updateShoppingItemDetails({
+      itemId: 'cld1234567890abc',
+      quantity: '2',
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBe('Unauthorized');
+    }
   });
 });

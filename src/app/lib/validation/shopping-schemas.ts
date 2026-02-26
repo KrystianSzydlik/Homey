@@ -52,5 +52,9 @@ export const createProductSchema = z.object({
 export const searchQuerySchema = z.string().min(1).max(100);
 
 export const clearCheckedItemsSchema = z.object({
-  itemIds: z.array(z.string().min(1, 'Item ID is required')).min(1),
+  itemIds: z.array(z.string().cuid('Invalid item ID')).min(1),
 });
+
+export const itemIdSchema = z.string().cuid('Invalid item ID');
+export const listIdSchema = z.string().cuid('Invalid list ID');
+export const itemIdsSchema = z.array(z.string().cuid('Invalid item ID')).min(1);

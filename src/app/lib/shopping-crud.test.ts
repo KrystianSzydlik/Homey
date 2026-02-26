@@ -80,7 +80,7 @@ describe('Shopping List Actions', () => {
       };
 
       const mockList = {
-        id: 'list-1',
+        id: 'clh1234567890list1',
         ...input,
         position: 0,
         householdId: mockHouseholdId,
@@ -126,7 +126,7 @@ describe('Shopping List Actions', () => {
 
   describe('updateShoppingList', () => {
     it('should update a shopping list successfully', async () => {
-      const listId = 'list-1';
+      const listId = 'clh1234567890list1';
       const input = { name: 'Updated Name' };
 
       // Mock finding existing list
@@ -148,7 +148,7 @@ describe('Shopping List Actions', () => {
     it('should return error if list not found or unauthorized', async () => {
       (prisma.shoppingList.findFirst as any).mockResolvedValue(null);
 
-      const result = await updateShoppingList('list-999', { name: 'New' });
+      const result = await updateShoppingList('clh123456789list99', { name: 'New' });
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -159,7 +159,7 @@ describe('Shopping List Actions', () => {
 
   describe('deleteShoppingList', () => {
     it('should delete a shopping list', async () => {
-      const listId = 'list-1';
+      const listId = 'clh1234567890list1';
 
       (prisma.shoppingList.findFirst as any).mockResolvedValue({ id: listId });
       (prisma.shoppingList.delete as any).mockResolvedValue({ id: listId });
@@ -177,7 +177,7 @@ describe('Shopping List Actions', () => {
 describe('Shopping Item Actions', () => {
   const mockUserId = 'user-123';
   const mockHouseholdId = 'household-123';
-  const mockListId = 'list-1';
+  const mockListId = 'clh1234567890list1';
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -208,7 +208,7 @@ describe('Shopping Item Actions', () => {
       (prisma.shoppingItem.findFirst as any).mockResolvedValue({ position: 2 });
 
       const mockItem = {
-        id: 'item-1',
+        id: 'clh1234567890item1',
         ...input,
         position: 3,
         householdId: mockHouseholdId,
