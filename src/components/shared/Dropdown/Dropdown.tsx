@@ -48,10 +48,12 @@ export function Dropdown<T extends string = string>({
       type="button"
       className={`${styles.option} ${value === option.value ? styles.active : ''}`}
       onClick={() => handleSelect(option.value)}
+      role="menuitem"
+      aria-current={value === option.value ? 'true' : undefined}
     >
       {option.icon && <span className={styles.optionIcon}>{option.icon}</span>}
       <span className={styles.optionLabel}>{option.label}</span>
-      {value === option.value && <span className={styles.check}>✓</span>}
+      {value === option.value && <span className={styles.check} aria-label="selected">✓</span>}
     </button>
   );
 
@@ -60,6 +62,7 @@ export function Dropdown<T extends string = string>({
       <Popover.Trigger
         className={`${styles.trigger} ${className || ''}`}
         disabled={disabled}
+        aria-label={selectedOption?.label || placeholder}
       >
         <div className={styles.triggerContent}>
           {selectedOption?.icon && (
@@ -69,7 +72,7 @@ export function Dropdown<T extends string = string>({
             {selectedOption?.label || placeholder}
           </span>
         </div>
-        <span className={styles.chevron}>▼</span>
+        <span className={styles.chevron} aria-hidden="true">▼</span>
       </Popover.Trigger>
 
       <Popover.Content
@@ -77,14 +80,15 @@ export function Dropdown<T extends string = string>({
         sideOffset={8}
         matchTriggerWidth
         className={styles.popover}
+        role="menu"
       >
         <Popover.Body className={styles.content}>
           {options && options.map(renderOption)}
 
           {groups &&
             groups.map((group) => (
-              <div key={group.label} className={styles.group}>
-                <div className={styles.groupLabel}>{group.label}</div>
+              <div key={group.label} className={styles.group} role="group" aria-labelledby={`group-${group.label}`}>
+                <div id={`group-${group.label}`} className={styles.groupLabel}>{group.label}</div>
                 {group.options.map(renderOption)}
               </div>
             ))}
