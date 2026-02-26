@@ -1,9 +1,14 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useActionState, useState, useRef } from 'react';
 import { authenticate } from '@/app/lib/actions';
 import styles from './login.module.scss';
-import LoginScene from '@/components/LoginScene';
+
+const LoginScene = dynamic(() => import('@/components/LoginScene'), {
+  loading: () => <div style={{ position: 'absolute', inset: 0, background: 'var(--bg-primary)' }} />,
+  ssr: false,
+});
 
 export default function LoginForm() {
   const [errorMessage, formAction, isPending] = useActionState(

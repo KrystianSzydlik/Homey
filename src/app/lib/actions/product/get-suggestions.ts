@@ -16,17 +16,50 @@ export async function getProductSuggestions(
 
     const validatedQuery = searchQuerySchema.parse(query);
 
-    // Search catalog products (household-specific and global)
-    const catalogProducts = await prisma.product.findMany({
-      where: {
-        name: {
-          contains: validatedQuery,
-          mode: 'insensitive',
+    // Execute all three queries in parallel to avoid network waterfall
+    const [catalogProducts, recentItems, smartSuggestions] = await Promise.all([
+      // Search catalog products (household-specific and global)
+      prisma.product.findMany({
+        where: {
+          name: {
+            contains: validatedQuery,
+            mode: 'insensitive',
+          },
+          OR: [{ householdId }, { householdId: null }],
         },
-        OR: [{ householdId }, { householdId: null }],
-      },
-      take: 5,
-    });
+        take: 5,
+      }),
+
+      // Search recent items from purchase history
+      prisma.shoppingItem.findMany({
+        where: {
+          householdId,
+          name: {
+            contains: validatedQuery,
+            mode: 'insensitive',
+          },
+          purchaseCount: { gt: 0 },
+        },
+        distinct: ['name'],
+        take: 5,
+        orderBy: { lastPurchasedAt: 'desc' },
+      }),
+
+      // Get smart suggestions (items due for repurchase)
+      prisma.shoppingItem.findMany({
+        where: {
+          householdId,
+          name: {
+            contains: validatedQuery,
+            mode: 'insensitive',
+          },
+          purchaseCount: { gt: 0 },
+          lastPurchasedAt: { not: null },
+          averageDaysBetweenPurchases: { not: null },
+        },
+        take: 5,
+      }),
+    ]);
 
     const catalogSuggestions: ProductSuggestion[] = catalogProducts.map(
       (product, index) => ({
@@ -40,21 +73,6 @@ export async function getProductSuggestions(
       })
     );
 
-    // Search recent items from purchase history
-    const recentItems = await prisma.shoppingItem.findMany({
-      where: {
-        householdId,
-        name: {
-          contains: validatedQuery,
-          mode: 'insensitive',
-        },
-        purchaseCount: { gt: 0 },
-      },
-      distinct: ['name'],
-      take: 5,
-      orderBy: { lastPurchasedAt: 'desc' },
-    });
-
     const recentSuggestions: ProductSuggestion[] = recentItems.map(
       (item, index) => ({
         name: item.name,
@@ -65,21 +83,6 @@ export async function getProductSuggestions(
         source: 'history',
       })
     );
-
-    // Get smart suggestions (items due for repurchase)
-    const smartSuggestions = await prisma.shoppingItem.findMany({
-      where: {
-        householdId,
-        name: {
-          contains: validatedQuery,
-          mode: 'insensitive',
-        },
-        purchaseCount: { gt: 0 },
-        lastPurchasedAt: { not: null },
-        averageDaysBetweenPurchases: { not: null },
-      },
-      take: 5,
-    });
 
     const smartSuggestionsFormatted: ProductSuggestion[] = smartSuggestions
       .map((item) => {
