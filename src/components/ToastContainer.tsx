@@ -32,7 +32,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div style={{ position: 'fixed', top: 0, right: 0, zIndex: 9999 }}>
+      <div
+        role="region"
+        aria-label="Notifications"
+        aria-live="polite"
+        aria-atomic="false"
+        style={{ position: 'fixed', top: 0, right: 0, zIndex: 9999 }}
+      >
         {toasts.map((toast, index) => (
           <div key={toast.id} style={{ marginTop: index > 0 ? '1rem' : 0 }}>
             <Toast
