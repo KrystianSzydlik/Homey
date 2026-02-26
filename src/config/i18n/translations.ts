@@ -1,3 +1,5 @@
+import { Keys } from './keys';
+
 export const translations = {
   common: {
     save: 'Zapisz',
@@ -70,6 +72,7 @@ export const translations = {
     duplicateConfirm: 'Tak, zaktualizuj',
     edit: 'Edytuj produkt',
     deleteFromCatalog: 'Usuń produkt z bazy',
+    deleteFromCatalogTitle: 'Usuń produkt z bazy',
     deleteFromCatalogMessage:
       'Czy na pewno chcesz usunąć "{name}" z katalogu produktów? Ta operacja jest nieodwracalna.',
     deleteConfirm: 'Usuń',
@@ -161,8 +164,16 @@ export type TranslationKey = string & {
   readonly __brand: 'TranslationKey';
 };
 
-/** Get translation by key with dot notation: 'common.save', 'auth.email' */
-export function t(key: keyof typeof translations | string): string {
+/**
+ * Get translation by key with dot notation: 'common.save', 'auth.email'
+ * Supports both string literals and type-safe Keys for compile-time validation
+ *
+ * Usage:
+ *   import { t, Keys } from '@/config/i18n/translations';
+ *   t(Keys.COMMON.SAVE)  // Type-safe (recommended)
+ *   t('common.save')     // String (fallback)
+ */
+export function t(key: string | typeof Keys[keyof typeof Keys][keyof typeof Keys[keyof typeof Keys]]): string {
   const keys = key.split('.');
   let current: unknown = translations;
 
@@ -189,3 +200,6 @@ export function tReplace(
   }
   return text;
 }
+
+// Export type-safe keys for component usage
+export { Keys } from './keys';

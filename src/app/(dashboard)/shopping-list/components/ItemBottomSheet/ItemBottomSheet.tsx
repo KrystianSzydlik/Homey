@@ -7,6 +7,7 @@ import { Dropdown } from '@/components/shared/Dropdown';
 import { getUnitGroups } from '@/lib/constants/shopping-units';
 import { updateShoppingItemDetails } from '@/lib/actions/shopping/update-item';
 import { parsePlnPrice } from '@/lib/pln-validation';
+import { t, Keys } from '@/config/i18n';
 import styles from './ItemBottomSheet.module.scss';
 
 interface ItemBottomSheetProps {
@@ -154,10 +155,10 @@ export default function ItemBottomSheet({
 
         <BottomSheet.Footer>
           <BottomSheet.CancelButton disabled={isLoading}>
-            Anuluj
+            {t(Keys.COMMON.CANCEL)}
           </BottomSheet.CancelButton>
           <BottomSheet.ConfirmButton onClick={handleSave} disabled={isLoading}>
-            {isLoading ? 'Zapisywanie...' : 'Zapisz'}
+            {isLoading ? t(Keys.PRODUCT.SAVING) : t(Keys.COMMON.SAVE)}
           </BottomSheet.ConfirmButton>
         </BottomSheet.Footer>
       </BottomSheet.Content>

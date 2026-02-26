@@ -11,6 +11,7 @@ import { ColorPicker } from '@/components/shared/ColorPicker';
 import { ShoppingListActionResult, ShoppingListWithCreator } from '@/types/shopping';
 import { LIST_EMOJI_GROUPS } from '@/config/emojis';
 import { DEFAULT_LIST_EMOJI, DEFAULT_LIST_COLOR } from '@/config/shopping';
+import { t, Keys } from '@/config/i18n';
 import styles from './CreateListForm.module.scss';
 
 type CreateListFormData = z.infer<typeof createShoppingListSchema>;
@@ -141,7 +142,7 @@ export function CreateListForm({
           className={styles.cancelButton}
           aria-label="Cancel creating shopping list"
         >
-          Anuluj
+          {t(Keys.COMMON.CANCEL)}
         </button>
         <motion.button
           type="submit"

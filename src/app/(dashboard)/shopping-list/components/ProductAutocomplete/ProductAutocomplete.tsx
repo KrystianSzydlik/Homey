@@ -10,6 +10,7 @@ import DropdownMenu, {
 } from '@/components/shared/DropdownMenu';
 import ProductBottomSheet from '../ProductBottomSheet/ProductBottomSheet';
 import { AlertModal } from '@/components/shared/Modal';
+import { t, Keys, tReplace } from '@/config/i18n';
 import styles from './ProductAutocomplete.module.scss';
 
 interface ProductAutocompleteProps {
@@ -100,12 +101,12 @@ export default function ProductAutocomplete({
     suggestion: ProductSuggestion
   ): DropdownMenuItem[] => [
     {
-      label: 'Edytuj produkt',
+      label: t(Keys.PRODUCT.EDIT),
       onClick: () => handleEdit(suggestion),
       icon: <span>✏️</span>,
     },
     {
-      label: 'Usuń z bazy',
+      label: t(Keys.PRODUCT.DELETE_FROM_CATALOG),
       onClick: () => handleDeleteClick(suggestion),
       variant: 'danger',
       icon: <span>🗑️</span>,
@@ -252,12 +253,12 @@ export default function ProductAutocomplete({
       {deleteConfirmProduct && isCatalogSuggestion(deleteConfirmProduct) && (
         <AlertModal
           isOpen={true}
-          title="Usuń produkt z bazy"
-          message={`Czy na pewno chcesz usunąć "${deleteConfirmProduct.name}" z katalogu produktów? Ta operacja jest nieodwracalna.`}
+          title={t(Keys.PRODUCT.DELETE_FROM_CATALOG_TITLE)}
+          message={tReplace(Keys.PRODUCT.DELETE_FROM_CATALOG_MESSAGE, { name: deleteConfirmProduct.name })}
           onConfirm={confirmDelete}
           onCancel={() => setDeleteConfirmProduct(null)}
           isLoading={isPending}
-          confirmText="Usuń"
+          confirmText={t(Keys.PRODUCT.DELETE_CONFIRM)}
           variant="danger"
         />
       )}

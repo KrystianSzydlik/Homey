@@ -12,6 +12,7 @@ import { CATEGORIES } from '@/config/shopping';
 import { FOOD_EMOJIS } from '@/config/emojis';
 import { Dropdown } from '@/components/shared/Dropdown';
 import { AlertModal } from '@/components/shared/Modal';
+import { t, Keys } from '@/config/i18n';
 import styles from './ProductBottomSheet.module.scss';
 
 interface ProductBottomSheetProps {
@@ -168,7 +169,7 @@ export default function ProductBottomSheet({
 
           <BottomSheet.Header>
             <BottomSheet.Title>
-              {productId ? 'Edytuj produkt' : 'Dodaj produkt'}
+              {productId ? t(Keys.PRODUCT.EDIT_TITLE) : t(Keys.PRODUCT.CREATE_TITLE)}
             </BottomSheet.Title>
             <BottomSheet.CloseButton />
           </BottomSheet.Header>
@@ -266,14 +267,14 @@ export default function ProductBottomSheet({
 
           <BottomSheet.Footer>
             <BottomSheet.CancelButton disabled={isLoading}>
-              Anuluj
+              {t(Keys.COMMON.CANCEL)}
             </BottomSheet.CancelButton>
             <BottomSheet.ConfirmButton
               type="submit"
               form="product-bottom-sheet-form"
               disabled={isLoading}
             >
-              {isLoading ? 'Zapisywanie...' : productId ? 'Zapisz' : 'Dodaj'}
+              {isLoading ? t(Keys.PRODUCT.SAVING) : productId ? t(Keys.COMMON.SAVE) : t(Keys.COMMON.ADD)}
             </BottomSheet.ConfirmButton>
           </BottomSheet.Footer>
         </BottomSheet.Content>
