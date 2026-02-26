@@ -12,11 +12,13 @@ model Household {
   name  String
   users User[]
 
-  recipes        Recipe[]
-  todos          Todo[]
-  shoppingItems  ShoppingItem[]
-  shoppingLists  ShoppingList[]
-  products       Product[]
+  recipes         Recipe[]
+  todos           Todo[]
+  shoppingItems   ShoppingItem[]
+  shoppingLists   ShoppingList[]
+  products        Product[]
+  habits          Habit[]
+  habitCompletions HabitCompletion[]
 }
 
 model User {
@@ -163,17 +165,29 @@ model Habit {
   name        String
   description String?
   frequency   String
+
+  householdId String
+  household   Household     @relation(fields: [householdId], references: [id])
   userId      String
   user        User          @relation(fields: [userId], references: [id])
+
   createdAt   DateTime      @default(now())
   completions HabitCompletion[]
+
+  @@index([householdId])
+  @@index([userId])
 }
 
 model HabitCompletion {
-  id      String   @id @default(cuid())
-  habitId String
-  habit   Habit    @relation(fields: [habitId], references: [id])
-  date    DateTime @default(now())
-  userId  String
-  user    User     @relation(fields: [userId], references: [id])
+  id          String   @id @default(cuid())
+  habitId     String
+  habit       Habit    @relation(fields: [habitId], references: [id])
+  date        DateTime @default(now())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id])
+
+  @@index([habitId, date])
+  @@index([householdId, date])
 }
