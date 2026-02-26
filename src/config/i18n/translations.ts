@@ -1,14 +1,4 @@
-/**
- * Centralized translations for HOMEY application.
- * Supports multiple languages with typed keys for safety.
- *
- * Usage:
- *   import { t } from '@/config/i18n';
- *   const label = t('common.save'); // 'Zapisz'
- */
-
 export const translations = {
-  // Common UI elements (buttons, labels, placeholders)
   common: {
     save: 'Zapisz',
     cancel: 'Anuluj',
@@ -25,8 +15,6 @@ export const translations = {
     no: 'Nie',
     optional: '(opcjonalnie)',
   },
-
-  // Authentication & Login
   auth: {
     welcome: 'Witaj w domu',
     email: 'Email',
@@ -38,8 +26,6 @@ export const translations = {
     invalidCredentials: 'Niepoprawne dane logowania.',
     somethingWentWrong: 'Coś poszło nie tak.',
   },
-
-  // Shopping List
   shoppingList: {
     title: 'Lista Zakupów',
     createList: 'Utwórz listę',
@@ -50,8 +36,6 @@ export const translations = {
     completedSection: 'Ukończone',
     clearing: 'Czyszczenie...',
   },
-
-  // Shopping Item (product in list)
   shoppingItem: {
     quantity: 'Ilość',
     unit: 'Jednostka',
@@ -65,8 +49,6 @@ export const translations = {
     deleteMessage: 'Czy na pewno chcesz usunąć "{name}"?',
     deleteConfirm: 'Usuń',
   },
-
-  // Product Management
   product: {
     createTitle: 'Dodaj produkt',
     editTitle: 'Edytuj produkt',
@@ -92,8 +74,6 @@ export const translations = {
       'Czy na pewno chcesz usunąć "{name}" z katalogu produktów? Ta operacja jest nieodwracalna.',
     deleteConfirm: 'Usuń',
   },
-
-  // Product Autocomplete & Search
   productSearch: {
     placeholder: 'Szukaj produktów...',
     searchPlaceholder: 'Szukaj lub wpisz nazwę produktu...',
@@ -104,8 +84,6 @@ export const translations = {
     },
     addNew: '+ Dodaj nowy produkt: "{query}"',
   },
-
-  // Shopping List Creation
   listCreation: {
     title: 'Stwórz nową listę',
     nameLabel: 'Nazwa listy',
@@ -114,8 +92,6 @@ export const translations = {
     createError: 'Nie udało się utworzyć listy.',
     createSuccess: 'Lista została utworzona.',
   },
-
-  // List Management
   listManagement: {
     deleteTitle: 'Usuń listę',
     deleteMessage: 'Czy na pewno chcesz usunąć tę listę? Wszystkie produkty zostaną usunięte na stałe.',
@@ -131,8 +107,6 @@ export const translations = {
     clearMissingPricesConfirm: 'Wyczyść mimo braków',
     clearMissingPricesCancel: 'Uzupełnij ceny',
   },
-
-  // Categories
   categories: {
     all: 'Wszystkie',
     vegetables: 'Warzywa',
@@ -146,16 +120,12 @@ export const translations = {
     sweets: 'Słodycze',
     other: 'Inne',
   },
-
-  // Units - Categories
   unitCategories: {
     weight: 'Waga',
     volume: 'Objętość',
     count: 'Ilość',
     container: 'Pojemniki',
   },
-
-  // Menu Items (Dropdown actions)
   menu: {
     edit: 'Edytuj',
     delete: 'Usuń',
@@ -165,8 +135,6 @@ export const translations = {
     deleteList: 'Usuń listę',
     moreActions: 'Więcej opcji',
   },
-
-  // Accessibility (ARIA labels, screen reader text)
   a11y: {
     closeModal: 'Zamknij okno dialogowe',
     closeNotification: 'Zamknij powiadomienie',
@@ -175,8 +143,6 @@ export const translations = {
     searchProducts: 'Szukaj produktów',
     toggleCategory: 'Zmień kategorię',
   },
-
-  // Validation & Error Messages
   validation: {
     nameRequired: 'Nazwa jest wymagana',
     nameTooLong: 'Nazwa jest za długa',
@@ -184,8 +150,6 @@ export const translations = {
     invalidListId: 'Nieprawidłowy ID listy',
     validationFailed: 'Walidacja nie powiodła się',
   },
-
-  // Placeholders & Hints
   placeholders: {
     quantity: '1',
     price: '0,00',
@@ -193,22 +157,11 @@ export const translations = {
   },
 } as const;
 
-/**
- * Type-safe translation key helper.
- * Ensures all translation keys exist at compile time.
- */
 export type TranslationKey = string & {
   readonly __brand: 'TranslationKey';
 };
 
-/**
- * Get a translation by key with dot notation.
- * Supports nested keys like 'common.save', 'auth.email', etc.
- *
- * @example
- * t('common.save') // 'Zapisz'
- * t('auth.welcome') // 'Witaj w domu'
- */
+/** Get translation by key with dot notation: 'common.save', 'auth.email' */
 export function t(key: keyof typeof translations | string): string {
   const keys = key.split('.');
   let current: unknown = translations;
@@ -225,13 +178,7 @@ export function t(key: keyof typeof translations | string): string {
   return typeof current === 'string' ? current : key;
 }
 
-/**
- * Get a translation and interpolate variables.
- *
- * @example
- * tReplace('listManagement.clearMissingPricesMessage', { count: 5 })
- * // 'Masz 5 kupionych produktów bez ceny. Wyczyścić mimo to?'
- */
+/** Get translation and interpolate variables: tReplace('key', { count: 5 }) */
 export function tReplace(
   key: string,
   variables: Record<string, string | number>
