@@ -7,6 +7,7 @@ import DropdownMenu from '@/components/shared/DropdownMenu';
 import { AlertModal } from '@/components/shared/Modal';
 import { Meta } from './Item.Meta';
 import ItemBottomSheet from '../ItemBottomSheet/ItemBottomSheet';
+import { t, Keys } from '@/config/i18n';
 import styles from './ShoppingItem.module.scss';
 import { ShoppingItemWithCreator } from '@/types/shopping';
 
@@ -143,7 +144,7 @@ export default function ShoppingItem({
                 icon: <span>✏️</span>,
               },
               {
-                label: 'Usuń',
+                label: t(Keys.COMMON.DELETE),
                 onClick: handleDeleteClick,
                 variant: 'danger',
                 icon: <span>🗑️</span>,

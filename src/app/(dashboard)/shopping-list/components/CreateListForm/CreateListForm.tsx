@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useTransition, useId } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
@@ -11,6 +11,7 @@ import { ColorPicker } from '@/components/shared/ColorPicker';
 import { ShoppingListActionResult, ShoppingListWithCreator } from '@/types/shopping';
 import { LIST_EMOJI_GROUPS } from '@/config/emojis';
 import { DEFAULT_LIST_EMOJI, DEFAULT_LIST_COLOR } from '@/config/shopping';
+import { t, Keys } from '@/config/i18n';
 import styles from './CreateListForm.module.scss';
 
 type CreateListFormData = z.infer<typeof createShoppingListSchema>;
@@ -29,6 +30,7 @@ export function CreateListForm({
   onCancel,
 }: CreateListFormProps) {
   const [isPending, startTransition] = useTransition();
+  const nameErrorId = useId();
 
   const {
     register,
@@ -76,11 +78,15 @@ export function CreateListForm({
             className={styles.nameInput}
             autoFocus
             disabled={isPending}
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? nameErrorId : undefined}
             {...register('name')}
           />
         </div>
         {errors.name && (
-          <span className={styles.errorMessage}>{errors.name.message}</span>
+          <span id={nameErrorId} className={styles.errorMessage} role="alert">
+            {errors.name.message}
+          </span>
         )}
       </div>
 
@@ -134,8 +140,9 @@ export function CreateListForm({
           onClick={onCancel}
           disabled={isPending}
           className={styles.cancelButton}
+          aria-label="Cancel creating shopping list"
         >
-          Anuluj
+          {t(Keys.COMMON.CANCEL)}
         </button>
         <motion.button
           type="submit"

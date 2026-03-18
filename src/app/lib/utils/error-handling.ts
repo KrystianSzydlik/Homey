@@ -13,7 +13,14 @@ export function getErrorMessage(error: unknown): string {
   }
   if (error && typeof error === 'object' && 'message' in error) {
     const msg = (error as Record<string, unknown>).message;
-    return typeof msg === 'string' ? msg : String(error);
+    return typeof msg === 'string' ? msg : JSON.stringify(error);
+  }
+  if (error && typeof error === 'object') {
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
   }
   return String(error);
 }

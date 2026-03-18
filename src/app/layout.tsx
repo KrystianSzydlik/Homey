@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "../styles/globals.scss";
 import { ToastProvider } from "@/components/ToastContainer";
+import SkipLink from "@/components/shared/SkipLink";
 
 export const metadata: Metadata = {
   title: "HOMEY",
@@ -15,8 +16,11 @@ export default function RootLayout({
   return (
     <html lang="pl">
       <body>
+        <SkipLink />
         <ToastProvider>
-          {children}
+          <main id="main-content">
+            {children}
+          </main>
         </ToastProvider>
       </body>
     </html>
