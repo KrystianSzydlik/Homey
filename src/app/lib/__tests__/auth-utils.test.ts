@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getHouseholdId, getUserId, getSessionData, SessionData } from '../auth-utils';
-import { auth } from '@/auth';
-import { redirect } from 'next/navigation';
+import { getHouseholdId, getUserId, getSessionData } from '../auth-utils';
 
 const { mockAuth, mockRedirect } = vi.hoisted(() => {
   const mockAuth = vi.fn();
@@ -36,271 +34,74 @@ describe('Auth Utilities', () => {
     vi.clearAllMocks();
   });
 
-  describe('getHouseholdId', () => {
-    it('successfully returns household ID when session exists', async () => {
+  describe('happy paths', () => {
+    it('getHouseholdId returns household ID from valid session', async () => {
       mockAuth.mockResolvedValue(validSession);
-
-      const result = await getHouseholdId();
-
-      expect(result).toBe(mockHouseholdId);
-      expect(mockAuth).toHaveBeenCalled();
+      expect(await getHouseholdId()).toBe(mockHouseholdId);
       expect(mockRedirect).not.toHaveBeenCalled();
     });
 
-    it('redirects to login when session is null', async () => {
-      mockAuth.mockResolvedValue(null);
-
-      try {
-        await getHouseholdId();
-        expect.fail('Should have redirected');
-      } catch (error) {
-        expect(mockRedirect).toHaveBeenCalledWith('/login');
-      }
-    });
-
-    it('redirects to login when user is null', async () => {
-      mockAuth.mockResolvedValue({ user: null });
-
-      try {
-        await getHouseholdId();
-        expect.fail('Should have redirected');
-      } catch (error) {
-        expect(mockRedirect).toHaveBeenCalledWith('/login');
-      }
-    });
-
-    it('redirects to login when householdId is missing', async () => {
-      mockAuth.mockResolvedValue({
-        user: {
-          id: mockUserId,
-          householdId: null,
-        },
-      });
-
-      try {
-        await getHouseholdId();
-        expect.fail('Should have redirected');
-      } catch (error) {
-        expect(mockRedirect).toHaveBeenCalledWith('/login');
-      }
-    });
-
-    it('redirects to login when householdId is undefined', async () => {
-      mockAuth.mockResolvedValue({
-        user: {
-          id: mockUserId,
-        },
-      });
-
-      try {
-        await getHouseholdId();
-        expect.fail('Should have redirected');
-      } catch (error) {
-        expect(mockRedirect).toHaveBeenCalledWith('/login');
-      }
-    });
-
-    it('redirects to login when session throws an error', async () => {
-      mockAuth.mockRejectedValue(new Error('Auth failed'));
-
-      try {
-        await getHouseholdId();
-        expect.fail('Should have thrown');
-      } catch (error) {
-        expect((error as Error).message).toBe('Auth failed');
-      }
-    });
-  });
-
-  describe('getUserId', () => {
-    it('successfully returns user ID when session exists', async () => {
+    it('getUserId returns user ID from valid session', async () => {
       mockAuth.mockResolvedValue(validSession);
-
-      const result = await getUserId();
-
-      expect(result).toBe(mockUserId);
-      expect(mockAuth).toHaveBeenCalled();
+      expect(await getUserId()).toBe(mockUserId);
       expect(mockRedirect).not.toHaveBeenCalled();
     });
 
-    it('redirects to login when session is null', async () => {
-      mockAuth.mockResolvedValue(null);
-
-      try {
-        await getUserId();
-        expect.fail('Should have redirected');
-      } catch (error) {
-        expect(mockRedirect).toHaveBeenCalledWith('/login');
-      }
-    });
-
-    it('redirects to login when user is null', async () => {
-      mockAuth.mockResolvedValue({ user: null });
-
-      try {
-        await getUserId();
-        expect.fail('Should have redirected');
-      } catch (error) {
-        expect(mockRedirect).toHaveBeenCalledWith('/login');
-      }
-    });
-
-    it('redirects to login when user ID is missing', async () => {
-      mockAuth.mockResolvedValue({
-        user: {
-          householdId: mockHouseholdId,
-          id: null,
-        },
-      });
-
-      try {
-        await getUserId();
-        expect.fail('Should have redirected');
-      } catch (error) {
-        expect(mockRedirect).toHaveBeenCalledWith('/login');
-      }
-    });
-
-    it('redirects to login when user ID is undefined', async () => {
-      mockAuth.mockResolvedValue({
-        user: {
-          householdId: mockHouseholdId,
-        },
-      });
-
-      try {
-        await getUserId();
-        expect.fail('Should have redirected');
-      } catch (error) {
-        expect(mockRedirect).toHaveBeenCalledWith('/login');
-      }
-    });
-  });
-
-  describe('getSessionData', () => {
-    it('successfully returns session data when both ID and household ID exist', async () => {
+    it('getSessionData returns both IDs from valid session', async () => {
       mockAuth.mockResolvedValue(validSession);
-
       const result = await getSessionData();
-
-      expect(result).toEqual({
-        householdId: mockHouseholdId,
-        userId: mockUserId,
-      });
-      expect(mockAuth).toHaveBeenCalled();
-      expect(mockRedirect).not.toHaveBeenCalled();
-    });
-
-    it('returns only required session fields', async () => {
-      const minimalSession = {
-        user: {
-          id: 'user-789',
-          householdId: 'household-456',
-        },
-      };
-      mockAuth.mockResolvedValue(minimalSession);
-
-      const result = await getSessionData();
-
-      expect(result).toEqual({
-        userId: 'user-789',
-        householdId: 'household-456',
-      });
+      expect(result).toEqual({ householdId: mockHouseholdId, userId: mockUserId });
       expect(result).not.toHaveProperty('name');
-      expect(result).not.toHaveProperty('email');
     });
+  });
 
-    it('redirects to login when session is null', async () => {
-      mockAuth.mockResolvedValue(null);
-
-      try {
-        await getSessionData();
-        expect.fail('Should have redirected');
-      } catch (error) {
-        expect(mockRedirect).toHaveBeenCalledWith('/login');
-      }
-    });
-
-    it('redirects to login when user is null', async () => {
-      mockAuth.mockResolvedValue({ user: null });
-
-      try {
-        await getSessionData();
-        expect.fail('Should have redirected');
-      } catch (error) {
-        expect(mockRedirect).toHaveBeenCalledWith('/login');
-      }
-    });
-
-    it('redirects to login when householdId is missing', async () => {
-      mockAuth.mockResolvedValue({
-        user: {
-          id: mockUserId,
-          householdId: null,
-        },
-      });
-
-      try {
-        await getSessionData();
-        expect.fail('Should have redirected');
-      } catch (error) {
-        expect(mockRedirect).toHaveBeenCalledWith('/login');
-      }
-    });
-
-    it('redirects to login when user ID is missing', async () => {
-      mockAuth.mockResolvedValue({
-        user: {
-          householdId: mockHouseholdId,
-          id: null,
-        },
-      });
-
-      try {
-        await getSessionData();
-        expect.fail('Should have redirected');
-      } catch (error) {
-        expect(mockRedirect).toHaveBeenCalledWith('/login');
-      }
-    });
-
-    it('redirects to login when both IDs are missing', async () => {
-      mockAuth.mockResolvedValue({
-        user: {
-          name: 'John Doe',
-        },
-      });
-
-      try {
-        await getSessionData();
-        expect.fail('Should have redirected');
-      } catch (error) {
-        expect(mockRedirect).toHaveBeenCalledWith('/login');
-      }
-    });
-
-    it('rejects when session throws an error', async () => {
-      mockAuth.mockRejectedValue(new Error('Auth service unavailable'));
-
-      try {
-        await getSessionData();
-        expect.fail('Should have thrown');
-      } catch (error) {
-        expect((error as Error).message).toBe('Auth service unavailable');
+  describe('redirects on universally invalid sessions', () => {
+    it.each([
+      ['null session', null],
+      ['null user', { user: null }],
+      ['empty user object', { user: { name: 'John Doe' } }],
+    ])('all auth functions redirect for %s', async (_label, session) => {
+      for (const fn of [getHouseholdId, getUserId, getSessionData]) {
+        mockAuth.mockResolvedValue(session);
+        mockRedirect.mockClear();
+        try {
+          await fn();
+          expect.fail('Should have redirected');
+        } catch {
+          expect(mockRedirect).toHaveBeenCalledWith('/login');
+        }
       }
     });
   });
 
-  describe('SessionData type', () => {
-    it('has required properties', async () => {
-      mockAuth.mockResolvedValue(validSession);
-
-      const data = await getSessionData();
-
-      expect(data).toHaveProperty('householdId');
-      expect(data).toHaveProperty('userId');
-      expect(typeof data.householdId).toBe('string');
-      expect(typeof data.userId).toBe('string');
+  describe('redirects on partially invalid sessions', () => {
+    it('getHouseholdId redirects when householdId is missing', async () => {
+      mockAuth.mockResolvedValue({ user: { id: mockUserId, householdId: null } });
+      await expect(getHouseholdId()).rejects.toThrow();
+      expect(mockRedirect).toHaveBeenCalledWith('/login');
     });
+
+    it('getUserId redirects when userId is missing', async () => {
+      mockAuth.mockResolvedValue({ user: { householdId: mockHouseholdId, id: null } });
+      await expect(getUserId()).rejects.toThrow();
+      expect(mockRedirect).toHaveBeenCalledWith('/login');
+    });
+
+    it('getSessionData redirects when either ID is missing', async () => {
+      for (const session of [
+        { user: { id: mockUserId, householdId: null } },
+        { user: { householdId: mockHouseholdId, id: null } },
+      ]) {
+        mockAuth.mockResolvedValue(session);
+        mockRedirect.mockClear();
+        await expect(getSessionData()).rejects.toThrow();
+        expect(mockRedirect).toHaveBeenCalledWith('/login');
+      }
+    });
+  });
+
+  it('propagates auth service errors', async () => {
+    mockAuth.mockRejectedValue(new Error('Auth service unavailable'));
+    await expect(getSessionData()).rejects.toThrow('Auth service unavailable');
   });
 });
