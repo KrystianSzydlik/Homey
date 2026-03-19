@@ -2,6 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import type { CSSProperties } from 'react';
 import { useLongPress, type Position } from '../../hooks/useLongPress';
 import { ShoppingListWithCreator } from '@/types/shopping';
 import styles from './ListSelector.module.scss';
@@ -54,13 +55,15 @@ export default function SortableListChip({
     longPressHandlers.onContextMenu(e);
   };
 
+  const chipStyle: CSSProperties & { '--chip-accent'?: string } = {
+    ...style,
+    ...(list.color ? { '--chip-accent': list.color } : {}),
+  };
+
   return (
     <button
       ref={setNodeRef}
-      style={{
-        ...style,
-        ...(isSelected && list.color ? { backgroundColor: list.color } : {}),
-      }}
+      style={chipStyle}
       onClick={handleClick}
       onContextMenu={handleContextMenuEvent}
       onTouchStart={longPressHandlers.onTouchStart}
@@ -71,9 +74,9 @@ export default function SortableListChip({
       {...attributes}
       {...listeners}
     >
-      {list.emoji && <span className={styles.emoji}>{list.emoji}</span>}
+      <span className={styles.emoji}>{list.emoji || '🛒'}</span>
       <span className={styles.name}>{list.name}</span>
-      <span className={styles.count}>({list._count.items})</span>
+      <span className={styles.count}>{list._count.items}</span>
     </button>
   );
 }

@@ -25,6 +25,7 @@ interface ListSelectorProps {
   onDeleteList: (listId: string) => void;
   onDeleteAllItems: (listId: string) => void;
   onReorderLists?: (lists: ShoppingListWithItems[]) => void;
+  onOpenCreateModal: () => void;
 }
 
 export default function ListSelector({
@@ -34,6 +35,7 @@ export default function ListSelector({
   onDeleteList,
   onDeleteAllItems,
   onReorderLists,
+  onOpenCreateModal,
 }: ListSelectorProps) {
   const { menuState, openMenu, closeMenu } = useContextMenuState();
   const sensors = useDndSensors({ touchDelay: 200 });
@@ -106,7 +108,14 @@ export default function ListSelector({
             </div>
           </SortableContext>
         </DndContext>
-
+        <button
+          type="button"
+          className={styles.createButton}
+          onClick={onOpenCreateModal}
+          aria-label="Utwórz nową listę"
+        >
+          <span aria-hidden="true">+</span>
+        </button>
       </div>
 
       {selectedList && (

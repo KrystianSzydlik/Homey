@@ -1,0 +1,36 @@
+@use '@/styles/variables' as v;
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.viewfinder {
+  width: 160px;
+  height: 160px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 41, 59, 0.3);
+  border-radius: var(--radius-md);
+}
+
+.corners {
+  width: 100%;
+  height: 100%;
+  color: var(--rose);
+  opacity: 0.6;
+}
+
+.info {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  text-align: center;
+  max-width: 260px;
+  line-height: 1.5;
+}

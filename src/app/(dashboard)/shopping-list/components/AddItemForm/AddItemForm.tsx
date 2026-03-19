@@ -60,7 +60,7 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
       <div className={styles.form}>
         <ProductAutocomplete
           onSelect={handleProductSelect}
-          placeholder="Search or type product name..."
+          placeholder="Wyszukaj lub wpisz nazwę produktu..."
           autoFocus={false}
         />
       </div>

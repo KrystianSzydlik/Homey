@@ -4,7 +4,6 @@ import { ShoppingItemWithCreator } from '@/types/shopping';
 
 interface UseItemListStateOptions {
   items: ShoppingItemWithCreator[];
-  availableCategories: ShoppingCategory[];
   onClearCheckedItems: (itemIds: string[]) => Promise<void>;
 }
 
@@ -26,7 +25,6 @@ export interface ItemListState {
 
 export function useItemListState({
   items,
-  availableCategories,
   onClearCheckedItems,
 }: UseItemListStateOptions): ItemListState {
   const [selectedCategory, setSelectedCategory] = useState<

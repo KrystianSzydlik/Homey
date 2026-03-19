@@ -1,0 +1,80 @@
+@use '@/styles/variables' as v;
+
+.bar {
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-4);
+  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  @include v.glass-surface(16px, var(--bottom-bg));
+  border-top: 1px solid var(--border-subtle);
+}
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.input {
+  flex: 1;
+  padding: var(--space-3);
+  font-size: var(--text-md); // 16px — prevents iOS zoom
+  font-family: inherit;
+  color: var(--text);
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  @include v.focus-ring;
+
+  &::placeholder {
+    color: var(--text-tertiary);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: rgba(244, 63, 94, 0.4);
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.addButton {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--gradient-warm-rose);
+  color: var(--white);
+  cursor: pointer;
+  box-shadow: var(--glow-rose);
+  transition:
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast),
+    opacity var(--transition-fast);
+  @include v.focus-ring;
+
+  @include v.hover-capable {
+    &:hover:not(:disabled) {
+      box-shadow: var(--shadow-glow-rose);
+      transform: translateY(-1px);
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}

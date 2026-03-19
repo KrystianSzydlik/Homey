@@ -81,6 +81,7 @@ export default function ItemBottomSheet({
   const helperText = checked
     ? 'Ta cena trafi do statystyk.'
     : 'Cena robocza — nie liczymy jej w statystykach.';
+  const priceLabel = `Cena za ${unit || 'szt.'}`;
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} closeOnSwipeDown>
@@ -110,7 +111,6 @@ export default function ItemBottomSheet({
                   className={styles.input}
                 />
               </div>
-
               <div className={styles.field}>
                 <label className={styles.label}>Jednostka</label>
                 <Dropdown
@@ -120,9 +120,11 @@ export default function ItemBottomSheet({
                   placeholder="Wybierz..."
                 />
               </div>
+            </div>
 
-              <div className={styles.field}>
-                <label htmlFor="item-price" className={styles.label}>Cena (PLN)</label>
+            <div className={styles.fieldRow}>
+              <div className={`${styles.field} ${styles.priceField}`}>
+                <label htmlFor="item-price" className={styles.label}>{priceLabel}</label>
                 <input
                   id="item-price"
                   type="text"
@@ -132,6 +134,7 @@ export default function ItemBottomSheet({
                   placeholder="0,00"
                   className={styles.input}
                 />
+                <p className={styles.priceHint}>Kwota w PLN, np. 6,99</p>
               </div>
             </div>
 

@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
+import { DM_Sans } from "next/font/google";
 import "../styles/globals.scss";
 import { ToastProvider } from "@/components/ToastContainer";
 import SkipLink from "@/components/shared/SkipLink";
+
+const dmSans = DM_Sans({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "HOMEY",
@@ -14,13 +22,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pl">
+    <html lang="pl" className={dmSans.variable}>
       <body>
         <SkipLink />
         <ToastProvider>
-          <main id="main-content">
+          <div id="main-content" role="main">
             {children}
-          </main>
+          </div>
         </ToastProvider>
       </body>
     </html>

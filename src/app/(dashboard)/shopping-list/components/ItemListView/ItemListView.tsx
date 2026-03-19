@@ -2,22 +2,23 @@
 
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
 import {
+  arrayMove,
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { ShoppingCategory } from '@prisma/client';
-import { useCallback, useTransition } from 'react';
+import { useCallback, useMemo, useState, useTransition } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ShoppingItemWithCreator } from '@/types/shopping';
 import { AlertModal } from '@/components/shared/Modal';
 import { reorderShoppingItems } from '@/app/lib/shopping-actions';
 import { useDndSensors } from '../../hooks/useDndSensors';
-import { useItemListState } from '../../hooks/useItemListState';
+import CategoryHeader from '@/components/shared/CategoryHeader';
+import { CATEGORIES } from '@/config/shopping';
 import ShoppingItem from '../ShoppingItem/ShoppingItem';
-import AddItemForm from '../AddItemForm/AddItemForm';
-import CategoryFilter from '../CategoryFilter/CategoryFilter';
-import styles from '../ShoppingList/ShoppingList.module.scss';
+import EmptyState from '../EmptyState/EmptyState';
+import styles from './ItemListView.module.scss';
 
 interface SourceListInfo {
   id: string;
@@ -25,23 +26,11 @@ interface SourceListInfo {
   emoji: string | null;
 }
 
-/** Map from item ID to its source list info (only in combined/multi-list view) */
 type SourceListMap = Map<string, SourceListInfo>;
 
 interface ItemListViewProps {
   items: ShoppingItemWithCreator[];
-  availableCategories: ShoppingCategory[];
   listId: string;
-  onAddItem: (
-    listId: string,
-    name: string,
-    productId?: string,
-    product?: {
-      emoji?: string | null;
-      defaultUnit?: string | null;
-      category?: ShoppingCategory;
-    }
-  ) => Promise<void>;
   onDeleteItem: (itemId: string) => Promise<void>;
   onUpdateItem: (
     itemId: string,
@@ -49,13 +38,11 @@ interface ItemListViewProps {
   ) => Promise<void>;
   onToggleItem: (itemId: string, checked: boolean) => Promise<void>;
   onClearCheckedItems: (itemIds: string[]) => Promise<void>;
-  /** Enable drag-and-drop reordering (single list mode only) */
   enableReorder?: boolean;
   onReorderItems?: (listId: string, items: ShoppingItemWithCreator[]) => void;
-  /** Source list info per item (combined/multi-list view) */
   sourceListMap?: SourceListMap;
-  /** Empty state message */
   emptyMessage?: string;
+  selectedCategory?: ShoppingCategory | 'ALL';
 }
 
 const MOTION_ITEM = {
@@ -79,9 +66,7 @@ const MOTION_LIST = {
 
 export default function ItemListView({
   items,
-  availableCategories,
   listId,
-  onAddItem,
   onDeleteItem,
   onUpdateItem,
   onToggleItem,
@@ -90,59 +75,98 @@ export default function ItemListView({
   onReorderItems,
   sourceListMap,
   emptyMessage = 'Brak produktów na liście',
+  selectedCategory = 'ALL',
 }: ItemListViewProps) {
-  const sensors = useDndSensors();
-  const [, startTransition] = useTransition();
+  const sensors = useDndSensors({ touchDelay: 400 });
+  const [isPending, startTransition] = useTransition();
+  const [showClearWarning, setShowClearWarning] = useState(false);
 
-  const {
-    selectedCategory,
-    setSelectedCategory,
-    uncheckedItems,
-    checkedItems,
-    isEmpty,
-    isPending,
-    showClearWarning,
-    missingPriceCount,
-    handleClearCompleted,
-    runClearCompleted,
-    closeClearWarning,
-  } = useItemListState({
-    items,
-    availableCategories,
-    onClearCheckedItems,
-  });
+  // Filter items based on category
+  const filteredItems = useMemo(() => {
+    if (selectedCategory === 'ALL') return items;
+    return items.filter((item) => item.category === selectedCategory);
+  }, [items, selectedCategory]);
 
-  const handleAddItem = useCallback(
-    (
-      name: string,
-      productId?: string,
-      product?: {
-        emoji?: string | null;
-        defaultUnit?: string | null;
-        category?: ShoppingCategory;
-      }
-    ) => onAddItem(listId, name, productId, product),
-    [listId, onAddItem]
+  const uncheckedItems = useMemo(
+    () => filteredItems.filter((item) => !item.checked),
+    [filteredItems]
+  );
+  const allUncheckedItems = useMemo(
+    () => items.filter((item) => !item.checked),
+    [items]
   );
 
+  const checkedItems = useMemo(
+    () => filteredItems.filter((item) => item.checked),
+    [filteredItems]
+  );
+  const allCheckedItems = useMemo(
+    () => items.filter((item) => item.checked),
+    [items]
+  );
+
+  const checkedIds = useMemo(
+    () => checkedItems.map((item) => item.id),
+    [checkedItems]
+  );
+
+  const missingPriceCount = useMemo(
+    () => checkedItems.filter((item) => item.price === null).length,
+    [checkedItems]
+  );
+
+  const isEmpty = uncheckedItems.length === 0 && checkedItems.length === 0;
+
+  const groupItemsByCategory = useCallback((inputItems: ShoppingItemWithCreator[]) => {
+    const groups = new Map<ShoppingCategory, ShoppingItemWithCreator[]>();
+    for (const item of inputItems) {
+      const existing = groups.get(item.category) || [];
+      existing.push(item);
+      groups.set(item.category, existing);
+    }
+    const orderedGroups: [ShoppingCategory, ShoppingItemWithCreator[]][] = [];
+    for (const cat of CATEGORIES) {
+      if (cat.value === 'ALL') continue;
+      const categoryItems = groups.get(cat.value as ShoppingCategory);
+      if (categoryItems?.length) {
+        orderedGroups.push([cat.value as ShoppingCategory, categoryItems]);
+      }
+    }
+    return orderedGroups;
+  }, []);
+
+  const allGroupedItems = useMemo(
+    () => groupItemsByCategory(allUncheckedItems),
+    [allUncheckedItems, groupItemsByCategory]
+  );
+
+  const groupedItems = useMemo(() => {
+    if (selectedCategory === 'ALL') return allGroupedItems;
+    return allGroupedItems.filter(([category]) => category === selectedCategory);
+  }, [allGroupedItems, selectedCategory]);
+
   const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
+    (
+      category: ShoppingCategory,
+      categoryItems: ShoppingItemWithCreator[],
+      event: DragEndEvent
+    ) => {
       if (!onReorderItems) return;
       const { active, over } = event;
       if (!over || active.id === over.id) return;
 
-      const oldIndex = uncheckedItems.findIndex(
-        (item) => item.id === active.id
-      );
-      const newIndex = uncheckedItems.findIndex((item) => item.id === over.id);
+      const oldIndex = categoryItems.findIndex((item) => item.id === active.id);
+      const newIndex = categoryItems.findIndex((item) => item.id === over.id);
 
       if (oldIndex === -1 || newIndex === -1) return;
 
-      const reorderedUnchecked = [...uncheckedItems];
-      const [movedItem] = reorderedUnchecked.splice(oldIndex, 1);
-      reorderedUnchecked.splice(newIndex, 0, movedItem);
+      const reorderedCategoryItems = arrayMove(categoryItems, oldIndex, newIndex);
 
-      const newItems = [...reorderedUnchecked, ...checkedItems];
+      const reorderedUnchecked = allGroupedItems.flatMap(([groupCategory, groupItems]) =>
+        groupCategory === category ? reorderedCategoryItems : groupItems
+      );
+
+      const newItems = [...reorderedUnchecked, ...allCheckedItems];
       onReorderItems(listId, newItems);
 
       const itemIds = reorderedUnchecked.map((item) => item.id);
@@ -153,80 +177,124 @@ export default function ItemListView({
         }
       });
     },
-    [listId, uncheckedItems, checkedItems, onReorderItems]
+    [allCheckedItems, allGroupedItems, listId, onReorderItems]
   );
 
-  const renderItem = (item: ShoppingItemWithCreator) => (
+  const getCategoryMeta = (category: ShoppingCategory) => {
+    const cat = CATEGORIES.find((c) => c.value === category);
+    return cat ?? { emoji: '📦', label: 'Inne' };
+  };
+
+  const renderItem = (item: ShoppingItemWithCreator, sortable = false) => (
     <ShoppingItem
       item={item}
       onDelete={onDeleteItem}
       onUpdate={onUpdateItem}
       onToggle={onToggleItem}
       sourceList={sourceListMap?.get(item.id)}
+      sortable={sortable}
     />
   );
 
   const renderUncheckedList = () => {
     if (uncheckedItems.length === 0) return null;
 
-    const listContent = (
-      <motion.ul className={styles.list} {...MOTION_LIST}>
-        <AnimatePresence mode="popLayout">
-          {uncheckedItems.map((item) => (
-            <motion.div key={item.id} layout layoutId={item.id} {...MOTION_ITEM}>
-              {renderItem(item)}
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </motion.ul>
+    const content = (
+      <div className={styles.categoryGroups}>
+        {groupedItems.map(([category, categoryItems]) => {
+          const meta = getCategoryMeta(category);
+          const categoryContent = (
+            <div className={styles.list} role="list" aria-labelledby={`category-${category}`}>
+              <AnimatePresence mode="popLayout">
+                {categoryItems.map((item) => (
+                  <motion.div key={item.id} layout layoutId={item.id} {...MOTION_ITEM}>
+                    {renderItem(item, enableReorder)}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          );
+
+          return (
+            <div key={category} className={styles.categoryGroup}>
+              <CategoryHeader
+                id={`category-${category}`}
+                emoji={meta.emoji}
+                label={meta.label}
+                count={categoryItems.length}
+              />
+
+              {!enableReorder ? (
+                categoryContent
+              ) : (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event) => {
+                    void handleDragEnd(category, categoryItems, event);
+                  }}
+                  modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+                >
+                  <SortableContext
+                    items={categoryItems.map((item) => item.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {categoryContent}
+                  </SortableContext>
+                </DndContext>
+              )}
+            </div>
+          );
+        })}
+      </div>
     );
 
-    if (!enableReorder) return listContent;
-
-    return (
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-        modifiers={[restrictToVerticalAxis]}
-      >
-        <SortableContext
-          items={uncheckedItems.map((item) => item.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {listContent}
-        </SortableContext>
-      </DndContext>
-    );
+    return content;
   };
+
+  const handleClearCompleted = useCallback(() => {
+    if (checkedIds.length === 0) return;
+
+    if (missingPriceCount > 0) {
+      setShowClearWarning(true);
+      return;
+    }
+
+    startTransition(async () => {
+      await onClearCheckedItems(checkedIds);
+    });
+  }, [checkedIds, missingPriceCount, onClearCheckedItems]);
+
+  const runClearCompleted = useCallback(() => {
+    if (checkedIds.length === 0) return;
+
+    startTransition(async () => {
+      await onClearCheckedItems(checkedIds);
+      setShowClearWarning(false);
+    });
+  }, [checkedIds, onClearCheckedItems]);
 
   return (
     <>
       <div className={styles.listSection}>
-        <AddItemForm onAddItem={handleAddItem} />
-
-        {items.length > 0 && (
-          <CategoryFilter
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-            availableCategories={availableCategories}
-          />
-        )}
-
         {isEmpty ? (
-          <div className={styles.emptyState}>
-            <p>{emptyMessage}</p>
-            <p className={styles.emptyStateHint}>Dodaj pierwszy produkt</p>
-          </div>
+          <EmptyState
+            title={selectedCategory === 'ALL' ? emptyMessage : 'Brak produktów w tej kategorii'}
+            description={
+              selectedCategory === 'ALL'
+                ? 'Dodaj pierwszy produkt, aby zacząć kompletować zakupy.'
+                : 'Wybierz inną kategorię albo dodaj produkt do tej sekcji.'
+            }
+          />
         ) : (
-          <div className={styles.uncheckedViewport}>
+          <div className={styles.viewport}>
             {renderUncheckedList()}
 
             {checkedItems.length > 0 && (
               <div className={styles.completedSection}>
                 <div className={styles.completedHeader}>
                   <h2 className={styles.completedTitle}>
-                    Completed ({checkedItems.length})
+                    Kupione ({checkedItems.length})
                   </h2>
                   <button
                     className={styles.clearButton}
@@ -234,11 +302,11 @@ export default function ItemListView({
                     disabled={isPending}
                     type="button"
                   >
-                    {isPending ? 'Clearing...' : 'Clear'}
+                    {isPending ? 'Czyszczenie...' : 'Wyczyść'}
                   </button>
                 </div>
 
-                <motion.ul className={styles.completedList} {...MOTION_LIST}>
+                <motion.div className={styles.completedList} {...MOTION_LIST} role="list">
                   <AnimatePresence mode="popLayout">
                     {checkedItems.map((item) => (
                       <motion.div
@@ -251,7 +319,7 @@ export default function ItemListView({
                       </motion.div>
                     ))}
                   </AnimatePresence>
-                </motion.ul>
+                </motion.div>
               </div>
             )}
           </div>
@@ -264,7 +332,7 @@ export default function ItemListView({
           title="Brakujące ceny"
           message={`Masz ${missingPriceCount} kupionych produktów bez ceny. Wyczyścić mimo to?`}
           onConfirm={runClearCompleted}
-          onCancel={closeClearWarning}
+          onCancel={() => setShowClearWarning(false)}
           confirmText="Wyczyść mimo braków"
           cancelText="Uzupełnij ceny"
           variant="warning"

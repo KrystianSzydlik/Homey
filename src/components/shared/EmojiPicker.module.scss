@@ -34,9 +34,12 @@
   padding: 0;
   border: 2px solid transparent;
   border-radius: 8px;
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(255, 255, 255, 0.04);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
   font-size: 1.75rem;
   height: 44px;
   display: flex;
@@ -46,20 +49,17 @@
 
   @include v.hover-capable {
     &:hover:not(:disabled) {
-      background: rgba(139, 92, 246, 0.2);
+      background: rgba(244, 63, 94, 0.12);
     }
   }
 
   &.selected {
-    border-color: #8b5cf6;
-    background: rgba(139, 92, 246, 0.3);
-    box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+    border-color: var(--rose);
+    background: rgba(244, 63, 94, 0.18);
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.2);
   }
 
-  &:focus-visible {
-    outline: 2px solid #8b5cf6;
-    outline-offset: 2px;
-  }
+  @include v.focus-ring;
 
   &:disabled {
     opacity: 0.6;

@@ -1,3 +1,5 @@
+@use '@/styles/variables' as v;
+
 .editContainer {
   position: relative;
   display: flex;
@@ -9,21 +11,26 @@
 .inputWrapper {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(30, 41, 59, 0.55);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   padding: 2px 4px;
-  transition: all 0.2s ease;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(139, 92, 246, 0.3);
+  @include v.hover-capable {
+    &:hover {
+      background: rgba(30, 41, 59, 0.7);
+      border-color: rgba(244, 63, 94, 0.18);
+    }
   }
 
   &:focus-within {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(139, 92, 246, 0.6);
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    background: rgba(30, 41, 59, 0.7);
+    border-color: rgba(244, 63, 94, 0.4);
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
   }
 }
 
@@ -31,7 +38,7 @@
 .unitInput {
   background: none;
   border: none;
-  color: white;
+  color: var(--text);
   font-size: 0.875rem;
   padding: 4px 6px;
   outline: none;
@@ -64,7 +71,7 @@
   width: 14px;
   height: 14px;
   border: 2px solid rgba(255, 255, 255, 0.2);
-  border-top-color: rgba(147, 51, 234, 0.8);
+  border-top-color: rgba(244, 63, 94, 0.8);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }

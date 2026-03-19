@@ -17,9 +17,11 @@ export default async function DashboardLayout({
   const avatarFallback = session.user.name?.[0]?.toUpperCase() || 'U';
 
   return (
-    <div className={styles.wrapper}>
-      <Header avatarFallback={avatarFallback} />
-      <main className={styles.main}>{children}</main>
+    <div className={styles.frameOuter}>
+      <div className={styles.frame}>
+        <Header avatarFallback={avatarFallback} />
+        <main className={styles.main}>{children}</main>
+      </div>
     </div>
   );
 }

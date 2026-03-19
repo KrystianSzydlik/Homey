@@ -2,8 +2,10 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import clsx from 'clsx';
 import { useCallback, useState } from 'react';
 import DropdownMenu from '@/components/shared/DropdownMenu';
+import CircularCheckbox from '@/components/shared/CircularCheckbox';
 import { AlertModal } from '@/components/shared/Modal';
 import { Meta } from './Item.Meta';
 import ItemBottomSheet from '../ItemBottomSheet/ItemBottomSheet';
@@ -26,6 +28,7 @@ interface ShoppingItemProps {
   ) => void;
   onToggle: (itemId: string, checked: boolean) => void;
   sourceList?: SourceListInfo;
+  sortable?: boolean;
 }
 
 export default function ShoppingItem({
@@ -34,6 +37,7 @@ export default function ShoppingItem({
   onUpdate,
   onToggle,
   sourceList,
+  sortable = false,
 }: ShoppingItemProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditSheet, setShowEditSheet] = useState(false);
@@ -45,7 +49,7 @@ export default function ShoppingItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: item.id, disabled: item.checked });
+  } = useSortable({ id: item.id, disabled: !sortable || item.checked });
 
   const handleToggleCheck = useCallback(() => {
     onToggle(item.id, !item.checked);
@@ -77,24 +81,40 @@ export default function ShoppingItem({
 
   return (
     <>
-      <li
+      <div
         ref={setNodeRef}
         style={style}
-        className={`${styles.item} ${item.checked ? styles.completed : ''} ${
-          isDragging ? styles.dragging : ''
-        }`}
+        className={clsx(
+          styles.item,
+          item.checked && styles.completed,
+          sortable && styles.sortable,
+          isDragging && styles.dragging
+        )}
+        role="listitem"
       >
-        <div className={styles.dragHandle} {...attributes} {...listeners}>
-          {!item.checked && <span className={styles.dragIcon}>⋮⋮</span>}
-        </div>
+        <button
+          type="button"
+          className={clsx(
+            styles.dragHandle,
+            (!sortable || item.checked) && styles.dragHandleHidden
+          )}
+          aria-label={`Przeciągnij, aby zmienić kolejność: ${item.name}`}
+          aria-hidden={!sortable || item.checked}
+          {...(sortable && !item.checked ? attributes : {})}
+          {...(sortable && !item.checked ? listeners : {})}
+        >
+          <span className={styles.dragIcon} aria-hidden="true">
+            ⋮⋮
+          </span>
+        </button>
 
-        <input
-          type="checkbox"
+        <CircularCheckbox
           checked={item.checked}
-          onChange={handleToggleCheck}
+          onChange={() => handleToggleCheck()}
+          size="md"
           className={styles.checkbox}
-          aria-label={`Mark "${item.name}" as ${
-            item.checked ? 'unchecked' : 'checked'
+          aria-label={`Oznacz "${item.name}" jako ${
+            item.checked ? 'niekupiony' : 'kupiony'
           }`}
         />
 
@@ -152,17 +172,17 @@ export default function ShoppingItem({
             ]}
           />
         </div>
-      </li>
+      </div>
 
       {showDeleteConfirm && (
         <AlertModal
           isOpen={true}
-          title="Delete Item"
-          message={`Are you sure you want to delete "${item.name}"?`}
+          title="Usuń produkt"
+          message={`Czy na pewno chcesz usunąć „${item.name}”?`}
           onConfirm={handleDeleteConfirm}
           onCancel={() => setShowDeleteConfirm(false)}
-          confirmText="Delete"
-          cancelText="Cancel"
+          confirmText="Usuń"
+          cancelText="Anuluj"
           variant="danger"
         />
       )}
