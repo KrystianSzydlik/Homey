@@ -14,6 +14,11 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "HOMEY",
   description: "Minimalist app for couples",
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
@@ -23,6 +28,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl" className={dmSans.variable}>
+      <head>
+        <meta name="theme-color" content="#080e1e" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+      </head>
       <body>
         <SkipLink />
         <ToastProvider>
