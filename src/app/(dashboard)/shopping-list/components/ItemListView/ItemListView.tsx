@@ -8,7 +8,7 @@ import {
 } from '@dnd-kit/sortable';
 import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { ShoppingCategory } from '@prisma/client';
-import { useCallback, useMemo, useState, useTransition } from 'react';
+import { useCallback, useId, useMemo, useState, useTransition } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ShoppingItemWithCreator } from '@/types/shopping';
 import { AlertModal } from '@/components/shared/Modal';
@@ -77,6 +77,7 @@ export default function ItemListView({
   emptyMessage = 'Brak produktów na liście',
   selectedCategory = 'ALL',
 }: ItemListViewProps) {
+  const baseId = useId();
   const sensors = useDndSensors({ touchDelay: 400 });
   const [isPending, startTransition] = useTransition();
   const [showClearWarning, setShowClearWarning] = useState(false);
@@ -228,6 +229,7 @@ export default function ItemListView({
                 categoryContent
               ) : (
                 <DndContext
+                  id={`${baseId}-${category}`}
                   sensors={sensors}
                   collisionDetection={closestCenter}
                   onDragEnd={(event) => {

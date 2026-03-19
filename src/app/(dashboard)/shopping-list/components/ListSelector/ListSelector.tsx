@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useCallback, useTransition } from 'react';
+import { useMemo, useCallback, useTransition, useId } from 'react';
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -37,6 +37,7 @@ export default function ListSelector({
   onReorderLists,
   onOpenCreateModal,
 }: ListSelectorProps) {
+  const dndId = useId();
   const { menuState, openMenu, closeMenu } = useContextMenuState();
   const sensors = useDndSensors({ touchDelay: 200 });
   const [, startTransition] = useTransition();
@@ -87,6 +88,7 @@ export default function ListSelector({
     <>
       <div className={styles.container}>
         <DndContext
+          id={dndId}
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
