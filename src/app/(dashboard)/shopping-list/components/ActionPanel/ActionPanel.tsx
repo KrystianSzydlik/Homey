@@ -55,10 +55,6 @@ export default function ActionPanel({
               <AddItemForm onAddItem={onAddItem} />
             )}
 
-            {activeTab === 'add' && (
-              <AddItemForm onAddItem={onAddItem} />
-            )}
-
             {activeTab === 'scanner' && <ScannerPanel />}
 
             {activeTab === 'filter' && (

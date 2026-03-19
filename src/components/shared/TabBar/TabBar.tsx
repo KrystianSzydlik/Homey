@@ -78,7 +78,6 @@ function TabBar({
 
     e.preventDefault();
     tabArray[nextIndex].focus();
-    tabArray[nextIndex].click();
   }, []);
 
   return (

@@ -83,6 +83,12 @@ export function isHistorySuggestion(
   return suggestion.source === 'history' || suggestion.source === 'smart';
 }
 
+export interface SourceListInfo {
+  id: string;
+  name: string;
+  emoji: string | null;
+}
+
 export type SerializedShoppingItem = Omit<ShoppingItem, 'price'> & {
   price: number | null;
 };

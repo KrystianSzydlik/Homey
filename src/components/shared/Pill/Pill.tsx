@@ -22,7 +22,7 @@ export default function Pill({
     <Tag
       className={clsx(styles.pill, isActive && styles.active, className)}
       onClick={onClick}
-      type={onClick ? 'button' : undefined}
+      {...(onClick ? { type: 'button' as const } : {})}
     >
       {icon && (
         <span className={styles.icon} aria-hidden="true">

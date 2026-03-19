@@ -8,6 +8,13 @@
   padding: var(--space-4);
 }
 
+.comingSoon {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+}
+
 .viewfinder {
   width: 160px;
   height: 160px;

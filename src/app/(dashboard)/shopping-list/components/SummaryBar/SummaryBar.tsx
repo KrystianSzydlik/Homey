@@ -1,4 +1,5 @@
 import ProgressBar from '@/components/shared/ProgressBar';
+import { pluralPl } from '@/config/i18n';
 import styles from './SummaryBar.module.scss';
 
 interface SummaryBarProps {
@@ -15,13 +16,13 @@ export default function SummaryBar({ totalItems, checkedItems }: SummaryBarProps
     <div className={styles.bar}>
       <div className={styles.text}>
         <span className={styles.total}>
-          {totalItems} {totalItems === 1 ? 'produkt' : 'produktów'}
+          {totalItems} {pluralPl(totalItems, 'produkt', 'produkty', 'produktów')}
         </span>
         <span className={styles.separator} aria-hidden="true">
           ·
         </span>
         <span className={styles.checked}>
-          {checkedItems} {checkedItems === 1 ? 'kupiony' : 'kupionych'}
+          {checkedItems} {pluralPl(checkedItems, 'kupiony', 'kupione', 'kupionych')}
         </span>
       </div>
       <ProgressBar

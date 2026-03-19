@@ -8,9 +8,9 @@ import {
 } from '@dnd-kit/sortable';
 import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { ShoppingCategory } from '@prisma/client';
-import { useCallback, useId, useMemo, useState, useTransition } from 'react';
+import { useId, useState, useTransition } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ShoppingItemWithCreator } from '@/types/shopping';
+import { ShoppingItemWithCreator, SourceListInfo } from '@/types/shopping';
 import { AlertModal } from '@/components/shared/Modal';
 import { reorderShoppingItems } from '@/app/lib/shopping-actions';
 import { useDndSensors } from '../../hooks/useDndSensors';
@@ -19,12 +19,6 @@ import { CATEGORIES } from '@/config/shopping';
 import ShoppingItem from '../ShoppingItem/ShoppingItem';
 import EmptyState from '../EmptyState/EmptyState';
 import styles from './ItemListView.module.scss';
-
-interface SourceListInfo {
-  id: string;
-  name: string;
-  emoji: string | null;
-}
 
 type SourceListMap = Map<string, SourceListInfo>;
 
@@ -51,6 +45,30 @@ const MOTION_ITEM = {
   exit: { opacity: 0, scale: 0.9, transition: { duration: 0.2 } },
   transition: { duration: 0.3, ease: 'easeOut' as const },
 };
+
+function getCategoryMeta(category: ShoppingCategory) {
+  const cat = CATEGORIES.find((c) => c.value === category);
+  return cat ?? { emoji: '📦', label: 'Inne' };
+}
+
+function groupItemsByCategory(inputItems: ShoppingItemWithCreator[]) {
+  const groups = new Map<ShoppingCategory, ShoppingItemWithCreator[]>();
+  for (const item of inputItems) {
+    const existing = groups.get(item.category) || [];
+    existing.push(item);
+    groups.set(item.category, existing);
+  }
+  const orderedGroups: [ShoppingCategory, ShoppingItemWithCreator[]][] = [];
+  for (const cat of CATEGORIES) {
+    if (cat.value === 'ALL') continue;
+    const category = cat.value as ShoppingCategory;
+    const categoryItems = groups.get(category);
+    if (categoryItems?.length) {
+      orderedGroups.push([category, categoryItems]);
+    }
+  }
+  return orderedGroups;
+}
 
 const MOTION_CHECKED = {
   initial: { opacity: 0 },
@@ -82,109 +100,54 @@ export default function ItemListView({
   const [isPending, startTransition] = useTransition();
   const [showClearWarning, setShowClearWarning] = useState(false);
 
-  // Filter items based on category
-  const filteredItems = useMemo(() => {
-    if (selectedCategory === 'ALL') return items;
-    return items.filter((item) => item.category === selectedCategory);
-  }, [items, selectedCategory]);
+  const filteredItems = selectedCategory === 'ALL'
+    ? items
+    : items.filter((item) => item.category === selectedCategory);
 
-  const uncheckedItems = useMemo(
-    () => filteredItems.filter((item) => !item.checked),
-    [filteredItems]
-  );
-  const allUncheckedItems = useMemo(
-    () => items.filter((item) => !item.checked),
-    [items]
-  );
-
-  const checkedItems = useMemo(
-    () => filteredItems.filter((item) => item.checked),
-    [filteredItems]
-  );
-  const allCheckedItems = useMemo(
-    () => items.filter((item) => item.checked),
-    [items]
-  );
-
-  const checkedIds = useMemo(
-    () => checkedItems.map((item) => item.id),
-    [checkedItems]
-  );
-
-  const missingPriceCount = useMemo(
-    () => checkedItems.filter((item) => item.price === null).length,
-    [checkedItems]
-  );
-
+  const uncheckedItems = filteredItems.filter((item) => !item.checked);
+  const allUncheckedItems = items.filter((item) => !item.checked);
+  const checkedItems = filteredItems.filter((item) => item.checked);
+  const allCheckedItems = items.filter((item) => item.checked);
+  const checkedIds = checkedItems.map((item) => item.id);
+  const missingPriceCount = checkedItems.filter((item) => item.price === null).length;
   const isEmpty = uncheckedItems.length === 0 && checkedItems.length === 0;
 
-  const groupItemsByCategory = useCallback((inputItems: ShoppingItemWithCreator[]) => {
-    const groups = new Map<ShoppingCategory, ShoppingItemWithCreator[]>();
-    for (const item of inputItems) {
-      const existing = groups.get(item.category) || [];
-      existing.push(item);
-      groups.set(item.category, existing);
-    }
-    const orderedGroups: [ShoppingCategory, ShoppingItemWithCreator[]][] = [];
-    for (const cat of CATEGORIES) {
-      if (cat.value === 'ALL') continue;
-      const categoryItems = groups.get(cat.value as ShoppingCategory);
-      if (categoryItems?.length) {
-        orderedGroups.push([cat.value as ShoppingCategory, categoryItems]);
+  const allGroupedItems = groupItemsByCategory(allUncheckedItems);
+  const groupedItems = selectedCategory === 'ALL'
+    ? allGroupedItems
+    : allGroupedItems.filter(([category]) => category === selectedCategory);
+
+  function handleDragEnd(
+    category: ShoppingCategory,
+    categoryItems: ShoppingItemWithCreator[],
+    event: DragEndEvent
+  ) {
+    if (!onReorderItems) return;
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = categoryItems.findIndex((item) => item.id === active.id);
+    const newIndex = categoryItems.findIndex((item) => item.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reorderedCategoryItems = arrayMove(categoryItems, oldIndex, newIndex);
+
+    const reorderedUnchecked = allGroupedItems.flatMap(([groupCategory, groupItems]) =>
+      groupCategory === category ? reorderedCategoryItems : groupItems
+    );
+
+    const newItems = [...reorderedUnchecked, ...allCheckedItems];
+    onReorderItems(listId, newItems);
+
+    const itemIds = reorderedUnchecked.map((item) => item.id);
+    startTransition(async () => {
+      const result = await reorderShoppingItems(listId, itemIds);
+      if (!result.success) {
+        console.error('Failed to reorder:', result.error);
       }
-    }
-    return orderedGroups;
-  }, []);
-
-  const allGroupedItems = useMemo(
-    () => groupItemsByCategory(allUncheckedItems),
-    [allUncheckedItems, groupItemsByCategory]
-  );
-
-  const groupedItems = useMemo(() => {
-    if (selectedCategory === 'ALL') return allGroupedItems;
-    return allGroupedItems.filter(([category]) => category === selectedCategory);
-  }, [allGroupedItems, selectedCategory]);
-
-  const handleDragEnd = useCallback(
-    (
-      category: ShoppingCategory,
-      categoryItems: ShoppingItemWithCreator[],
-      event: DragEndEvent
-    ) => {
-      if (!onReorderItems) return;
-      const { active, over } = event;
-      if (!over || active.id === over.id) return;
-
-      const oldIndex = categoryItems.findIndex((item) => item.id === active.id);
-      const newIndex = categoryItems.findIndex((item) => item.id === over.id);
-
-      if (oldIndex === -1 || newIndex === -1) return;
-
-      const reorderedCategoryItems = arrayMove(categoryItems, oldIndex, newIndex);
-
-      const reorderedUnchecked = allGroupedItems.flatMap(([groupCategory, groupItems]) =>
-        groupCategory === category ? reorderedCategoryItems : groupItems
-      );
-
-      const newItems = [...reorderedUnchecked, ...allCheckedItems];
-      onReorderItems(listId, newItems);
-
-      const itemIds = reorderedUnchecked.map((item) => item.id);
-      startTransition(async () => {
-        const result = await reorderShoppingItems(listId, itemIds);
-        if (!result.success) {
-          console.error('Failed to reorder:', result.error);
-        }
-      });
-    },
-    [allCheckedItems, allGroupedItems, listId, onReorderItems]
-  );
-
-  const getCategoryMeta = (category: ShoppingCategory) => {
-    const cat = CATEGORIES.find((c) => c.value === category);
-    return cat ?? { emoji: '📦', label: 'Inne' };
-  };
+    });
+  }
 
   const renderItem = (item: ShoppingItemWithCreator, sortable = false) => (
     <ShoppingItem
@@ -254,7 +217,7 @@ export default function ItemListView({
     return content;
   };
 
-  const handleClearCompleted = useCallback(() => {
+  function handleClearCompleted() {
     if (checkedIds.length === 0) return;
 
     if (missingPriceCount > 0) {
@@ -265,16 +228,16 @@ export default function ItemListView({
     startTransition(async () => {
       await onClearCheckedItems(checkedIds);
     });
-  }, [checkedIds, missingPriceCount, onClearCheckedItems]);
+  }
 
-  const runClearCompleted = useCallback(() => {
+  function runClearCompleted() {
     if (checkedIds.length === 0) return;
 
     startTransition(async () => {
       await onClearCheckedItems(checkedIds);
       setShowClearWarning(false);
     });
-  }, [checkedIds, onClearCheckedItems]);
+  }
 
   return (
     <>

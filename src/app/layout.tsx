@@ -26,7 +26,7 @@ export default function RootLayout({
       <body>
         <SkipLink />
         <ToastProvider>
-          <div id="main-content" role="main">
+          <div id="main-content">
             {children}
           </div>
         </ToastProvider>

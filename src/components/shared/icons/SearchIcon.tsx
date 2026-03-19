@@ -16,6 +16,8 @@ export default function SearchIcon({ className, size = 24 }: SearchIconProps) {
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
+      aria-hidden="true"
+      focusable="false"
     >
       <circle cx="11" cy="11" r="8" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />

@@ -22,7 +22,6 @@ import ListGrid from '../ListGrid/ListGrid';
 import ActionTabBar, { type ActionTab } from '../ActionTabBar/ActionTabBar';
 import ActionPanel from '../ActionPanel/ActionPanel';
 import SummaryBar from '../SummaryBar/SummaryBar';
-import BottomQuickAddBar from '../BottomQuickAddBar/BottomQuickAddBar';
 import EmptyState from '../EmptyState/EmptyState';
 import styles from './ShoppingList.module.scss';
 
@@ -142,7 +141,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     [addItemOptimistic]
   );
 
-  // Shorthand for ActionPanel/BottomQuickAddBar — adds to the default list
+  // Shorthand for ActionPanel — adds to the default list
   const handleAddItemShorthand = useCallback(
     (
       name: string,
@@ -155,14 +154,6 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     ) => {
       if (!defaultListId) return;
       handleAddItem(defaultListId, name, productId, product);
-    },
-    [defaultListId, handleAddItem]
-  );
-
-  const handleQuickAdd = useCallback(
-    (name: string) => {
-      if (!defaultListId) return;
-      handleAddItem(defaultListId, name);
     },
     [defaultListId, handleAddItem]
   );
@@ -321,14 +312,6 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
 
       {/* Item List / Grid / Empty State */}
       <div className={styles.content}>{renderContent()}</div>
-
-      {/* Bottom Quick-Add Bar */}
-      {hasListSelected && defaultListId && (
-        <BottomQuickAddBar
-          onAddItem={handleQuickAdd}
-          disabled={!defaultListId}
-        />
-      )}
 
       {/* Modals */}
       <ListBottomSheet

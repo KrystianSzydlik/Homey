@@ -16,6 +16,8 @@ export default function ScanIcon({ className, size = 24 }: ScanIconProps) {
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
+      aria-hidden="true"
+      focusable="false"
     >
       <path d="M3 7V5a2 2 0 0 1 2-2h2" />
       <path d="M17 3h2a2 2 0 0 1 2 2v2" />

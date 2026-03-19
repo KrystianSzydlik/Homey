@@ -11,13 +11,7 @@ import { Meta } from './Item.Meta';
 import ItemBottomSheet from '../ItemBottomSheet/ItemBottomSheet';
 import { t, Keys } from '@/config/i18n';
 import styles from './ShoppingItem.module.scss';
-import { ShoppingItemWithCreator } from '@/types/shopping';
-
-interface SourceListInfo {
-  id: string;
-  name: string;
-  emoji: string | null;
-}
+import { ShoppingItemWithCreator, SourceListInfo } from '@/types/shopping';
 
 interface ShoppingItemProps {
   item: ShoppingItemWithCreator;

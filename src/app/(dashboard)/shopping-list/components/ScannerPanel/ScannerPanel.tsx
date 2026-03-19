@@ -1,10 +1,12 @@
 import Button from '@/components/shared/Button';
+import Pill from '@/components/shared/Pill';
 import ScanIcon from '@/components/shared/icons/ScanIcon';
 import styles from './ScannerPanel.module.scss';
 
 export default function ScannerPanel() {
   return (
     <div className={styles.container}>
+      <Pill className={styles.comingSoon}>Wkrótce</Pill>
       <div className={styles.viewfinder}>
         {/* SVG corner brackets */}
         <svg
