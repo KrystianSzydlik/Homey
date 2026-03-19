@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useTransition } from 'react';
+import { useCallback, useTransition, useId } from 'react';
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { ShoppingListWithCreator, ShoppingListWithItems } from '@/types/shopping';
@@ -28,6 +28,7 @@ export default function ListGrid({
   onDeleteAllItems,
   onReorderLists,
 }: ListGridProps) {
+  const dndId = useId();
   const { menuState, openMenu, closeMenu } = useContextMenuState();
   const sensors = useDndSensors({ touchDelay: 200 });
   const [, startTransition] = useTransition();
@@ -64,6 +65,7 @@ export default function ListGrid({
   return (
     <>
       <DndContext
+        id={dndId}
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}

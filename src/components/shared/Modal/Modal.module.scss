@@ -18,8 +18,8 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(8px);
   z-index: 1;
 }
 
@@ -30,16 +30,14 @@
 .content {
   position: relative;
   z-index: 2;
-  background: rgba(30, 27, 75, 0.98);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(139, 92, 246, 0.4);
-  border-radius: 16px;
+  @include v.glass-surface(18px, rgba(15, 23, 42, 0.94), rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-xl);
   width: 100%;
   max-height: calc(100vh - 2rem);
   overflow: auto;
   box-shadow:
     0 25px 70px rgba(0, 0, 0, 0.5),
-    0 0 30px rgba(139, 92, 246, 0.1);
+    0 0 30px rgba(244, 63, 94, 0.08);
 
   @include v.vertical-scrollbar;
 
@@ -95,26 +93,26 @@
   width: 36px;
   height: 36px;
   padding: 0;
-  background: rgba(139, 92, 246, 0.15);
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
   flex-shrink: 0;
 
   @include v.hover-capable {
     &:hover {
-      background: rgba(139, 92, 246, 0.25);
-      border-color: rgba(139, 92, 246, 0.5);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(244, 63, 94, 0.2);
       color: var(--text);
     }
   }
 
-  &:focus-visible {
-    outline: 2px solid #8b5cf6;
-    outline-offset: 2px;
-  }
+  @include v.focus-ring;
 
   svg {
     width: 20px;
@@ -128,7 +126,7 @@
 
 .body {
   padding: 1.5rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(248, 250, 252, 0.88);
   font-size: 0.95rem;
   line-height: 1.6;
 }
@@ -162,11 +160,7 @@
   justify-content: center;
   gap: 0.5rem;
   min-height: 44px; // WCAG touch target
-
-  &:focus-visible {
-    outline: 2px solid #8b5cf6;
-    outline-offset: 2px;
-  }
+  @include v.focus-ring;
 
   &:disabled {
     opacity: 0.6;
@@ -180,14 +174,14 @@
 
 .cancelButton {
   @extend %button-base;
-  background: rgba(139, 92, 246, 0.2);
-  color: #8b5cf6;
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border: 1px solid var(--border-subtle);
 
   @include v.hover-capable {
     &:hover:not(:disabled) {
-      background: rgba(139, 92, 246, 0.3);
-      border-color: rgba(139, 92, 246, 0.5);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.16);
     }
   }
 
@@ -202,16 +196,15 @@
 
 .confirmButton {
   @extend %button-base;
-  color: white;
+  color: var(--white);
 
-  // Default variant (primary/violet)
   &.default {
-    background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    background: var(--gradient-warm-rose);
+    box-shadow: var(--glow-rose);
 
     @include v.hover-capable {
       &:hover:not(:disabled) {
-        box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+        box-shadow: var(--shadow-glow-rose);
       }
     }
   }

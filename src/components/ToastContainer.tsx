@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback } from 'react';
 import Toast from './Toast';
+import styles from './Toast.module.scss';
 
 type ToastType = 'error' | 'success' | 'info';
 
@@ -37,10 +38,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         aria-label="Notifications"
         aria-live="polite"
         aria-atomic="false"
-        style={{ position: 'fixed', top: 0, right: 0, zIndex: 9999 }}
+        className={styles.stack}
       >
-        {toasts.map((toast, index) => (
-          <div key={toast.id} style={{ marginTop: index > 0 ? '1rem' : 0 }}>
+        {toasts.map((toast) => (
+          <div key={toast.id}>
             <Toast
               message={toast.message}
               type={toast.type}

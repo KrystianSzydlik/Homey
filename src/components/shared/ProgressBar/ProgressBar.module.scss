@@ -1,0 +1,30 @@
+.track {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--transition-layout);
+}
+
+// Sizes
+.xs {
+  height: 3px;
+}
+
+.sm {
+  height: 6px;
+}
+
+// Colors
+.rose {
+  background: var(--gradient-warm-rose);
+}
+
+.success {
+  background: linear-gradient(135deg, var(--success), #34d399);
+}

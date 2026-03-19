@@ -1,0 +1,55 @@
+@use '@/styles/variables' as v;
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  background: rgba(30, 41, 59, 0.5);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  @include v.focus-ring;
+
+  @include v.hover-capable {
+    &:hover:not(.active) {
+      color: var(--text);
+      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(30, 41, 59, 0.7);
+    }
+  }
+
+  &.active {
+    background: var(--gradient-warm-rose);
+    color: var(--white);
+    border-color: transparent;
+    box-shadow: var(--glow-rose);
+    font-weight: 600;
+  }
+}
+
+// If rendered as <span> (non-interactive)
+span.pill {
+  cursor: default;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 1em;
+  flex-shrink: 0;
+}
+
+.label {
+  line-height: 1.2;
+}

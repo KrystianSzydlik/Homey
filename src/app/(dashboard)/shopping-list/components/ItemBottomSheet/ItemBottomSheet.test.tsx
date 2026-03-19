@@ -169,6 +169,11 @@ describe('ItemBottomSheet', () => {
       expect(priceInput).toHaveValue('4.5');
     });
 
+    it('should show unit-aware price label', () => {
+      render(<ItemBottomSheet {...defaultProps} />);
+      expect(screen.getByText('Cena za l')).toBeInTheDocument();
+    });
+
     it('should show checked checkbox when item is checked', () => {
       const checkedItem = { ...mockItem, checked: true };
       render(<ItemBottomSheet {...defaultProps} item={checkedItem} />);

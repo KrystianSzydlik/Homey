@@ -1,24 +1,32 @@
+@use '@/styles/variables' as v;
+
 .trigger {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
   padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.55);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  @include v.focus-ring;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(139, 92, 246, 0.4);
+  @include v.hover-capable {
+    &:hover {
+      background: rgba(30, 41, 59, 0.75);
+      border-color: rgba(244, 63, 94, 0.2);
+    }
   }
 
   &:focus {
     outline: none;
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+    border-color: var(--rose);
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12);
   }
 }
 
@@ -43,7 +51,7 @@
 
 .header {
   padding: 0.75rem 1rem !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-bottom: 1px solid var(--separator) !important;
 }
 
 .headerTitle {
@@ -60,7 +68,7 @@
   height: 24px !important;
 
   &:hover {
-    color: white !important;
+    color: var(--text) !important;
     background: transparent !important;
   }
 }
@@ -96,7 +104,7 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-tertiary);
   margin-bottom: 0.75rem;
   font-weight: 700;
 }
@@ -125,7 +133,7 @@
   }
 
   &.active {
-    background: rgba(139, 92, 246, 0.2);
-    border-color: rgba(139, 92, 246, 0.5);
+    background: rgba(244, 63, 94, 0.16);
+    border-color: rgba(244, 63, 94, 0.24);
   }
 }

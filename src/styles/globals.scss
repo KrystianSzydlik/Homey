@@ -1,81 +1,25 @@
 @use 'variables' as v;
 
-@font-face {
-  font-family: 'Cartograph CF';
-  src: url('/fonts/cartograph-cf/fonnts.com-cartographcf-thin.otf')
-    format('opentype');
-  font-weight: 100;
-  font-style: normal;
-}
+// ==========================================================================
+// Global Resets & Base Styles
+// ==========================================================================
 
-@font-face {
-  font-family: 'Cartograph CF';
-  src: url('/fonts/cartograph-cf/fonnts.com-cartographcf-extralight.otf')
-    format('opentype');
-  font-weight: 200;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Cartograph CF';
-  src: url('/fonts/cartograph-cf/fonnts.com-cartographcf-light.otf')
-    format('opentype');
-  font-weight: 300;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Cartograph CF';
-  src: url('/fonts/cartograph-cf/fonnts.com-cartographcf-regular.otf')
-    format('opentype');
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Cartograph CF';
-  src: url('/fonts/cartograph-cf/fonnts.com-cartographcf-demibold.otf')
-    format('opentype');
-  font-weight: 600;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Cartograph CF';
-  src: url('/fonts/cartograph-cf/fonnts.com-cartographcf-bold.otf')
-    format('opentype');
-  font-weight: 700;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Cartograph CF';
-  src: url('/fonts/cartograph-cf/fonnts.com-cartographcf-extrabold.otf')
-    format('opentype');
-  font-weight: 800;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Cartograph CF';
-  src: url('/fonts/cartograph-cf/fonnts.com-cartographcf-heavy.otf')
-    format('opentype');
-  font-weight: 900;
-  font-style: normal;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
+  background: var(--bg-body);
   color: var(--text);
-  font-family: var(--font-sans);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 a {
@@ -87,6 +31,40 @@ button {
   cursor: pointer;
   font-family: inherit;
 }
+
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+// ==========================================================================
+// Selection & Focus
+// ==========================================================================
+
+::selection {
+  background: rgba(244, 63, 94, 0.3);
+  color: var(--text);
+}
+
+// ==========================================================================
+// Reduced Motion — Global Animation Kill Switch
+// ==========================================================================
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// ==========================================================================
+// Utility Classes
+// ==========================================================================
 
 .custom-vertical-scrollbar {
   @include v.vertical-scrollbar;

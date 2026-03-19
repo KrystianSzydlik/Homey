@@ -1,3 +1,5 @@
+@forward 'mixins';
+
 :root {
   // Warm palette colors
   --rose: #f43f5e;
@@ -16,14 +18,28 @@
   // Text Colors
   --text: #f8fafc; // Slate 50
   --text-secondary: #94a3b8; // Slate 400
+  --text-tertiary: #64748b; // Slate 500
   --white: #ffffff;
   --error: #ef4444;
   --success: #10b981;
 
-  // Fonts
-  --font-sans: 'Cartograph CF', system-ui, -apple-system, sans-serif;
+  // Background layers
+  --bg-primary: #0f172a;
+  --bg-body: #080e1e;
+  --bar-bg: rgba(15, 23, 42, 0.8);
+  --bottom-bg: rgba(15, 23, 42, 0.95);
 
-  // Backgrounds
+  // Surface backgrounds (glass layers)
+  --item-bg: rgba(30, 41, 59, 0.6);
+  --item-bg-hover: rgba(30, 41, 59, 0.75);
+  --item-checked-bg: rgba(30, 41, 59, 0.3);
+
+  // Borders
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-check: rgba(255, 255, 255, 0.2);
+  --separator: rgba(255, 255, 255, 0.06);
+
+  // Legacy composite background (still available for non-framed pages)
   --shopping-bg:
     radial-gradient(
       circle at 80% 20%,
@@ -44,10 +60,6 @@
 
   --background: var(--shopping-bg);
 
-  --item-bg: rgba(30, 41, 59, 0.6);
-  --item-bg-hover: rgba(30, 41, 59, 0.75);
-  --item-checked-bg: rgba(30, 41, 59, 0.3);
-
   // Warm gradients
   --gradient-warm-rose: linear-gradient(135deg, #f43f5e 0%, #f06292 100%);
   --gradient-warm-violet: linear-gradient(135deg, #7c3aed 0%, #f43f5e 100%);
@@ -57,6 +69,43 @@
   --glow-rose: 0 0 15px rgba(244, 63, 94, 0.25);
   --glow-violet: 0 0 15px rgba(124, 58, 237, 0.25);
   --glow-amber: 0 0 15px rgba(255, 213, 79, 0.2);
+
+  // Shadows
+  --shadow-glow-rose: 0 0 20px rgba(244, 63, 94, 0.3);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+
+  // Spacing scale (4px base)
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  // Radius scale
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  // Typography scale
+  --text-xs: 0.6875rem;  // 11px
+  --text-sm: 0.8125rem;  // 13px
+  --text-base: 0.875rem; // 14px
+  --text-md: 1rem;       // 16px
+  --text-lg: 1.125rem;   // 18px
+
+  // Phone frame
+  --frame-max-width: 430px;
+
+  // Transitions
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-layout: 0.3s ease;
 }
 
 $mobile-breakpoint: 768px;

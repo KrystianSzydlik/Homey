@@ -14,8 +14,8 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(2, 6, 23, 0.65);
+  backdrop-filter: blur(8px);
   pointer-events: auto;
   z-index: 1001;
 }
@@ -25,15 +25,15 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  background: var(--item-bg);
-  backdrop-filter: blur(20px);
+  @include v.glass-surface(18px, rgba(15, 23, 42, 0.96), rgba(255, 255, 255, 0.08));
   border-radius: 20px 20px 0 0;
   pointer-events: auto;
   overflow: hidden;
   box-shadow: 
-    0 -4px 24px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
+    0 -8px 32px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
   z-index: 1002;
+  width: min(100%, var(--frame-max-width));
   
   // Size variants
   &.sm {
@@ -52,7 +52,8 @@
   }
   
   &.full {
-    width: 100%;
+    width: min(100%, var(--frame-max-width));
+    margin: 0 auto;
   }
 
   @include v.mobile {
@@ -92,7 +93,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 20px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--separator);
 }
 
 .title {
@@ -108,16 +109,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  background: transparent;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-secondary);
   cursor: pointer;
   border-radius: 8px;
-  transition: all 0.2s;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+  @include v.focus-ring;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text);
+  @include v.hover-capable {
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
   }
 
   &:active {
@@ -153,8 +162,8 @@
   display: flex;
   gap: 12px;
   padding: 16px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid var(--separator);
+  background: rgba(2, 6, 23, 0.2);
 }
 
 // Buttons
@@ -180,21 +189,24 @@
 }
 
 .cancelButton {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text);
 
-  &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.1);
+  @include v.hover-capable {
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+    }
   }
 }
 
 .confirmButton {
-  background: var(--primary);
-  color: white;
+  background: var(--gradient-warm-rose);
+  color: var(--white);
   box-shadow: var(--glow-rose);
 
-  &:hover:not(:disabled) {
-    background: var(--rose);
-    box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+  @include v.hover-capable {
+    &:hover:not(:disabled) {
+      box-shadow: var(--shadow-glow-rose);
+    }
   }
 }

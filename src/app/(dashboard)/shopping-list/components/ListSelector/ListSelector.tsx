@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useCallback, useTransition } from 'react';
+import { useMemo, useCallback, useTransition, useId } from 'react';
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -25,6 +25,7 @@ interface ListSelectorProps {
   onDeleteList: (listId: string) => void;
   onDeleteAllItems: (listId: string) => void;
   onReorderLists?: (lists: ShoppingListWithItems[]) => void;
+  onOpenCreateModal: () => void;
 }
 
 export default function ListSelector({
@@ -34,7 +35,9 @@ export default function ListSelector({
   onDeleteList,
   onDeleteAllItems,
   onReorderLists,
+  onOpenCreateModal,
 }: ListSelectorProps) {
+  const dndId = useId();
   const { menuState, openMenu, closeMenu } = useContextMenuState();
   const sensors = useDndSensors({ touchDelay: 200 });
   const [, startTransition] = useTransition();
@@ -85,6 +88,7 @@ export default function ListSelector({
     <>
       <div className={styles.container}>
         <DndContext
+          id={dndId}
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
@@ -106,7 +110,14 @@ export default function ListSelector({
             </div>
           </SortableContext>
         </DndContext>
-
+        <button
+          type="button"
+          className={styles.createButton}
+          onClick={onOpenCreateModal}
+          aria-label="Utwórz nową listę"
+        >
+          <span aria-hidden="true">+</span>
+        </button>
       </div>
 
       {selectedList && (

@@ -37,7 +37,7 @@ export default function Toast({
       <button
         className={styles.closeButton}
         onClick={onClose}
-        aria-label="Close notification"
+        aria-label="Zamknij powiadomienie"
       >
         ×
       </button>

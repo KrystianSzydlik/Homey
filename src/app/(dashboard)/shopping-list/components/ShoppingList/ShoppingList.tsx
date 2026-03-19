@@ -1,7 +1,7 @@
 'use client';
 
 import { ShoppingCategory } from '@prisma/client';
-import { useCallback, useMemo, useEffect, useTransition } from 'react';
+import { useCallback, useMemo, useEffect, useState, useTransition } from 'react';
 import { deleteAllShoppingItems } from '@/app/lib/shopping-actions';
 import { deleteShoppingList } from '@/app/lib/shopping-list-actions';
 import {
@@ -19,6 +19,10 @@ import ListSelector from '../ListSelector/ListSelector';
 import ListBottomSheet from '../ListBottomSheet/ListBottomSheet';
 import { AlertModal } from '@/components/shared/Modal';
 import ListGrid from '../ListGrid/ListGrid';
+import ActionTabBar, { type ActionTab } from '../ActionTabBar/ActionTabBar';
+import ActionPanel from '../ActionPanel/ActionPanel';
+import SummaryBar from '../SummaryBar/SummaryBar';
+import EmptyState from '../EmptyState/EmptyState';
 import styles from './ShoppingList.module.scss';
 
 interface ShoppingListProps {
@@ -45,28 +49,15 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   const { refreshIfStale } = useProductCacheContext();
   const modals = useShoppingListModals();
   const [isPending, startTransition] = useTransition();
+  const [activeTab, setActiveTab] = useState<ActionTab | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<ShoppingCategory | 'ALL'>('ALL');
 
   useEffect(() => {
     refreshIfStale();
   }, [refreshIfStale]);
 
-  // Lists with items — used only for ListSelector chips
-  const listsWithItems = useMemo(
-    () => lists.filter((list) => list.items.length > 0),
-    [lists]
-  );
-
-  // ListSelector shows only selected lists that have items (for chip filtering)
-  const selectorListIds = useMemo(
-    () => {
-      const withItemsSet = new Set(listsWithItems.map((list) => list.id));
-      return selectedListIds.filter((id) => withItemsSet.has(id));
-    },
-    [selectedListIds, listsWithItems]
-  );
-
   // Combined items from all selected lists
-  const { items: combinedItems, availableCategories } = useCombinedListItems(
+  const { items: combinedItems, availableCategories: combinedAvailableCategories } = useCombinedListItems(
     lists,
     selectedListIds
   );
@@ -82,6 +73,7 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
 
   // Default list for adding items (first selected)
   const defaultListId = selectedListIds[0] ?? '';
+  const hasListSelected = selectedListIds.length > 0;
 
   // Source list map for combined view (item ID → source list info)
   const sourceListMap = useMemo(() => {
@@ -92,6 +84,31 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
     }
     return map;
   }, [selectedListIds.length, combinedItems]);
+
+  const activeItems = useMemo(
+    () => selectedList?.items ?? combinedItems,
+    [selectedList, combinedItems]
+  );
+
+  const filterCategories = useMemo(
+    () => Array.from(new Set(activeItems.map((item) => item.category))),
+    [activeItems]
+  );
+  const resolvedSelectedCategory = useMemo(
+    () =>
+      selectedCategory === 'ALL' || filterCategories.includes(selectedCategory)
+        ? selectedCategory
+        : 'ALL',
+    [filterCategories, selectedCategory]
+  );
+
+  // Summary counts for progress bar
+  const summaryItems = useMemo(() => {
+    return {
+      total: activeItems.length,
+      checked: activeItems.filter((item) => item.checked).length,
+    };
+  }, [activeItems]);
 
   const handleListCreated = useCallback(
     (newList: ShoppingListWithCreator) => {
@@ -122,6 +139,23 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       });
     },
     [addItemOptimistic]
+  );
+
+  // Shorthand for ActionPanel — adds to the default list
+  const handleAddItemShorthand = useCallback(
+    (
+      name: string,
+      productId?: string,
+      product?: {
+        emoji?: string | null;
+        defaultUnit?: string | null;
+        category?: ShoppingCategory;
+      }
+    ) => {
+      if (!defaultListId) return;
+      handleAddItem(defaultListId, name, productId, product);
+    },
+    [defaultListId, handleAddItem]
   );
 
   const handleDeleteItem = useCallback(
@@ -180,19 +214,16 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
   const renderContent = () => {
     if (lists.length === 0) {
       return (
-        <div className={styles.emptyState}>
-          <p>Utwórz swoją pierwszą listę zakupów</p>
-          <button
-            onClick={modals.openCreateModal}
-            className={styles.createButton}
-          >
-            Utwórz listę
-          </button>
-        </div>
+        <EmptyState
+          title="Utwórz swoją pierwszą listę zakupów"
+          description="Dodaj listę, aby szybko planować wspólne zakupy."
+          actionLabel="Utwórz listę"
+          onAction={modals.openCreateModal}
+        />
       );
     }
 
-    if (selectedListIds.length === 0) {
+    if (!hasListSelected) {
       return (
         <ListGrid
           lists={lists}
@@ -205,74 +236,99 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       );
     }
 
-    // Single list selected - use standard section with reordering
+    // Single list selected — use standard section with reordering
     if (selectedList) {
-      const singleListCategories = Array.from(
-        new Set(selectedList.items.map((item) => item.category))
-      );
       return (
         <ItemListView
           items={selectedList.items}
-          availableCategories={singleListCategories}
           listId={selectedList.id}
-          onAddItem={handleAddItem}
           onDeleteItem={handleDeleteItem}
           onUpdateItem={handleItemUpdate}
           onToggleItem={handleToggleItem}
           onClearCheckedItems={clearCheckedItems}
           enableReorder
           onReorderItems={reorderItems}
+          selectedCategory={resolvedSelectedCategory}
         />
       );
     }
 
-    // Multiple lists selected - use combined view
+    // Multiple lists selected — use combined view
     return (
       <ItemListView
         items={combinedItems}
-        availableCategories={availableCategories}
         listId={defaultListId}
-        onAddItem={handleAddItem}
         onDeleteItem={handleDeleteItem}
         onUpdateItem={handleItemUpdate}
         onToggleItem={handleToggleItem}
         onClearCheckedItems={clearCheckedItems}
         sourceListMap={sourceListMap}
         emptyMessage="Brak produktów na wybranych listach"
+        selectedCategory={resolvedSelectedCategory}
       />
     );
   };
 
-      return (
+  return (
     <div className={styles.container}>
-      {selectorListIds.length > 0 && (
+      {/* List Pill Selector */}
+      {hasListSelected && lists.length > 0 && (
         <ListSelector
-          lists={listsWithItems}
-          selectedListIds={selectorListIds}
+          lists={lists}
+          selectedListIds={selectedListIds}
           onSelectList={selectList}
           onDeleteList={modals.openDeleteListModal}
           onDeleteAllItems={modals.openDeleteAllModal}
           onReorderLists={reorderListsOptimistic}
+          onOpenCreateModal={modals.openCreateModal}
         />
       )}
 
+      {/* Action Tab Bar + Expandable Panel */}
+      {hasListSelected && (
+        <>
+          <ActionTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+          <ActionPanel
+            activeTab={activeTab}
+            onAddItem={handleAddItemShorthand}
+            selectedCategory={resolvedSelectedCategory}
+            onCategoryChange={setSelectedCategory}
+            availableCategories={
+            selectedList
+                ? filterCategories
+                : combinedAvailableCategories
+            }
+          />
+        </>
+      )}
+
+      {/* Summary Progress Bar */}
+      {hasListSelected && (
+        <SummaryBar
+          totalItems={summaryItems.total}
+          checkedItems={summaryItems.checked}
+        />
+      )}
+
+      {/* Item List / Grid / Empty State */}
+      <div className={styles.content}>{renderContent()}</div>
+
+      {/* Modals */}
       <ListBottomSheet
         isOpen={modals.isCreateModalOpen}
         onClose={modals.closeCreateModal}
         onListCreated={handleListCreated}
       />
 
-      <div className={styles.content}>{renderContent()}</div>
-
       {modals.deleteListId && (
         <AlertModal
           isOpen={true}
-          title="Delete Shopping List"
-          message="Are you sure you want to delete this shopping list? All items will be permanently removed."
+          title="Usuń listę zakupów"
+          message="Czy na pewno chcesz usunąć tę listę? Wszystkie produkty z tej listy zostaną trwale skasowane."
           onConfirm={() => handleDeleteList(modals.deleteListId!)}
           onCancel={modals.closeDeleteListModal}
-          confirmText="Delete List"
-          cancelText="Cancel"
+          confirmText="Usuń listę"
+          cancelText="Anuluj"
           variant="danger"
           isLoading={isPending}
         />
@@ -281,12 +337,12 @@ export default function ShoppingList({ initialLists }: ShoppingListProps) {
       {modals.deleteAllListId && (
         <AlertModal
           isOpen={true}
-          title="Clear All Items"
-          message="Are you sure you want to delete all items from this list? This action cannot be undone."
+          title="Wyczyść listę"
+          message="Czy na pewno chcesz usunąć wszystkie produkty z tej listy? Tej operacji nie da się cofnąć."
           onConfirm={() => handleDeleteAllItems(modals.deleteAllListId!)}
           onCancel={modals.closeDeleteAllModal}
-          confirmText="Delete All"
-          cancelText="Cancel"
+          confirmText="Usuń wszystko"
+          cancelText="Anuluj"
           variant="warning"
           isLoading={isPending}
         />

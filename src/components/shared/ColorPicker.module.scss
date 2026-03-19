@@ -1,3 +1,5 @@
+@use '@/styles/variables' as v;
+
 .colorGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
@@ -15,26 +17,23 @@
   justify-content: center;
 
   &:not(.selected) {
-    border: 2px solid rgba(139, 92, 246, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.14);
 
-    &:hover:not(:disabled) {
-      border-color: rgba(139, 92, 246, 0.5);
+    @include v.hover-capable {
+      &:hover:not(:disabled) {
+        border-color: rgba(244, 63, 94, 0.35);
+      }
     }
   }
 
   &.selected {
-    border-color: #8b5cf6;
     border: 2px solid white;
-    /* Adding white border to make selection visible on colored background or just rely on outer shadow/ring */
     box-shadow:
       0 0 0 2px #1e1b4b,
-      0 0 0 4px #8b5cf6; /* Ring effect */
+      0 0 0 4px var(--rose);
   }
 
-  &:focus-visible {
-    outline: 2px solid #8b5cf6;
-    outline-offset: 2px;
-  }
+  @include v.focus-ring;
 
   &:disabled {
     opacity: 0.6;
