@@ -1,0 +1,128 @@
+@use '@/styles/variables' as v;
+
+.container {
+  position: relative;
+  width: 100%;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(30, 41, 59, 0.55);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  @include v.focus-ring;
+
+  @include v.hover-capable {
+    &:hover {
+      background: rgba(30, 41, 59, 0.75);
+      border-color: rgba(244, 63, 94, 0.2);
+    }
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--rose);
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12);
+  }
+}
+
+.triggerContent {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.emoji {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.label {
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.chevron {
+  font-size: 0.6rem;
+  opacity: 0.5;
+  transition: transform 0.2s;
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  @include v.glass-surface(18px, rgba(15, 23, 42, 0.96));
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  max-height: 350px;
+  overflow-y: auto;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content {
+  padding: 0.5rem;
+}
+
+.option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.15s ease;
+  position: relative;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+  }
+
+  &.active {
+    background: rgba(244, 63, 94, 0.12);
+    color: var(--text);
+    font-weight: 600;
+  }
+}
+
+.optionEmoji {
+  font-size: 1.25rem;
+}
+
+.optionLabel {
+  font-size: 0.9375rem;
+}
+
+.check {
+  margin-left: auto;
+  font-size: 1rem;
+  color: var(--rose);
+}

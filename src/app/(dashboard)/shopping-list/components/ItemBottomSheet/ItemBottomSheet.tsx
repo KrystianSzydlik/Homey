@@ -1,0 +1,170 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { BottomSheet } from '@/components/shared/BottomSheet';
+import { ShoppingItemWithCreator } from '@/types/shopping';
+import { Dropdown } from '@/components/shared/Dropdown';
+import { getUnitGroups } from '@/lib/constants/shopping-units';
+import { updateShoppingItemDetails } from '@/lib/actions/shopping/update-item';
+import { parsePlnPrice } from '@/lib/pln-validation';
+import { t, Keys } from '@/config/i18n';
+import styles from './ItemBottomSheet.module.scss';
+
+interface ItemBottomSheetProps {
+  item: ShoppingItemWithCreator;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (updatedItem: Partial<ShoppingItemWithCreator>) => void;
+}
+
+export default function ItemBottomSheet({
+  item,
+  isOpen,
+  onClose,
+  onSave,
+}: ItemBottomSheetProps) {
+  const [quantity, setQuantity] = useState(item.quantity);
+  const [unit, setUnit] = useState(item.unit || '');
+  const [price, setPrice] = useState<string>(
+    item.price ? String(item.price) : ''
+  );
+  const [checked, setChecked] = useState(item.checked);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setQuantity(item.quantity);
+      setUnit(item.unit || '');
+      setPrice(item.price ? String(item.price) : '');
+      setChecked(item.checked);
+      setError(null);
+    }
+  }, [isOpen, item]);
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const priceNum = price ? parsePlnPrice(price) : null;
+
+      const result = await updateShoppingItemDetails({
+        itemId: item.id,
+        quantity,
+        unit: unit || undefined,
+        price: priceNum,
+        checked,
+      });
+
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+
+      onSave({
+        ...item,
+        quantity: result.data.quantity,
+        unit: result.data.unit,
+        price: result.data.price,
+        checked: result.data.checked,
+      });
+      onClose();
+    } catch (e) {
+      console.error(e);
+      setError('Nie udało się zapisać. Spróbuj ponownie.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const helperText = checked
+    ? 'Ta cena trafi do statystyk.'
+    : 'Cena robocza — nie liczymy jej w statystykach.';
+  const priceLabel = `Cena za ${unit || 'szt.'}`;
+
+  return (
+    <BottomSheet isOpen={isOpen} onClose={onClose} closeOnSwipeDown>
+      <BottomSheet.Overlay />
+      <BottomSheet.Content size="full">
+        <BottomSheet.Handle />
+
+        <BottomSheet.Header>
+          <BottomSheet.Title>
+            <span className={styles.titleEmoji}>{item.emoji}</span>
+            {item.name}
+          </BottomSheet.Title>
+          <BottomSheet.CloseButton />
+        </BottomSheet.Header>
+
+        <BottomSheet.Body>
+          <form className={styles.form}>
+            <div className={styles.fieldRow}>
+              <div className={styles.field}>
+                <label htmlFor="item-quantity" className={styles.label}>Ilość</label>
+                <input
+                  id="item-quantity"
+                  type="text"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder="1"
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>Jednostka</label>
+                <Dropdown
+                  value={unit}
+                  onChange={(value) => setUnit(value)}
+                  groups={getUnitGroups()}
+                  placeholder="Wybierz..."
+                />
+              </div>
+            </div>
+
+            <div className={styles.fieldRow}>
+              <div className={`${styles.field} ${styles.priceField}`}>
+                <label htmlFor="item-price" className={styles.label}>{priceLabel}</label>
+                <input
+                  id="item-price"
+                  type="text"
+                  inputMode="decimal"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="0,00"
+                  className={styles.input}
+                />
+                <p className={styles.priceHint}>Kwota w PLN, np. 6,99</p>
+              </div>
+            </div>
+
+            <p className={styles.helperText}>{helperText}</p>
+
+            <div className={styles.checkboxField}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(e) => setChecked(e.target.checked)}
+                  className={styles.checkbox}
+                />
+                <span>Kupione</span>
+              </label>
+            </div>
+
+            {error && <div className={styles.error}>{error}</div>}
+          </form>
+        </BottomSheet.Body>
+
+        <BottomSheet.Footer>
+          <BottomSheet.CancelButton disabled={isLoading}>
+            {t(Keys.COMMON.CANCEL)}
+          </BottomSheet.CancelButton>
+          <BottomSheet.ConfirmButton onClick={handleSave} disabled={isLoading}>
+            {isLoading ? t(Keys.PRODUCT.SAVING) : t(Keys.COMMON.SAVE)}
+          </BottomSheet.ConfirmButton>
+        </BottomSheet.Footer>
+      </BottomSheet.Content>
+    </BottomSheet>
+  );
+}

@@ -1,0 +1,73 @@
+@use '@/styles/variables' as v;
+
+.checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  border-radius: 50%;
+  border: 2px solid var(--border-check);
+  background: rgba(30, 41, 59, 0.3);
+  position: relative;
+  flex-shrink: 0;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+  @include v.focus-ring;
+
+  // Checkmark via ::after
+  &::after {
+    content: '';
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg) scale(0);
+    border: solid var(--white);
+    border-width: 0 2px 2px 0;
+    transition: transform var(--transition-fast);
+  }
+
+  &:checked {
+    background: var(--gradient-warm-rose);
+    border-color: var(--rose);
+    box-shadow: var(--glow-rose);
+
+    &::after {
+      transform: translate(-50%, -50%) rotate(45deg) scale(1);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  // Scale pulse on check
+  &:active:not(:disabled) {
+    transform: scale(0.9);
+  }
+}
+
+// Sizes
+// --------------------------------------------------------------------------
+
+.sm {
+  width: 18px;
+  height: 18px;
+
+  &::after {
+    width: 3px;
+    height: 7px;
+  }
+}
+
+.md {
+  width: 22px;
+  height: 22px;
+
+  &::after {
+    width: 4px;
+    height: 9px;
+  }
+}

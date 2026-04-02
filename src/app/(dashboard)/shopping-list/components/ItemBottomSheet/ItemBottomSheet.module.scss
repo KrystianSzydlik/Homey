@@ -1,0 +1,228 @@
+@use '@/styles/variables' as v;
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+// Title with emoji
+.titleEmoji {
+  font-size: 20px;
+  margin-right: 8px;
+  user-select: none;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.input {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: rgba(30, 41, 59, 0.55);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 500;
+  width: 100%;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
+  @include v.focus-ring;
+
+  &::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+  }
+
+  &:focus {
+    outline: none;
+    background: rgba(30, 41, 59, 0.75);
+    border-color: var(--rose);
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+  }
+
+  @include v.mobile {
+    font-size: 16px;
+  }
+
+  &[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+}
+
+.helperText {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+  opacity: 0.8;
+}
+
+.priceHint {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.priceField {
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(244, 63, 94, 0.15);
+  background:
+    linear-gradient(135deg, rgba(244, 63, 94, 0.08), rgba(124, 58, 237, 0.06)),
+    rgba(15, 23, 42, 0.5);
+}
+
+.checkboxField {
+  display: flex;
+  align-items: center;
+  padding: var(--space-3) 0;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--text);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.checkbox {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  cursor: pointer;
+  border-radius: 50%;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 2px solid rgba(244, 63, 94, 0.4);
+  position: relative;
+  background: rgba(30, 41, 59, 0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:checked {
+    background: var(--rose);
+    border-color: var(--rose);
+    box-shadow: var(--glow-rose);
+    animation: checkPulse 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(45deg);
+      width: 5px;
+      height: 10px;
+      border: solid white;
+      border-width: 0 2.5px 2.5px 0;
+    }
+  }
+
+  @include v.mobile {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+  }
+}
+
+@keyframes checkPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.destructiveLink {
+  background: none;
+  border: none;
+  color: var(--error);
+  cursor: pointer;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 500;
+  margin-right: auto;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+    opacity: 0.8;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.error {
+  color: var(--error);
+  font-size: 14px;
+  line-height: 1.5;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 12px 16px;
+  border-radius: 10px;
+  animation: slideIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (max-width: 640px) {
+  .fieldRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

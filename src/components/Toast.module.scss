@@ -1,0 +1,108 @@
+@use '../styles/variables' as v;
+
+.stack {
+  position: fixed;
+  top: max(1rem, env(safe-area-inset-top, 0px));
+  left: 50%;
+  width: min(calc(100vw - 2rem), var(--frame-max-width));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transform: translateX(-50%);
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toast {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  animation: slideIn 0.3s ease-out;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  pointer-events: auto;
+  @include v.glass-surface(18px, rgba(15, 23, 42, 0.94));
+
+  &.error {
+    border-left: 3px solid var(--error);
+  }
+
+  &.success {
+    border-left: 3px solid var(--success);
+  }
+
+  &.info {
+    border-left: 3px solid var(--violet);
+  }
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+}
+
+.icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  width: 1.5rem;
+  text-align: center;
+}
+
+.message {
+  color: var(--text);
+  font-size: var(--text-base);
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.closeButton {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.25rem;
+  color: var(--text);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+  flex-shrink: 0;
+  @include v.focus-ring;
+
+  @include v.hover-capable {
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .stack {
+    width: calc(100vw - 1rem);
+  }
+}

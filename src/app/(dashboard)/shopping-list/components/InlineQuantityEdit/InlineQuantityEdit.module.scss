@@ -1,0 +1,83 @@
+@use '@/styles/variables' as v;
+
+.editContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  top: 5px;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  background: rgba(30, 41, 59, 0.55);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 2px 4px;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  @include v.hover-capable {
+    &:hover {
+      background: rgba(30, 41, 59, 0.7);
+      border-color: rgba(244, 63, 94, 0.18);
+    }
+  }
+
+  &:focus-within {
+    background: rgba(30, 41, 59, 0.7);
+    border-color: rgba(244, 63, 94, 0.4);
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+  }
+}
+
+.quantityInput,
+.unitInput {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 0.875rem;
+  padding: 4px 6px;
+  outline: none;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.quantityInput {
+  width: 45px;
+  text-align: center;
+  font-weight: 600;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.unitInput {
+  max-width: 35px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: rgba(244, 63, 94, 0.8);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

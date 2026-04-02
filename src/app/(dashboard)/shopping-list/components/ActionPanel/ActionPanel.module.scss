@@ -1,0 +1,9 @@
+@use '@/styles/variables' as v;
+
+.panel {
+  border-bottom: 1px solid var(--separator);
+}
+
+.panelContent {
+  padding: var(--space-3) var(--space-4);
+}

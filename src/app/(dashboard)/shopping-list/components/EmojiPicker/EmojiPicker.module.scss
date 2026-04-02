@@ -1,0 +1,139 @@
+@use '@/styles/variables' as v;
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(30, 41, 59, 0.55);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  @include v.focus-ring;
+
+  @include v.hover-capable {
+    &:hover {
+      background: rgba(30, 41, 59, 0.75);
+      border-color: rgba(244, 63, 94, 0.2);
+    }
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--rose);
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12);
+  }
+}
+
+.currentEmoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.chevron {
+  font-size: 0.6rem;
+  opacity: 0.5;
+  transition: transform 0.2s;
+}
+
+.popover {
+  width: 320px;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  padding: 0.75rem 1rem !important;
+  border-bottom: 1px solid var(--separator) !important;
+}
+
+.headerTitle {
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary) !important;
+}
+
+.closeBtn {
+  background: none !important;
+  border: none !important;
+  color: var(--text-secondary) !important;
+  width: 24px !important;
+  height: 24px !important;
+
+  &:hover {
+    color: var(--text) !important;
+    background: transparent !important;
+  }
+}
+
+.content {
+  padding: 1rem !important;
+  overflow-y: auto;
+  flex: 1;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+}
+
+.group {
+  margin-bottom: 1.5rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.categoryTitle {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+
+.emojiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 0.5rem;
+}
+
+.emojiBtn {
+  aspect-ratio: 1;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: scale(1.1);
+  }
+
+  &.active {
+    background: rgba(244, 63, 94, 0.16);
+    border-color: rgba(244, 63, 94, 0.24);
+  }
+}

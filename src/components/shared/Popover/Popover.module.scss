@@ -1,0 +1,94 @@
+@use '@/styles/variables' as v;
+
+// ============================================================================
+// Popover Content
+// ============================================================================
+
+.content {
+  z-index: 10001;
+  @include v.glass-surface(18px, rgba(15, 23, 42, 0.96));
+  border-radius: 12px;
+  min-width: 180px;
+  max-width: 320px;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(244, 63, 94, 0.1);
+  overflow: hidden;
+  touch-action: auto;
+}
+
+// ============================================================================
+// Popover Header
+// ============================================================================
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--separator);
+  gap: 0.5rem;
+}
+
+.title {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+  flex-shrink: 0;
+
+  @include v.hover-capable {
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(244, 63, 94, 0.2);
+      color: var(--text);
+    }
+  }
+
+  @include v.focus-ring;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// ============================================================================
+// Popover Body
+// ============================================================================
+
+.body {
+  padding: 0.75rem 1rem;
+  color: rgba(248, 250, 252, 0.82);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+// ============================================================================
+// Mobile Responsive
+// ============================================================================
+
+@include v.mobile {
+  .content {
+    max-width: calc(100vw - 2rem);
+  }
+}

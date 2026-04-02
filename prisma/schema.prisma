@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Household {
+  id    String  @id @default(cuid())
+  name  String
+  users User[]
+
+  recipes         Recipe[]
+  todos           Todo[]
+  shoppingItems   ShoppingItem[]
+  shoppingLists   ShoppingList[]
+  products        Product[]
+  habits          Habit[]
+  habitCompletions HabitCompletion[]
+}
+
+model User {
+  id          String     @id @default(cuid())
+  email       String     @unique
+  name        String
+  password    String
+  householdId String
+  household   Household  @relation(fields: [householdId], references: [id])
+
+  recipes          Recipe[]
+  todos            Todo[]
+  shoppingItems    ShoppingItem[]
+  shoppingLists    ShoppingList[]
+  products         Product[]
+  habits           Habit[]
+  habitCompletions HabitCompletion[]
+
+  @@index([householdId])
+}
+
+model Recipe {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  ingredients String[]
+  steps       String[]
+  imageUrl    String?
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id])
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@index([householdId])
+}
+
+model Todo {
+  id          String    @id @default(cuid())
+  title       String
+  completed   Boolean   @default(false)
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id])
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@index([householdId, completed])
+}
+
+model ShoppingList {
+  id          String    @id @default(cuid())
+  name        String
+  emoji       String?
+  color       String?
+  position    Int       @default(0)
+  isDefault   Boolean   @default(false)
+
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id])
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+
+  items       ShoppingItem[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([householdId, position])
+}
+
+model Product {
+  id              String           @id @default(cuid())
+  name            String
+  emoji           String?
+  defaultCategory ShoppingCategory @default(OTHER)
+  defaultUnit     String?
+  usageCount      Int              @default(0)
+  lastUsedAt      DateTime?
+
+  householdId     String?
+  household       Household?       @relation(fields: [householdId], references: [id])
+  createdById     String?
+  createdBy       User?            @relation(fields: [createdById], references: [id])
+
+  items           ShoppingItem[]
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([name, householdId])
+  @@index([householdId, usageCount])
+  @@index([name])
+}
+
+model ShoppingItem {
+  id          String    @id @default(cuid())
+  name        String
+  quantity    String    @default("1")
+  unit        String?   // "kg", "szt", "opak", "l"
+  category    ShoppingCategory @default(OTHER)
+  checked     Boolean   @default(false)
+  position    Int       @default(0)
+  emoji       String?
+
+  // Purchase price tracking for finances analytics
+  price       Decimal?  @db.Decimal(10, 2)
+  currency    String    @default("PLN")
+  purchasedAt DateTime?
+
+  // Statystyki dla smart suggestions
+  purchaseCount              Int       @default(0)
+  lastPurchasedAt            DateTime?
+  averageDaysBetweenPurchases Float?
+
+  shoppingListId String
+  shoppingList   ShoppingList @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+
+  productId   String
+  product     Product      @relation(fields: [productId], references: [id])
+
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id])
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([shoppingListId, position])
+  @@index([householdId, checked])
+  @@index([householdId, name])
+  @@index([householdId, purchaseCount])
+}
+
+enum ShoppingCategory {
+  VEGETABLES    // Warzywa
+  DAIRY         // Mleko, ser, jogurt
+  MEAT          // Mięso, drób, ryba
+  BAKERY        // Chleb, bułki
+  FRUITS        // Owoce
+  FROZEN        // Produkty mrożone
+  DRINKS        // Napoje
+  CONDIMENTS    // Przyprawa, olej, sól
+  SWEETS        // Słodycze, desserty
+  OTHER         // Inne
+}
+
+model Habit {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  frequency   String
+
+  householdId String
+  household   Household     @relation(fields: [householdId], references: [id])
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+
+  createdAt   DateTime      @default(now())
+  completions HabitCompletion[]
+
+  @@index([householdId])
+  @@index([userId])
+}
+
+model HabitCompletion {
+  id          String   @id @default(cuid())
+  habitId     String
+  habit       Habit    @relation(fields: [habitId], references: [id])
+  date        DateTime @default(now())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id])
+
+  @@index([habitId, date])
+  @@index([householdId, date])
+}

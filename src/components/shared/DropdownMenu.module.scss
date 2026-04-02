@@ -1,0 +1,177 @@
+@use '@/styles/variables' as v;
+
+.container {
+  position: relative;
+  display: inline-block;
+}
+
+.trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+
+  @include v.hover-capable {
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.16);
+      transform: scale(1.05);
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &.active {
+    background: rgba(244, 63, 94, 0.12);
+    border-color: rgba(244, 63, 94, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  @include v.focus-ring;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  transition: background 0.2s ease;
+
+  @include v.hover-capable {
+    .trigger:hover:not(:disabled) & {
+      background: rgba(255, 255, 255, 1);
+    }
+  }
+
+  .trigger:disabled & {
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.menu {
+  min-width: 180px;
+  @include v.glass-surface(18px, rgba(15, 23, 42, 0.96));
+  border-radius: 12px;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  padding: 4px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: var(--text-base);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+  white-space: nowrap;
+
+  @include v.hover-capable {
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--white);
+    }
+  }
+
+  &:active:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  &.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &.warning {
+    color: rgba(251, 191, 36, 0.9);
+
+    @include v.hover-capable {
+      &:hover:not(:disabled) {
+        background: rgba(251, 191, 36, 0.15);
+        color: rgb(251, 191, 36);
+      }
+    }
+  }
+
+  &.danger {
+    color: rgba(239, 68, 68, 0.9);
+
+    @include v.hover-capable {
+      &:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.15);
+        color: rgb(239, 68, 68);
+      }
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(244, 63, 94, 0.45);
+    outline-offset: -2px;
+  }
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+}
+
+.label {
+  flex: 1;
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .menu {
+    min-width: 160px;
+  }
+
+  .menuItem {
+    padding: 12px 14px;
+    font-size: 15px;
+  }
+
+  .trigger {
+    width: 36px;
+    height: 36px;
+  }
+
+  .dot {
+    width: 4.5px;
+    height: 4.5px;
+  }
+}

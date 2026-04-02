@@ -1,0 +1,49 @@
+@use '@/styles/variables' as v;
+
+.colorGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+  gap: 0.5rem;
+}
+
+.colorOption {
+  padding: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:not(.selected) {
+    border: 2px solid rgba(255, 255, 255, 0.14);
+
+    @include v.hover-capable {
+      &:hover:not(:disabled) {
+        border-color: rgba(244, 63, 94, 0.35);
+      }
+    }
+  }
+
+  &.selected {
+    border: 2px solid white;
+    box-shadow:
+      0 0 0 2px #1e1b4b,
+      0 0 0 4px var(--rose);
+  }
+
+  @include v.focus-ring;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Mobile responsive
+@media (max-width: 640px) {
+  .colorGrid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
