@@ -117,8 +117,7 @@ describe('ListBottomSheet', () => {
       const successButton = screen.getByText('Trigger Success');
       successButton.click();
 
-      // onSuccess callback should trigger both
-      // Note: In the real implementation, this would pass a list object
+      expect(mockOnListCreated).toHaveBeenCalled();
       expect(mockOnClose).toHaveBeenCalled();
     });
   });

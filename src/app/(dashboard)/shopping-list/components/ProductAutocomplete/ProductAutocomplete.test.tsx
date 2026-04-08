@@ -165,7 +165,7 @@ describe('ProductAutocomplete', () => {
       });
 
       // Click the suggestion
-      fireEvent.click(screen.getByText('Mleko'));
+      await user.click(screen.getByText('Mleko'));
 
       expect(mockOnSelect).toHaveBeenCalledWith({
         id: 'prod-1',
@@ -189,7 +189,7 @@ describe('ProductAutocomplete', () => {
         expect(screen.getByText('Marchewka')).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Marchewka'));
+      await user.click(screen.getByText('Marchewka'));
 
       expect(mockOnSelect).toHaveBeenCalledWith({
         id: 'prod-2',
@@ -213,7 +213,7 @@ describe('ProductAutocomplete', () => {
         expect(screen.getByText('Chleb')).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Chleb'));
+      await user.click(screen.getByText('Chleb'));
 
       expect(mockOnSelect).toHaveBeenCalledWith({
         id: 'prod-3',
@@ -247,7 +247,7 @@ describe('ProductAutocomplete', () => {
       const addNewOption = screen.getByText(
         /\+ Dodaj nowy produkt:.*Xyz/
       );
-      fireEvent.click(addNewOption);
+      await user.click(addNewOption);
 
       expect(mockOnSelect).toHaveBeenCalledWith({
         name: 'Xyz',
@@ -322,7 +322,7 @@ describe('ProductAutocomplete', () => {
         expect(screen.getByText('Mleko')).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText('Mleko'));
+      await user.click(screen.getByText('Mleko'));
 
       expect(input.value).toBe('');
     });

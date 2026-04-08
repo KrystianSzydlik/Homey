@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import InlineQuantityEdit from './InlineQuantityEdit';
 import * as shoppingActions from '@/app/lib/shopping-actions';
+import { createMockShoppingItem } from '@/test/factories';
 
 vi.mock('@/app/lib/shopping-actions', () => ({
   updateShoppingItem: vi.fn(),
@@ -19,30 +20,9 @@ describe('InlineQuantityEdit', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  beforeEach(() => {
-    vi.clearAllMocks();
     vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
       success: true,
-      item: {
-        id: 'item-1',
-        quantity: '2',
-        unit: 'kg',
-        createdBy: { name: 'Test' },
-      } as any,
-    });
-  });
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
-      success: true,
-      item: {
-        id: 'item-1',
-        quantity: '2',
-        unit: 'kg',
-        createdBy: { name: 'Test' },
-      } as any,
+      item: createMockShoppingItem({ id: 'item-1', quantity: '2', unit: 'kg' }),
     });
   });
   describe('Rendering', () => {
@@ -77,12 +57,7 @@ describe('InlineQuantityEdit', () => {
               () =>
                 resolve({
                   success: true,
-                  item: {
-                    id: 'item-1',
-                    quantity: '5',
-                    unit: 'szt',
-                    createdBy: { name: 'Test' },
-                  } as any,
+                  item: createMockShoppingItem({ id: 'item-1', quantity: '5', unit: 'szt' }),
                 }),
               100
             );
@@ -93,11 +68,11 @@ describe('InlineQuantityEdit', () => {
       const quantityInput = screen.getByDisplayValue('2');
       await user.clear(quantityInput);
       await user.type(quantityInput, '5');
-      fireEvent.blur(quantityInput);
+      await user.tab();
+      await user.tab();
 
       await waitFor(() => {
         expect(quantityInput).toBeDisabled();
-        // The unit input might disappear if empty, so we check conditionally
         const unitInput = screen.queryByDisplayValue('kg');
         if (unitInput) {
           expect(unitInput).toBeDisabled();
@@ -109,16 +84,11 @@ describe('InlineQuantityEdit', () => {
   describe('Save Functionality', () => {
     it('should call onUpdate with updated item', async () => {
       const user = userEvent.setup();
-      const mockItem = {
-        id: 'item-1',
-        quantity: '10',
-        unit: null,
-        createdBy: { name: 'Test' },
-      };
+      const mockItem = createMockShoppingItem({ id: 'item-1', quantity: '10', unit: null });
 
       vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
         success: true,
-        item: mockItem as any,
+        item: mockItem,
       });
 
       render(<InlineQuantityEdit {...defaultProps} initialUnit={null} />);
@@ -126,8 +96,7 @@ describe('InlineQuantityEdit', () => {
 
       await user.clear(quantityInput);
       await user.type(quantityInput, '10');
-
-      fireEvent.blur(quantityInput);
+      await user.keyboard('{Enter}');
 
       await waitFor(() => {
         expect(mockOnUpdate).toHaveBeenCalledWith(mockItem);
@@ -138,12 +107,7 @@ describe('InlineQuantityEdit', () => {
       const user = userEvent.setup();
       vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
         success: true,
-        item: {
-          id: 'item-1',
-          quantity: '5',
-          unit: 'pieces',
-          createdBy: { name: 'Test' },
-        } as any,
+        item: createMockShoppingItem({ id: 'item-1', quantity: '5', unit: 'pieces' }),
       });
 
       render(<InlineQuantityEdit {...defaultProps} />);
@@ -156,7 +120,7 @@ describe('InlineQuantityEdit', () => {
       await user.clear(unitInput);
       await user.type(unitInput, 'pieces');
 
-      fireEvent.blur(quantityInput);
+      await user.tab();
 
       await waitFor(() => {
         expect(shoppingActions.updateShoppingItem).toHaveBeenCalled();
@@ -209,7 +173,7 @@ describe('InlineQuantityEdit', () => {
       await user.clear(quantityInput);
       await user.type(quantityInput, '5');
       await user.clear(unitInput);
-      fireEvent.blur(quantityInput);
+      await user.tab();
 
       await waitFor(() => {
         expect(shoppingActions.updateShoppingItem).toHaveBeenCalledWith(
@@ -226,22 +190,16 @@ describe('InlineQuantityEdit', () => {
       const user = userEvent.setup();
       vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
         success: true,
-        item: {
-          id: 'item-1',
-          quantity: '2',
-          unit: 'large bottles',
-          createdBy: { name: 'Test' },
-        } as any,
+        item: createMockShoppingItem({ id: 'item-1', quantity: '2', unit: 'large bottles' }),
       });
 
       render(<InlineQuantityEdit {...defaultProps} />);
 
-      const quantityInput = screen.getByDisplayValue('2');
       const unitInput = screen.getByDisplayValue('kg');
 
       await user.clear(unitInput);
       await user.type(unitInput, 'large bottles');
-      fireEvent.blur(unitInput);
+      await user.tab();
 
       await waitFor(() => {
         expect(shoppingActions.updateShoppingItem).toHaveBeenCalledWith(
@@ -268,7 +226,7 @@ describe('InlineQuantityEdit', () => {
       const quantityInput = screen.getByDisplayValue('2');
       await user.clear(quantityInput);
       await user.type(quantityInput, '10');
-      fireEvent.blur(quantityInput);
+      await user.keyboard('{Enter}');
 
       await waitFor(() => {
         expect(shoppingActions.updateShoppingItem).toHaveBeenCalled();
@@ -284,12 +242,7 @@ describe('InlineQuantityEdit', () => {
       const user = userEvent.setup();
       vi.mocked(shoppingActions.updateShoppingItem).mockResolvedValue({
         success: true,
-        item: {
-          id: 'item-1',
-          quantity: '5',
-          unit: null,
-          createdBy: { name: 'Test' },
-        } as any,
+        item: createMockShoppingItem({ id: 'item-1', quantity: '5', unit: null }),
       });
 
       render(<InlineQuantityEdit {...defaultProps} />);

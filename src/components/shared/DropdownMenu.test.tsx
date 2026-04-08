@@ -317,15 +317,22 @@ describe('DropdownMenu', () => {
   });
 
   describe('Alignment', () => {
-    it('should align menu to the right by default', () => {
+    it('should align menu to the right by default', async () => {
+      const user = userEvent.setup();
       render(<DropdownMenu items={mockItems} />);
-      // This would be tested visually or with CSS class checking
-      // The component uses align="right" by default
+      await user.click(screen.getByRole('button', { name: /more actions/i }));
+
+      const menu = screen.getByRole('menu');
+      expect(menu.getAttribute('data-align')).toBe('right');
     });
 
-    it('should align menu to the left when specified', () => {
+    it('should align menu to the left when specified', async () => {
+      const user = userEvent.setup();
       render(<DropdownMenu items={mockItems} align="left" />);
-      // This would be tested visually or with CSS class checking
+      await user.click(screen.getByRole('button', { name: /more actions/i }));
+
+      const menu = screen.getByRole('menu');
+      expect(menu.getAttribute('data-align')).toBe('left');
     });
   });
 

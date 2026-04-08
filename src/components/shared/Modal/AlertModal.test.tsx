@@ -66,25 +66,25 @@ describe('AlertModal', () => {
   });
 
   describe('Variant Styling', () => {
-    it('should apply danger variant class by default', () => {
+    it('should apply danger variant by default', () => {
       render(<AlertModal {...defaultProps} />);
 
       const confirmButton = screen.getByRole('button', { name: 'Confirm' });
-      expect(confirmButton.className).toContain('danger');
+      expect(confirmButton).toHaveAttribute('data-variant', 'danger');
     });
 
-    it('should apply warning variant class when specified', () => {
+    it('should apply warning variant when specified', () => {
       render(<AlertModal {...defaultProps} variant="warning" />);
 
       const confirmButton = screen.getByRole('button', { name: 'Confirm' });
-      expect(confirmButton.className).toContain('warning');
+      expect(confirmButton).toHaveAttribute('data-variant', 'warning');
     });
 
-    it('should apply success variant class when specified', () => {
+    it('should apply success variant when specified', () => {
       render(<AlertModal {...defaultProps} variant="success" />);
 
       const confirmButton = screen.getByRole('button', { name: 'Confirm' });
-      expect(confirmButton.className).toContain('success');
+      expect(confirmButton).toHaveAttribute('data-variant', 'success');
     });
   });
 

@@ -13,7 +13,12 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['**/*.d.ts', '**/types/**', '**/*.module.{ts,tsx}'],
+      exclude: [
+        '**/*.d.ts',
+        '**/types/**',
+        '**/*.module.{ts,tsx}',
+        '**/test/**',
+      ],
     },
   },
   resolve: {
@@ -27,6 +32,7 @@ export default defineConfig({
       '@/hooks': path.resolve(__dirname, './src/hooks'),
       '@/config': path.resolve(__dirname, './src/config'),
       '@/styles': path.resolve(__dirname, './src/styles'),
+      '@/test': path.resolve(__dirname, './src/test'),
       // More specific lib paths first (src/lib/)
       '@/lib/constants': path.resolve(__dirname, './src/lib/constants'),
       '@/lib/actions': path.resolve(__dirname, './src/lib/actions'),

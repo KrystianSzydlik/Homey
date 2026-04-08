@@ -10,6 +10,10 @@ import {
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { ShoppingCategory } from '@prisma/client';
+import {
+  createMockProduct,
+  createMockShoppingItemRecord,
+} from '@/test/factories';
 
 const { mockPrisma, mockAuth } = vi.hoisted(() => {
   const mockAuth = vi.fn();
@@ -62,7 +66,7 @@ describe('Product Actions', () => {
         defaultUnit: 'liter',
       };
 
-      const mockProduct = {
+      const mockProduct = createMockProduct({
         id: 'product-1',
         name: input.name,
         emoji: input.emoji,
@@ -70,14 +74,10 @@ describe('Product Actions', () => {
         defaultUnit: input.defaultUnit,
         householdId: mockHouseholdId,
         createdById: mockUserId,
-        usageCount: 0,
-        lastUsedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      });
 
-      (prisma.product.findUnique as any).mockResolvedValue(null);
-      (prisma.product.create as any).mockResolvedValue(mockProduct);
+      vi.mocked(prisma.product.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.product.create).mockResolvedValue(mockProduct);
 
       const result = await createProduct(input);
 
@@ -136,10 +136,10 @@ describe('Product Actions', () => {
         name: 'Milk',
       };
 
-      (prisma.product.findUnique as any).mockResolvedValue({
+      vi.mocked(prisma.product.findUnique).mockResolvedValue(createMockProduct({
         id: 'existing-product',
         name: 'Milk',
-      });
+      }));
 
       const result = await createProduct(input);
 
@@ -155,12 +155,12 @@ describe('Product Actions', () => {
         name: 'Milk',
       };
 
-      (prisma.product.findUnique as any).mockResolvedValue(null);
-      (prisma.product.create as any).mockResolvedValue({
+      vi.mocked(prisma.product.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.product.create).mockResolvedValue(createMockProduct({
         id: 'product-1',
         name: 'Milk',
         defaultCategory: 'OTHER',
-      });
+      }));
 
       const result = await createProduct(input);
 
@@ -181,19 +181,19 @@ describe('Product Actions', () => {
         emoji: '🥛',
       };
 
-      (prisma.product.findFirst as any).mockResolvedValue({
+      vi.mocked(prisma.product.findFirst).mockResolvedValue(createMockProduct({
         id: productId,
         householdId: mockHouseholdId,
-      });
+      }));
 
-      const mockUpdatedProduct = {
+      const mockUpdatedProduct = createMockProduct({
         id: productId,
         name: input.name,
         emoji: input.emoji,
         householdId: mockHouseholdId,
-      };
+      });
 
-      (prisma.product.update as any).mockResolvedValue(mockUpdatedProduct);
+      vi.mocked(prisma.product.update).mockResolvedValue(mockUpdatedProduct);
 
       const result = await updateProduct(productId, input);
 
@@ -214,7 +214,7 @@ describe('Product Actions', () => {
     });
 
     it('should return error if product not found', async () => {
-      (prisma.product.findFirst as any).mockResolvedValue(null);
+      vi.mocked(prisma.product.findFirst).mockResolvedValue(null);
 
       const result = await updateProduct('product-999', { name: 'New' });
 
@@ -229,14 +229,14 @@ describe('Product Actions', () => {
       const productId = 'product-1';
       const input = { name: 'New Name' };
 
-      (prisma.product.findFirst as any).mockResolvedValue({
+      vi.mocked(prisma.product.findFirst).mockResolvedValue(createMockProduct({
         id: productId,
         householdId: mockHouseholdId,
-      });
-      (prisma.product.update as any).mockResolvedValue({
+      }));
+      vi.mocked(prisma.product.update).mockResolvedValue(createMockProduct({
         id: productId,
         name: input.name,
-      });
+      }));
 
       await updateProduct(productId, input);
 
@@ -251,11 +251,11 @@ describe('Product Actions', () => {
     it('should delete a product successfully', async () => {
       const productId = 'product-1';
 
-      (prisma.product.findFirst as any).mockResolvedValue({
+      vi.mocked(prisma.product.findFirst).mockResolvedValue(createMockProduct({
         id: productId,
         householdId: mockHouseholdId,
-      });
-      (prisma.product.delete as any).mockResolvedValue({ id: productId });
+      }));
+      vi.mocked(prisma.product.delete).mockResolvedValue(createMockProduct({ id: productId }));
 
       const result = await deleteProduct(productId);
 
@@ -266,7 +266,7 @@ describe('Product Actions', () => {
     });
 
     it('should return error if product not found', async () => {
-      (prisma.product.findFirst as any).mockResolvedValue(null);
+      vi.mocked(prisma.product.findFirst).mockResolvedValue(null);
 
       const result = await deleteProduct('product-999');
 
@@ -280,11 +280,11 @@ describe('Product Actions', () => {
     it('should scope deletion to household', async () => {
       const productId = 'product-1';
 
-      (prisma.product.findFirst as any).mockResolvedValue({
+      vi.mocked(prisma.product.findFirst).mockResolvedValue(createMockProduct({
         id: productId,
         householdId: mockHouseholdId,
-      });
-      (prisma.product.delete as any).mockResolvedValue({ id: productId });
+      }));
+      vi.mocked(prisma.product.delete).mockResolvedValue(createMockProduct({ id: productId }));
 
       await deleteProduct(productId);
 
@@ -298,11 +298,11 @@ describe('Product Actions', () => {
     it('should search products by name', async () => {
       const query = 'milk';
       const mockProducts = [
-        { id: '1', name: 'Milk', householdId: mockHouseholdId },
-        { id: '2', name: 'Almond Milk', householdId: null },
+        createMockProduct({ id: '1', name: 'Milk', householdId: mockHouseholdId }),
+        createMockProduct({ id: '2', name: 'Almond Milk', householdId: null }),
       ];
 
-      (prisma.product.findMany as any).mockResolvedValue(mockProducts);
+      vi.mocked(prisma.product.findMany).mockResolvedValue(mockProducts);
 
       const result = await searchProducts(query);
 
@@ -325,7 +325,7 @@ describe('Product Actions', () => {
     it('should include both household and global products', async () => {
       const query = 'milk';
 
-      (prisma.product.findMany as any).mockResolvedValue([]);
+      vi.mocked(prisma.product.findMany).mockResolvedValue([]);
 
       await searchProducts(query);
 
@@ -342,7 +342,7 @@ describe('Product Actions', () => {
     });
 
     it('should limit results to 10', async () => {
-      (prisma.product.findMany as any).mockResolvedValue([]);
+      vi.mocked(prisma.product.findMany).mockResolvedValue([]);
 
       await searchProducts('milk');
 
@@ -367,18 +367,18 @@ describe('Product Actions', () => {
     it('should return catalog suggestions', async () => {
       const query = 'milk';
       const mockCatalogProducts = [
-        {
+        createMockProduct({
           id: 'product-1',
           name: 'Milk',
           emoji: '🥛',
           defaultCategory: ShoppingCategory.DAIRY,
           defaultUnit: 'liter',
           householdId: mockHouseholdId,
-        },
+        }),
       ];
 
-      (prisma.product.findMany as any).mockResolvedValue(mockCatalogProducts);
-      (prisma.shoppingItem.findMany as any).mockResolvedValue([]);
+      vi.mocked(prisma.product.findMany).mockResolvedValue(mockCatalogProducts);
+      vi.mocked(prisma.shoppingItem.findMany).mockResolvedValue([]);
 
       const result = await getProductSuggestions(query);
 
@@ -397,7 +397,7 @@ describe('Product Actions', () => {
     it('should return history suggestions', async () => {
       const query = 'bread';
       const mockRecentItems = [
-        {
+        createMockShoppingItemRecord({
           id: 'item-1',
           name: 'Bread',
           emoji: '🍞',
@@ -406,11 +406,11 @@ describe('Product Actions', () => {
           purchaseCount: 5,
           lastPurchasedAt: new Date(),
           averageDaysBetweenPurchases: null,
-        },
+        }),
       ];
 
-      (prisma.product.findMany as any).mockResolvedValue([]);
-      (prisma.shoppingItem.findMany as any)
+      vi.mocked(prisma.product.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.shoppingItem.findMany)
         .mockResolvedValueOnce(mockRecentItems)
         .mockResolvedValueOnce([]);
 
@@ -428,7 +428,7 @@ describe('Product Actions', () => {
       const tenDaysAgo = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000);
 
       const mockSmartItems = [
-        {
+        createMockShoppingItemRecord({
           id: 'item-1',
           name: 'Eggs',
           emoji: '🥚',
@@ -437,11 +437,11 @@ describe('Product Actions', () => {
           purchaseCount: 3,
           lastPurchasedAt: tenDaysAgo,
           averageDaysBetweenPurchases: 7,
-        },
+        }),
       ];
 
-      (prisma.product.findMany as any).mockResolvedValue([]);
-      (prisma.shoppingItem.findMany as any)
+      vi.mocked(prisma.product.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.shoppingItem.findMany)
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce(mockSmartItems);
 
@@ -456,17 +456,17 @@ describe('Product Actions', () => {
     it('should deduplicate suggestions by name and keep highest score', async () => {
       const query = 'milk';
       const mockCatalogProducts = [
-        {
+        createMockProduct({
           id: 'product-1',
           name: 'Milk',
           emoji: '🥛',
           defaultCategory: ShoppingCategory.DAIRY,
           defaultUnit: 'liter',
           householdId: mockHouseholdId,
-        },
+        }),
       ];
       const mockRecentItems = [
-        {
+        createMockShoppingItemRecord({
           id: 'item-1',
           name: 'Milk',
           emoji: '🥛',
@@ -475,11 +475,11 @@ describe('Product Actions', () => {
           purchaseCount: 2,
           lastPurchasedAt: new Date(),
           averageDaysBetweenPurchases: null,
-        },
+        }),
       ];
 
-      (prisma.product.findMany as any).mockResolvedValue(mockCatalogProducts);
-      (prisma.shoppingItem.findMany as any)
+      vi.mocked(prisma.product.findMany).mockResolvedValue(mockCatalogProducts);
+      vi.mocked(prisma.shoppingItem.findMany)
         .mockResolvedValueOnce(mockRecentItems)
         .mockResolvedValueOnce([]);
 
@@ -510,8 +510,8 @@ describe('Product Actions', () => {
         },
       ];
 
-      (prisma.product.findMany as any).mockResolvedValue(mockCatalogProducts);
-      (prisma.shoppingItem.findMany as any).mockResolvedValue([]);
+      vi.mocked(prisma.product.findMany).mockResolvedValue(mockCatalogProducts.map(p => createMockProduct(p)));
+      vi.mocked(prisma.shoppingItem.findMany).mockResolvedValue([]);
 
       const result = await getProductSuggestions(query);
 
@@ -523,17 +523,19 @@ describe('Product Actions', () => {
 
     it('should limit results to 10', async () => {
       const query = 'a';
-      const mockProducts = Array.from({ length: 15 }, (_, i) => ({
-        id: `product-${i}`,
-        name: `Product ${i}`,
-        emoji: null,
-        defaultCategory: ShoppingCategory.OTHER,
-        defaultUnit: null,
-        householdId: mockHouseholdId,
-      }));
+      const mockProducts = Array.from({ length: 15 }, (_, i) =>
+        createMockProduct({
+          id: `product-${i}`,
+          name: `Product ${i}`,
+          emoji: null,
+          defaultCategory: ShoppingCategory.OTHER,
+          defaultUnit: null,
+          householdId: mockHouseholdId,
+        })
+      );
 
-      (prisma.product.findMany as any).mockResolvedValue(mockProducts.slice(0, 5));
-      (prisma.shoppingItem.findMany as any).mockResolvedValue([]);
+      vi.mocked(prisma.product.findMany).mockResolvedValue(mockProducts.slice(0, 5));
+      vi.mocked(prisma.shoppingItem.findMany).mockResolvedValue([]);
 
       const result = await getProductSuggestions(query);
 
@@ -541,7 +543,7 @@ describe('Product Actions', () => {
     });
 
     it('should return empty array on error', async () => {
-      (prisma.product.findMany as any).mockRejectedValue(new Error('DB error'));
+      vi.mocked(prisma.product.findMany).mockRejectedValue(new Error('DB error'));
 
       const result = await getProductSuggestions('milk');
 
@@ -553,14 +555,14 @@ describe('Product Actions', () => {
     it('should increment product usage count', async () => {
       const productId = 'product-1';
 
-      (prisma.product.findFirst as any).mockResolvedValue({
+      vi.mocked(prisma.product.findFirst).mockResolvedValue(createMockProduct({
         id: productId,
         householdId: mockHouseholdId,
-      });
-      (prisma.product.update as any).mockResolvedValue({
+      }));
+      vi.mocked(prisma.product.update).mockResolvedValue(createMockProduct({
         id: productId,
         usageCount: 1,
-      });
+      }));
 
       await incrementProductUsage(productId);
 
@@ -574,7 +576,7 @@ describe('Product Actions', () => {
     });
 
     it('should not increment if product not found', async () => {
-      (prisma.product.findFirst as any).mockResolvedValue(null);
+      vi.mocked(prisma.product.findFirst).mockResolvedValue(null);
 
       await incrementProductUsage('product-999');
 
@@ -584,11 +586,11 @@ describe('Product Actions', () => {
     it('should verify household access before incrementing', async () => {
       const productId = 'product-1';
 
-      (prisma.product.findFirst as any).mockResolvedValue({
+      vi.mocked(prisma.product.findFirst).mockResolvedValue(createMockProduct({
         id: productId,
         householdId: mockHouseholdId,
-      });
-      (prisma.product.update as any).mockResolvedValue({});
+      }));
+      vi.mocked(prisma.product.update).mockResolvedValue(createMockProduct({ id: productId }));
 
       await incrementProductUsage(productId);
 
