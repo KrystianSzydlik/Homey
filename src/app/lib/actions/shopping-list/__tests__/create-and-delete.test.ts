@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createShoppingList } from '../create';
 import { deleteShoppingList } from '../delete';
 import * as authUtils from '@/app/lib/auth-utils';
+import { createMockShoppingList } from '@/test/factories';
 
 const { mockPrisma, mockGetSessionData, mockGetHouseholdId } = vi.hoisted(() => {
   const mockGetSessionData = vi.fn();
@@ -28,7 +29,7 @@ describe('Shopping List Operations', () => {
   const mockUserId = 'user-456';
   const mockListId = 'clh1234567890list1';
 
-  const mockList = {
+  const mockList = createMockShoppingList({
     id: mockListId,
     householdId: mockHouseholdId,
     name: 'Biedronka',
@@ -36,9 +37,7 @@ describe('Shopping List Operations', () => {
     color: '#FF5733',
     position: 0,
     createdById: mockUserId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  });
 
   const mockRelated = {
     createdBy: { name: 'John' },
@@ -56,9 +55,9 @@ describe('Shopping List Operations', () => {
   describe('createShoppingList', () => {
     it('creates list with all fields, correct position, and IDs', async () => {
       mockPrisma.shoppingList.findFirst.mockResolvedValue({ position: 2 });
-      mockPrisma.shoppingList.create.mockResolvedValue({
-        ...mockList, position: 3, ...mockRelated, _count: { items: 5 },
-      });
+      mockPrisma.shoppingList.create.mockResolvedValue(createMockShoppingList({
+        ...mockList, position: 3, _count: { items: 5 },
+      }));
 
       const result = await createShoppingList({ name: 'Biedronka', emoji: '🛒', color: '#FF5733' });
 
@@ -76,9 +75,9 @@ describe('Shopping List Operations', () => {
 
     it('creates list with name only, position 0 when first', async () => {
       mockPrisma.shoppingList.findFirst.mockResolvedValue(null);
-      mockPrisma.shoppingList.create.mockResolvedValue({
-        ...mockList, name: 'Grocery', position: 0, ...mockRelated,
-      });
+      mockPrisma.shoppingList.create.mockResolvedValue(createMockShoppingList({
+        ...mockList, name: 'Grocery', position: 0,
+      }));
 
       const result = await createShoppingList({ name: 'Grocery' });
 

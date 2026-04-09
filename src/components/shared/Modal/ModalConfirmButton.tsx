@@ -18,6 +18,7 @@ export function ModalConfirmButton({
       type={type || 'button'}
       disabled={disabled || isLoading}
       onClick={onClick}
+      data-variant={variant}
       className={`${styles.confirmButton} ${styles[variant]} ${className || ''}`}
       whileHover={{ y: isLoading ? 0 : -2 }}
       whileTap={{ y: isLoading ? 0 : 0 }}

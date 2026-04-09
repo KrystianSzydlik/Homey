@@ -187,6 +187,7 @@ export default function DropdownMenu({
               exit={{ opacity: 0, scale: 0.95, y: animationOrigin }}
               transition={{ duration: 0.15, ease: 'easeOut' }}
               role="menu"
+              data-align={align}
               aria-orientation="vertical"
             >
               {items.map((item, index) => (

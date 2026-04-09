@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createShoppingItem } from '../create';
 import * as authUtils from '@/app/lib/auth-utils';
+import { createMockShoppingItem, createMockShoppingList } from '@/test/factories';
 
 const { mockPrisma, mockGetSessionData } = vi.hoisted(() => {
   const mockGetSessionData = vi.fn();
@@ -38,10 +39,10 @@ describe('createShoppingItem', () => {
     productId: mockProductId,
   };
 
-  const mockShoppingList = {
+  const mockShoppingList = createMockShoppingList({
     id: mockListId,
     householdId: mockHouseholdId,
-  };
+  });
 
   const mockRelatedData = {
     createdBy: { name: 'John' },
@@ -63,10 +64,13 @@ describe('createShoppingItem', () => {
   it('creates item with all fields, correct position, and related data', async () => {
     mockPrisma.shoppingList.findFirst.mockResolvedValue(mockShoppingList);
     mockPrisma.shoppingItem.findFirst.mockResolvedValue({ position: 5 });
-    mockPrisma.shoppingItem.create.mockResolvedValue({
-      id: 'clh1234567890item1', ...validInput, position: 6, householdId: mockHouseholdId,
-      createdById: mockUserId, ...mockRelatedData,
-    });
+    mockPrisma.shoppingItem.create.mockResolvedValue(createMockShoppingItem({
+      id: 'clh1234567890item1',
+      ...validInput,
+      position: 6,
+      householdId: mockHouseholdId,
+      createdById: mockUserId,
+    }));
 
     const result = await createShoppingItem(validInput);
 
@@ -88,10 +92,13 @@ describe('createShoppingItem', () => {
   it('creates item with minimal fields, position 0 when list is empty', async () => {
     mockPrisma.shoppingList.findFirst.mockResolvedValue(mockShoppingList);
     mockPrisma.shoppingItem.findFirst.mockResolvedValue(null);
-    mockPrisma.shoppingItem.create.mockResolvedValue({
-      id: 'clh1234567890item1', name: 'Milk', position: 0, category: 'OTHER',
-      quantity: '1', ...mockRelatedData,
-    });
+    mockPrisma.shoppingItem.create.mockResolvedValue(createMockShoppingItem({
+      id: 'clh1234567890item1',
+      name: 'Milk',
+      position: 0,
+      category: 'OTHER',
+      quantity: '1',
+    }));
 
     const result = await createShoppingItem({
       name: 'Milk', shoppingListId: mockListId, productId: mockProductId,
@@ -104,6 +111,8 @@ describe('createShoppingItem', () => {
   });
 
   it('returns error for missing required fields', async () => {
+    // Validating Zod schema behavior - we pass partial data but handle it safely without 'as any' where possible
+    // In these specific validation tests, we cast to any only to test the rejection of invalid JS objects
     const noName = await createShoppingItem({ shoppingListId: mockListId, productId: mockProductId } as any);
     expect(noName.success).toBe(false);
 

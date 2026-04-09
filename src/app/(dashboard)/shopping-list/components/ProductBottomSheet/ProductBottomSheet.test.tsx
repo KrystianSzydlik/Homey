@@ -1,9 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ProductBottomSheet from './ProductBottomSheet';
 import { ProductCallbackData } from '@/types/shopping';
 import { ShoppingCategory } from '@prisma/client';
+import { t, Keys } from '@/config/i18n';
+import { createMockProduct } from '@/test/factories';
+
+type CreateProductResult = {
+  success: boolean;
+  product?: ReturnType<typeof createMockProduct>;
+};
+
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((res) => {
+    resolve = res;
+  });
+
+  return { promise, resolve };
+}
 
 /* eslint-disable react/display-name */
 // Mock BottomSheet with all subcomponents
@@ -34,11 +50,39 @@ vi.mock('@/components/shared/BottomSheet', () => {
   MockBottomSheet.Footer = ({ children }: { children: React.ReactNode }) => (
     <div data-testid="footer">{children}</div>
   );
-  MockBottomSheet.CancelButton = ({ children }: { children: React.ReactNode }) => (
-    <button data-testid="cancel-button">{children}</button>
+  MockBottomSheet.CancelButton = ({
+    children,
+    onClick,
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+  }) => (
+    <button data-testid="cancel-button" onClick={onClick}>
+      {children}
+    </button>
   );
-  MockBottomSheet.ConfirmButton = ({ children }: { children: React.ReactNode }) => (
-    <button data-testid="confirm-button">{children}</button>
+  MockBottomSheet.ConfirmButton = ({
+    children,
+    disabled,
+    onClick,
+    type,
+    form,
+  }: {
+    children: React.ReactNode;
+    disabled?: boolean;
+    onClick?: () => void;
+    type?: 'button' | 'submit' | 'reset';
+    form?: string;
+  }) => (
+    <button
+      data-testid="confirm-button"
+      disabled={disabled}
+      onClick={onClick}
+      type={type}
+      form={form}
+    >
+      {children}
+    </button>
   );
 
   return {
@@ -167,21 +211,32 @@ describe('ProductBottomSheet', () => {
       expect(nameInput).toHaveValue('Mleko');
     });
 
-    it('should have clickable emoji buttons', async () => {
+    it('should allow selecting an emoji and create product with it', async () => {
       const user = userEvent.setup();
+      mockCreateProduct.mockResolvedValue({
+        success: true,
+        product: createMockProduct({ id: 'p1', name: 'Jabłko', emoji: '🍎' })
+      });
+
       render(<ProductBottomSheet {...defaultProps} />);
 
-      const emojiButtons = screen.getAllByRole('button');
-      const appleEmoji = emojiButtons.find((btn) =>
-        btn.textContent?.includes('🍎')
-      );
+      const nameInput = screen.getByPlaceholderText('Nazwa produktu');
+      await user.type(nameInput, 'Jabłko');
 
-      expect(appleEmoji).toBeTruthy();
-      if (appleEmoji) {
-        await user.click(appleEmoji);
-        // Emoji selection updates internal state
-        expect(appleEmoji).toBeInTheDocument();
-      }
+      // Find and click the apple emoji
+      const appleEmoji = screen.getByRole('button', { name: /🍎/ });
+      await user.click(appleEmoji);
+
+      // JSDOM has issues with external form="id" buttons, trigger form directly
+      const form = document.getElementById('product-bottom-sheet-form')!;
+      fireEvent.submit(form);
+
+      await waitFor(() => {
+        expect(mockCreateProduct).toHaveBeenCalledWith(expect.objectContaining({
+          name: 'Jabłko',
+          emoji: '🍎',
+        }));
+      });
     });
 
     it('should render dropdowns for category and unit selection', () => {
@@ -225,20 +280,40 @@ describe('ProductBottomSheet', () => {
   });
 
   describe('Error handling', () => {
-    it('should have name input for product creation', () => {
-      render(<ProductBottomSheet {...defaultProps} initialName="Test" />);
+    it('should display error message on creation failure', async () => {
+      mockCreateProduct.mockRejectedValue(new Error('Failed'));
+      render(<ProductBottomSheet {...defaultProps} initialName="Mleko" />);
 
-      const nameInput = screen.getByPlaceholderText('Nazwa produktu');
-      expect(nameInput).toHaveValue('Test');
+      const form = document.getElementById('product-bottom-sheet-form')!;
+      fireEvent.submit(form);
+
+      await waitFor(() => {
+        expect(screen.getByText(t(Keys.AUTH.SOMETHING_WENT_WRONG))).toBeInTheDocument();
+      });
     });
   });
 
   describe('Loading states', () => {
-    it('should have submit button', () => {
-      render(<ProductBottomSheet {...defaultProps} initialName="Test" />);
+    it('should disable submit button while creating', async () => {
+      const deferred = createDeferred<CreateProductResult>();
+      mockCreateProduct.mockReturnValue(deferred.promise);
+      render(<ProductBottomSheet {...defaultProps} initialName="Mleko" />);
 
       const submitButton = screen.getByRole('button', { name: /Dodaj/ });
-      expect(submitButton).toBeInTheDocument();
+      const form = document.getElementById('product-bottom-sheet-form')!;
+      fireEvent.submit(form);
+
+      expect(submitButton).toBeDisabled();
+      expect(submitButton).toHaveTextContent('Zapisywanie...');
+
+      deferred.resolve({
+        success: true,
+        product: createMockProduct({ id: 'product-1', name: 'Mleko' }),
+      });
+
+      await waitFor(() => {
+        expect(mockOnProductCreated).toHaveBeenCalled();
+      });
     });
   });
 });

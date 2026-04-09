@@ -129,7 +129,7 @@ export default function ProductBottomSheet({
           onProductCreated(extractProductCallback(result.product));
           onClose();
         } else {
-          setError(result.error || 'Failed to save product');
+          setError(result.error || t(Keys.PRODUCT.SAVE_ERROR));
         }
       } else {
         const result = await createProduct({
@@ -146,11 +146,11 @@ export default function ProductBottomSheet({
           setDuplicateProduct(result.existingProduct);
           setShowConfirmation(true);
         } else {
-          setError(result.error || 'Failed to create product');
+          setError(result.error || t(Keys.PRODUCT.CREATE_ERROR));
         }
       }
     } catch {
-      setError('Something went wrong');
+      setError(t(Keys.AUTH.SOMETHING_WENT_WRONG));
     } finally {
       setIsLoading(false);
     }
