@@ -12,12 +12,13 @@ model Household {
   name  String
   users User[]
 
-  recipes         Recipe[]
-  todos           Todo[]
-  shoppingItems   ShoppingItem[]
-  shoppingLists   ShoppingList[]
-  products        Product[]
-  habits          Habit[]
+  recipes          Recipe[]
+  todos            Todo[]
+  shoppingItems    ShoppingItem[]
+  shoppingLists    ShoppingList[]
+  products         Product[]
+  purchaseRecords  PurchaseRecord[]
+  habits           Habit[]
   habitCompletions HabitCompletion[]
 }
 
@@ -34,6 +35,7 @@ model User {
   shoppingItems    ShoppingItem[]
   shoppingLists    ShoppingList[]
   products         Product[]
+  purchaseRecords  PurchaseRecord[]
   habits           Habit[]
   habitCompletions HabitCompletion[]
 
@@ -96,8 +98,13 @@ model Product {
   emoji           String?
   defaultCategory ShoppingCategory @default(OTHER)
   defaultUnit     String?
-  usageCount      Int              @default(0)
-  lastUsedAt      DateTime?
+
+  // Statystyki — aktualizowane przy każdym PurchaseRecord
+  usageCount                  Int       @default(0)
+  lastUsedAt                  DateTime?
+  purchaseCount               Int       @default(0)
+  lastPurchasedAt             DateTime?
+  averageDaysBetweenPurchases Float?
 
   householdId     String?
   household       Household?       @relation(fields: [householdId], references: [id])
@@ -105,6 +112,7 @@ model Product {
   createdBy       User?            @relation(fields: [createdById], references: [id])
 
   items           ShoppingItem[]
+  purchases       PurchaseRecord[]
 
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
@@ -115,30 +123,21 @@ model Product {
 }
 
 model ShoppingItem {
-  id          String    @id @default(cuid())
-  name        String
-  quantity    String    @default("1")
-  unit        String?   // "kg", "szt", "opak", "l"
-  category    ShoppingCategory @default(OTHER)
-  checked     Boolean   @default(false)
-  position    Int       @default(0)
-  emoji       String?
-
-  // Purchase price tracking for finances analytics
-  price       Decimal?  @db.Decimal(10, 2)
-  currency    String    @default("PLN")
-  purchasedAt DateTime?
-
-  // Statystyki dla smart suggestions
-  purchaseCount              Int       @default(0)
-  lastPurchasedAt            DateTime?
-  averageDaysBetweenPurchases Float?
+  id       String           @id @default(cuid())
+  name     String
+  quantity String           @default("1")
+  unit     String?          // "kg", "szt", "opak", "l"
+  category ShoppingCategory @default(OTHER)
+  checked  Boolean          @default(false)
+  position Int              @default(0)
+  emoji    String?
+  note     String?
 
   shoppingListId String
   shoppingList   ShoppingList @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
 
-  productId   String
-  product     Product      @relation(fields: [productId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
 
   householdId String
   household   Household @relation(fields: [householdId], references: [id])
@@ -150,7 +149,35 @@ model ShoppingItem {
   @@index([shoppingListId, position])
   @@index([householdId, checked])
   @@index([householdId, name])
-  @@index([householdId, purchaseCount])
+}
+
+// Immutable log — jeden rekord = jeden zakup konkretnego produktu.
+// Tworzony gdy ShoppingItem.checked = true (lub ręcznie).
+// Nigdy nie usuwany — to źródło prawdy dla analytics.
+model PurchaseRecord {
+  id          String    @id @default(cuid())
+
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+
+  quantity    Float     @default(1)  // Float żeby można liczyć sumy (0.5 kg, 2 szt)
+  unit        String?               // "kg", "szt", "opak", "l"
+  price       Decimal?  @db.Decimal(10, 2)
+  currency    String    @default("PLN")
+  purchasedAt DateTime  @default(now())
+
+  // Opcjonalny link do ShoppingItem, z którego powstał rekord
+  shoppingItemId String?
+
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id])
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@index([householdId, purchasedAt])           // wydatki per okres
+  @@index([productId, purchasedAt])             // historia konkretnego produktu
+  @@index([householdId, productId, purchasedAt]) // analytics compound
 }
 
 enum ShoppingCategory {
