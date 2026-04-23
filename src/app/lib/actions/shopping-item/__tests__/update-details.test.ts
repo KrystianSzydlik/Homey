@@ -10,6 +10,14 @@ const { mockPrisma, mockGetSessionData } = vi.hoisted(() => {
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    product: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
+    purchaseRecord: {
+      create: vi.fn(),
+    },
+    $transaction: vi.fn(async (cb: (tx: unknown) => Promise<unknown>) => cb(mockPrisma)),
   };
   return { mockPrisma, mockGetSessionData };
 });
@@ -18,8 +26,6 @@ vi.mock('@/lib/prisma', () => ({
   prisma: mockPrisma,
 }));
 
-vi.spyOn(authUtils, 'getSessionData').mockImplementation(() => mockGetSessionData());
-
 describe('updateShoppingItemDetails', () => {
   const mockHouseholdId = 'household-123';
   const mockUserId = 'user-456';
@@ -27,26 +33,29 @@ describe('updateShoppingItemDetails', () => {
 
   const mockItem = {
     id: mockItemId,
-    householdId: mockHouseholdId,
-    checked: false,
     name: 'Apples',
     quantity: '1',
     unit: 'kg',
     category: 'FRUITS' as const,
     emoji: '🍎',
     position: 0,
-    price: '10.50',
-    purchaseCount: 5,
-    lastPurchasedAt: new Date(),
+    note: null,
+    checked: false,
+    householdId: mockHouseholdId,
     createdById: mockUserId,
     shoppingListId: 'list-123',
-    productId: 'product-456',
+    productId: 'clh1234567890prod1',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   beforeEach(() => {
+    vi.resetAllMocks();
+    vi.spyOn(authUtils, 'getSessionData').mockImplementation(() => mockGetSessionData());
     mockGetSessionData.mockResolvedValue({ householdId: mockHouseholdId, userId: mockUserId });
-    mockPrisma.shoppingItem.findUnique.mockReset();
-    mockPrisma.shoppingItem.update.mockReset();
+    mockPrisma.$transaction.mockImplementation(
+      async (cb: (tx: unknown) => Promise<unknown>) => cb(mockPrisma)
+    );
     vi.spyOn(plnValidation, 'validatePlnPrice').mockReturnValue('10.50' as any);
   });
 
@@ -61,41 +70,47 @@ describe('updateShoppingItemDetails', () => {
     expect(result.data?.quantity).toBe('2');
   });
 
-  it('sets purchasedAt when checking, clears when unchecking', async () => {
-    // Check → sets purchasedAt
+  it('creates PurchaseRecord when item is checked', async () => {
     mockPrisma.shoppingItem.findUnique.mockResolvedValue({ householdId: mockHouseholdId, checked: false });
-    mockPrisma.shoppingItem.update.mockResolvedValue({ ...mockItem, checked: true, purchasedAt: new Date() });
+    mockPrisma.shoppingItem.update.mockResolvedValue({ ...mockItem, checked: true });
+    mockPrisma.product.findUnique.mockResolvedValue({ lastPurchasedAt: null, averageDaysBetweenPurchases: null });
+    mockPrisma.purchaseRecord.create.mockResolvedValue({});
+    mockPrisma.product.update.mockResolvedValue({});
 
     await updateShoppingItemDetails({ itemId: mockItemId, checked: true });
-    expect(mockPrisma.shoppingItem.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ purchasedAt: expect.any(Date) }) })
-    );
 
-    // Uncheck → clears purchasedAt
+    expect(mockPrisma.purchaseRecord.create).toHaveBeenCalled();
+  });
+
+  it('does not create PurchaseRecord when item is unchecked', async () => {
     mockPrisma.shoppingItem.findUnique.mockResolvedValue({ householdId: mockHouseholdId, checked: true });
-    mockPrisma.shoppingItem.update.mockResolvedValue({ ...mockItem, checked: false, purchasedAt: null });
+    mockPrisma.shoppingItem.update.mockResolvedValue({ ...mockItem, checked: false });
 
     await updateShoppingItemDetails({ itemId: mockItemId, checked: false });
-    expect(mockPrisma.shoppingItem.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ purchasedAt: null }) })
-    );
+
+    expect(mockPrisma.purchaseRecord.create).not.toHaveBeenCalled();
   });
 
   it('accepts null price to clear price', async () => {
     mockPrisma.shoppingItem.findUnique.mockResolvedValue({ householdId: mockHouseholdId, checked: false });
-    mockPrisma.shoppingItem.update.mockResolvedValue({ ...mockItem, price: null });
+    mockPrisma.shoppingItem.update.mockResolvedValue(mockItem);
 
     const result = await updateShoppingItemDetails({ itemId: mockItemId, price: null });
+
     expect(result.success).toBe(true);
   });
 
   it('updates multiple fields at once', async () => {
     mockPrisma.shoppingItem.findUnique.mockResolvedValue({ householdId: mockHouseholdId, checked: false });
     mockPrisma.shoppingItem.update.mockResolvedValue({ ...mockItem, quantity: '3', unit: 'boxes', checked: true });
+    mockPrisma.product.findUnique.mockResolvedValue({ lastPurchasedAt: null, averageDaysBetweenPurchases: null });
+    mockPrisma.purchaseRecord.create.mockResolvedValue({});
+    mockPrisma.product.update.mockResolvedValue({});
 
     const result = await updateShoppingItemDetails({
       itemId: mockItemId, quantity: '3', unit: 'boxes', checked: true,
     });
+
     expect(result.success).toBe(true);
   });
 

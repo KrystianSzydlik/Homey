@@ -6,3 +6,5 @@ export { searchProducts } from './search';
 export { getAllProducts } from './get-all';
 export { getProductSuggestions } from './get-suggestions';
 export { incrementProductUsage } from './increment-usage';
+export { getSmartReminders } from './get-smart-reminders';
+export type { SmartReminder } from './get-smart-reminders';

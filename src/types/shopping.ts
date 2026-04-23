@@ -6,13 +6,10 @@ import {
   ShoppingCategory,
 } from '@prisma/client';
 
-export type ShoppingItemWithCreator = Omit<ShoppingItem, 'price'> & {
+export type ShoppingItemWithCreator = ShoppingItem & {
   createdBy: { name: string };
   shoppingList?: { name: string; emoji?: string | null };
   product?: { name: string; emoji?: string | null } | null;
-  currency: string;
-  purchasedAt: Date | null;
-  price: number | null;
 };
 
 export type ShoppingListWithItems = ShoppingList & {
@@ -88,10 +85,6 @@ export interface SourceListInfo {
   name: string;
   emoji: string | null;
 }
-
-export type SerializedShoppingItem = Omit<ShoppingItem, 'price'> & {
-  price: number | null;
-};
 
 export interface ShoppingItemInput {
   name: string;

@@ -1,7 +1,6 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { serializeDecimals } from '@/lib/serializers';
 import { ShoppingCategory } from '@prisma/client';
 import { ShoppingItemActionResult } from '@/types/shopping';
 import { z } from 'zod';
@@ -68,7 +67,7 @@ export async function createShoppingItem(
       },
     });
 
-    return { success: true, item: serializeDecimals(item) };
+    return { success: true, item };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {

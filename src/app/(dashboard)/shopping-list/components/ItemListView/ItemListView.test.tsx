@@ -28,31 +28,6 @@ vi.mock('../ShoppingItem/ShoppingItem', () => ({
   default: (props: Parameters<typeof shoppingItemSpy>[0]) => shoppingItemSpy(props),
 }));
 
-vi.mock('@/components/shared/Modal', () => ({
-  AlertModal: ({
-    title,
-    message,
-    onConfirm,
-    onCancel,
-  }: {
-    title: string;
-    message: string;
-    onConfirm: () => void;
-    onCancel: () => void;
-  }) => (
-    <div data-testid="alert-modal">
-      <p>{title}</p>
-      <p>{message}</p>
-      <button type="button" onClick={onConfirm}>
-        Confirm
-      </button>
-      <button type="button" onClick={onCancel}>
-        Cancel
-      </button>
-    </div>
-  ),
-}));
-
 vi.mock('../../hooks/useDndSensors', () => ({
   useDndSensors: () => [],
 }));
@@ -73,16 +48,11 @@ function createItem(
     checked: false,
     position: 0,
     emoji: '🛒',
-    price: null,
-    purchaseCount: 0,
-    lastPurchasedAt: null,
-    averageDaysBetweenPurchases: null,
+    note: null,
     shoppingListId: 'list-1',
     productId: 'product-1',
     householdId: 'household-1',
     createdById: 'user-1',
-    currency: 'PLN',
-    purchasedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     createdBy: { name: 'Test User' },
@@ -143,7 +113,7 @@ describe('ItemListView', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows warning modal before clearing completed items without prices', async () => {
+  it('clears completed items when the Wyczyść button is clicked', async () => {
     const user = userEvent.setup();
 
     render(
@@ -154,36 +124,6 @@ describe('ItemListView', () => {
             name: 'Masło',
             category: 'DAIRY',
             checked: true,
-            price: null,
-          }),
-        ]}
-        listId="list-1"
-        onDeleteItem={onDeleteItem}
-        onUpdateItem={onUpdateItem}
-        onToggleItem={onToggleItem}
-        onClearCheckedItems={onClearCheckedItems}
-      />
-    );
-
-    await user.click(screen.getByRole('button', { name: 'Wyczyść' }));
-
-    expect(screen.getByTestId('alert-modal')).toBeInTheDocument();
-    expect(screen.getByText('Brakujące ceny')).toBeInTheDocument();
-    expect(onClearCheckedItems).not.toHaveBeenCalled();
-  });
-
-  it('clears completed items immediately when all prices are present', async () => {
-    const user = userEvent.setup();
-
-    render(
-      <ItemListView
-        items={[
-          createItem({
-            id: 'checked-1',
-            name: 'Masło',
-            category: 'DAIRY',
-            checked: true,
-            price: 8.99,
           }),
         ]}
         listId="list-1"
@@ -197,7 +137,6 @@ describe('ItemListView', () => {
     await user.click(screen.getByRole('button', { name: 'Wyczyść' }));
 
     expect(onClearCheckedItems).toHaveBeenCalledWith(['checked-1']);
-    expect(screen.queryByTestId('alert-modal')).not.toBeInTheDocument();
   });
 
   it('passes source list metadata and disables sorting in combined view', () => {

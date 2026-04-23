@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import AddItemForm from './AddItemForm';
 import { ProductSuggestion, ProductCallbackData } from '@/types/shopping';
 
-// Mock the ProductCacheContext
 const mockRefreshCache = vi.fn();
 vi.mock('../../contexts/ProductCacheContext', () => ({
   useProductCacheContext: () => ({
@@ -16,7 +15,6 @@ vi.mock('../../contexts/ProductCacheContext', () => ({
   }),
 }));
 
-// Mock the ProductAutocomplete component
 vi.mock('../ProductAutocomplete/ProductAutocomplete', () => ({
   default: ({
     onSelect,
@@ -75,7 +73,6 @@ vi.mock('../ProductAutocomplete/ProductAutocomplete', () => ({
   ),
 }));
 
-// Mock the ProductBottomSheet
 vi.mock('../ProductBottomSheet/ProductBottomSheet', () => ({
   default: ({
     isOpen,
@@ -187,11 +184,9 @@ describe('AddItemForm', () => {
       const user = userEvent.setup();
       render(<AddItemForm onAddItem={mockOnAddItem} />);
 
-      // First open the create modal by selecting a history product
       await user.click(screen.getByTestId('select-history-product'));
       expect(screen.getByTestId('create-product-modal')).toBeInTheDocument();
 
-      // Then create the product
       await user.click(screen.getByTestId('create-product-submit'));
 
       expect(mockOnAddItem).toHaveBeenCalledWith('Jabłka', 'new-product-789', {
@@ -219,10 +214,8 @@ describe('AddItemForm', () => {
       const user = userEvent.setup();
       render(<AddItemForm onAddItem={mockOnAddItem} />);
 
-      // Open create modal
       await user.click(screen.getByTestId('select-history-product'));
 
-      // Create product
       await user.click(screen.getByTestId('create-product-submit'));
 
       expect(mockRefreshCache).toHaveBeenCalledTimes(1);
@@ -243,11 +236,9 @@ describe('AddItemForm', () => {
       const user = userEvent.setup();
       render(<AddItemForm onAddItem={mockOnAddItem} />);
 
-      // Open modal
       await user.click(screen.getByTestId('select-history-product'));
       expect(screen.getByTestId('create-product-modal')).toBeInTheDocument();
 
-      // Close without creating
       await user.click(screen.getByTestId('close-modal'));
 
       expect(

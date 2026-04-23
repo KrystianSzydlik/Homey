@@ -1,10 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import {
-  ProductSuggestion,
-  HistorySuggestion,
-} from '@/types/shopping';
+import { ProductSuggestion } from '@/types/shopping';
 import { getHouseholdId } from '@/app/lib/auth-utils';
 import { searchQuerySchema } from '@/app/lib/validation/shopping-schemas';
 
@@ -16,7 +13,7 @@ export async function getProductSuggestions(
 
     const validatedQuery = searchQuerySchema.parse(query);
 
-    const [catalogProducts, recentItems, smartSuggestions] = await Promise.all([
+    const [catalogProducts, recentProducts] = await Promise.all([
       prisma.product.findMany({
         where: {
           name: {
@@ -28,7 +25,7 @@ export async function getProductSuggestions(
         take: 5,
       }),
 
-      prisma.shoppingItem.findMany({
+      prisma.product.findMany({
         where: {
           householdId,
           name: {
@@ -37,23 +34,8 @@ export async function getProductSuggestions(
           },
           purchaseCount: { gt: 0 },
         },
-        distinct: ['name'],
         take: 5,
         orderBy: { lastPurchasedAt: 'desc' },
-      }),
-
-      prisma.shoppingItem.findMany({
-        where: {
-          householdId,
-          name: {
-            contains: validatedQuery,
-            mode: 'insensitive',
-          },
-          purchaseCount: { gt: 0 },
-          lastPurchasedAt: { not: null },
-          averageDaysBetweenPurchases: { not: null },
-        },
-        take: 5,
       }),
     ]);
 
@@ -69,43 +51,18 @@ export async function getProductSuggestions(
       })
     );
 
-    const recentSuggestions: ProductSuggestion[] = recentItems.map(
-      (item, index) => ({
-        name: item.name,
-        emoji: item.emoji,
-        category: item.category,
-        defaultUnit: item.unit,
+    const recentSuggestions: ProductSuggestion[] = recentProducts.map(
+      (product, index) => ({
+        name: product.name,
+        emoji: product.emoji,
+        category: product.defaultCategory,
+        defaultUnit: product.defaultUnit,
         score: 0.8 - index * 0.1,
         source: 'history',
       })
     );
 
-    const smartSuggestionsFormatted: ProductSuggestion[] = smartSuggestions
-      .map((item) => {
-        if (!item.lastPurchasedAt || !item.averageDaysBetweenPurchases)
-          return null;
-
-        const daysSinceLastPurchase =
-          (Date.now() - item.lastPurchasedAt.getTime()) / (1000 * 60 * 60 * 24);
-        const urgencyScore =
-          daysSinceLastPurchase / item.averageDaysBetweenPurchases;
-
-        return {
-          name: item.name,
-          emoji: item.emoji,
-          category: item.category,
-          defaultUnit: item.unit,
-          score: Math.min(urgencyScore * 0.5, 0.7),
-          source: 'smart' as const,
-        } satisfies HistorySuggestion;
-      })
-      .filter(Boolean) as ProductSuggestion[];
-
-    const allSuggestions = [
-      ...catalogSuggestions,
-      ...recentSuggestions,
-      ...smartSuggestionsFormatted,
-    ];
+    const allSuggestions = [...catalogSuggestions, ...recentSuggestions];
     const uniqueSuggestions = Array.from(
       allSuggestions
         .reduce((map, suggestion) => {

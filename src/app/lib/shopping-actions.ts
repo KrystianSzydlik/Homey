@@ -7,5 +7,4 @@ export {
   reorderShoppingItems,
   deleteAllShoppingItems,
   getShoppingItems,
-  getSuggestedItems,
 } from './actions/shopping-item';

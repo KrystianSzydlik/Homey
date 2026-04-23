@@ -1,7 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
 
-// Mock next/navigation
 vi.mock('next/navigation', () => ({
   redirect: vi.fn(),
   useRouter: () => ({
@@ -14,7 +13,6 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-// Mock @/auth
 vi.mock('@/auth', () => ({
   auth: vi.fn().mockResolvedValue({
     user: {

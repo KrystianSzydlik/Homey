@@ -99,7 +99,6 @@ model Product {
   defaultCategory ShoppingCategory @default(OTHER)
   defaultUnit     String?
 
-  // Statystyki — aktualizowane przy każdym PurchaseRecord
   usageCount                  Int       @default(0)
   lastUsedAt                  DateTime?
   purchaseCount               Int       @default(0)
@@ -126,7 +125,7 @@ model ShoppingItem {
   id       String           @id @default(cuid())
   name     String
   quantity String           @default("1")
-  unit     String?          // "kg", "szt", "opak", "l"
+  unit     String?          
   category ShoppingCategory @default(OTHER)
   checked  Boolean          @default(false)
   position Int              @default(0)
@@ -151,22 +150,18 @@ model ShoppingItem {
   @@index([householdId, name])
 }
 
-// Immutable log — jeden rekord = jeden zakup konkretnego produktu.
-// Tworzony gdy ShoppingItem.checked = true (lub ręcznie).
-// Nigdy nie usuwany — to źródło prawdy dla analytics.
 model PurchaseRecord {
   id          String    @id @default(cuid())
 
   productId   String
   product     Product   @relation(fields: [productId], references: [id])
 
-  quantity    Float     @default(1)  // Float żeby można liczyć sumy (0.5 kg, 2 szt)
-  unit        String?               // "kg", "szt", "opak", "l"
+  quantity    Float     @default(1)  
+  unit        String?               
   price       Decimal?  @db.Decimal(10, 2)
   currency    String    @default("PLN")
   purchasedAt DateTime  @default(now())
 
-  // Opcjonalny link do ShoppingItem, z którego powstał rekord
   shoppingItemId String?
 
   householdId String
@@ -175,22 +170,22 @@ model PurchaseRecord {
   createdBy   User      @relation(fields: [createdById], references: [id])
   createdAt   DateTime  @default(now())
 
-  @@index([householdId, purchasedAt])           // wydatki per okres
-  @@index([productId, purchasedAt])             // historia konkretnego produktu
-  @@index([householdId, productId, purchasedAt]) // analytics compound
+  @@index([householdId, purchasedAt])           
+  @@index([productId, purchasedAt])             
+  @@index([householdId, productId, purchasedAt]) 
 }
 
 enum ShoppingCategory {
-  VEGETABLES    // Warzywa
-  DAIRY         // Mleko, ser, jogurt
-  MEAT          // Mięso, drób, ryba
-  BAKERY        // Chleb, bułki
-  FRUITS        // Owoce
-  FROZEN        // Produkty mrożone
-  DRINKS        // Napoje
-  CONDIMENTS    // Przyprawa, olej, sól
-  SWEETS        // Słodycze, desserty
-  OTHER         // Inne
+  VEGETABLES    
+  DAIRY         
+  MEAT          
+  BAKERY        
+  FRUITS        
+  FROZEN        
+  DRINKS        
+  CONDIMENTS    
+  SWEETS        
+  OTHER         
 }
 
 model Habit {

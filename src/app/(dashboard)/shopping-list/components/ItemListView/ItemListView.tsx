@@ -8,10 +8,9 @@ import {
 } from '@dnd-kit/sortable';
 import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { ShoppingCategory } from '@prisma/client';
-import { useId, useState, useTransition } from 'react';
+import { useId, useTransition } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ShoppingItemWithCreator, SourceListInfo } from '@/types/shopping';
-import { AlertModal } from '@/components/shared/Modal';
 import { reorderShoppingItems } from '@/app/lib/shopping-actions';
 import { useDndSensors } from '../../hooks/useDndSensors';
 import CategoryHeader from '@/components/shared/CategoryHeader';
@@ -98,7 +97,6 @@ export default function ItemListView({
   const baseId = useId();
   const sensors = useDndSensors({ touchDelay: 400 });
   const [isPending, startTransition] = useTransition();
-  const [showClearWarning, setShowClearWarning] = useState(false);
 
   const filteredItems = selectedCategory === 'ALL'
     ? items
@@ -109,7 +107,6 @@ export default function ItemListView({
   const checkedItems = filteredItems.filter((item) => item.checked);
   const allCheckedItems = items.filter((item) => item.checked);
   const checkedIds = checkedItems.map((item) => item.id);
-  const missingPriceCount = checkedItems.filter((item) => item.price === null).length;
   const isEmpty = uncheckedItems.length === 0 && checkedItems.length === 0;
 
   const allGroupedItems = groupItemsByCategory(allUncheckedItems);
@@ -220,90 +217,60 @@ export default function ItemListView({
   function handleClearCompleted() {
     if (checkedIds.length === 0) return;
 
-    if (missingPriceCount > 0) {
-      setShowClearWarning(true);
-      return;
-    }
-
     startTransition(async () => {
       await onClearCheckedItems(checkedIds);
-    });
-  }
-
-  function runClearCompleted() {
-    if (checkedIds.length === 0) return;
-
-    startTransition(async () => {
-      await onClearCheckedItems(checkedIds);
-      setShowClearWarning(false);
     });
   }
 
   return (
-    <>
-      <div className={styles.listSection}>
-        {isEmpty ? (
-          <EmptyState
-            title={selectedCategory === 'ALL' ? emptyMessage : 'Brak produktów w tej kategorii'}
-            description={
-              selectedCategory === 'ALL'
-                ? 'Dodaj pierwszy produkt, aby zacząć kompletować zakupy.'
-                : 'Wybierz inną kategorię albo dodaj produkt do tej sekcji.'
-            }
-          />
-        ) : (
-          <div className={styles.viewport}>
-            {renderUncheckedList()}
-
-            {checkedItems.length > 0 && (
-              <div className={styles.completedSection}>
-                <div className={styles.completedHeader}>
-                  <h2 className={styles.completedTitle}>
-                    Kupione ({checkedItems.length})
-                  </h2>
-                  <button
-                    className={styles.clearButton}
-                    onClick={handleClearCompleted}
-                    disabled={isPending}
-                    type="button"
-                  >
-                    {isPending ? 'Czyszczenie...' : 'Wyczyść'}
-                  </button>
-                </div>
-
-                <motion.div className={styles.completedList} {...MOTION_LIST} role="list">
-                  <AnimatePresence mode="popLayout">
-                    {checkedItems.map((item) => (
-                      <motion.div
-                        key={item.id}
-                        layout
-                        layoutId={item.id}
-                        {...MOTION_CHECKED}
-                      >
-                        {renderItem(item)}
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </motion.div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {showClearWarning && (
-        <AlertModal
-          isOpen={true}
-          title="Brakujące ceny"
-          message={`Masz ${missingPriceCount} kupionych produktów bez ceny. Wyczyścić mimo to?`}
-          onConfirm={runClearCompleted}
-          onCancel={() => setShowClearWarning(false)}
-          confirmText="Wyczyść mimo braków"
-          cancelText="Uzupełnij ceny"
-          variant="warning"
-          isLoading={isPending}
+    <div className={styles.listSection}>
+      {isEmpty ? (
+        <EmptyState
+          title={selectedCategory === 'ALL' ? emptyMessage : 'Brak produktów w tej kategorii'}
+          description={
+            selectedCategory === 'ALL'
+              ? 'Dodaj pierwszy produkt, aby zacząć kompletować zakupy.'
+              : 'Wybierz inną kategorię albo dodaj produkt do tej sekcji.'
+          }
         />
+      ) : (
+        <div className={styles.viewport}>
+          {renderUncheckedList()}
+
+          {checkedItems.length > 0 && (
+            <div className={styles.completedSection}>
+              <div className={styles.completedHeader}>
+                <h2 className={styles.completedTitle}>
+                  Kupione ({checkedItems.length})
+                </h2>
+                <button
+                  className={styles.clearButton}
+                  onClick={handleClearCompleted}
+                  disabled={isPending}
+                  type="button"
+                >
+                  {isPending ? 'Czyszczenie...' : 'Wyczyść'}
+                </button>
+              </div>
+
+              <motion.div className={styles.completedList} {...MOTION_LIST} role="list">
+                <AnimatePresence mode="popLayout">
+                  {checkedItems.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      layoutId={item.id}
+                      {...MOTION_CHECKED}
+                    >
+                      {renderItem(item)}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            </div>
+          )}
+        </div>
       )}
-    </>
+    </div>
   );
 }

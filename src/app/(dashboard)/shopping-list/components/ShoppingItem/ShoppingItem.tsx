@@ -131,7 +131,6 @@ export default function ShoppingItem({
           <Meta
             quantity={item.quantity}
             unit={item.unit}
-            price={item.price}
             checked={item.checked}
           />
         </div>

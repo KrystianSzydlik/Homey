@@ -25,9 +25,7 @@ export default function ItemBottomSheet({
 }: ItemBottomSheetProps) {
   const [quantity, setQuantity] = useState(item.quantity);
   const [unit, setUnit] = useState(item.unit || '');
-  const [price, setPrice] = useState<string>(
-    item.price ? String(item.price) : ''
-  );
+  const [price, setPrice] = useState<string>('');
   const [checked, setChecked] = useState(item.checked);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +34,7 @@ export default function ItemBottomSheet({
     if (isOpen) {
       setQuantity(item.quantity);
       setUnit(item.unit || '');
-      setPrice(item.price ? String(item.price) : '');
+      setPrice('');
       setChecked(item.checked);
       setError(null);
     }
@@ -66,7 +64,6 @@ export default function ItemBottomSheet({
         ...item,
         quantity: result.data.quantity,
         unit: result.data.unit,
-        price: result.data.price,
         checked: result.data.checked,
       });
       onClose();
