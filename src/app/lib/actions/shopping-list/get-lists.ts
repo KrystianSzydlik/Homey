@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { ShoppingListWithItems } from '@/types/shopping';
 import { getHouseholdId } from '@/app/lib/auth-utils';
+import { getPurchasePricesByItemId } from '@/app/lib/actions/shopping-item/helpers/purchase-prices';
 
 interface GetShoppingListsResult {
   success: boolean;
@@ -41,7 +42,20 @@ export async function getShoppingLists(): Promise<GetShoppingListsResult> {
       },
     });
 
-    return { success: true, lists };
+    const checkedIds = lists.flatMap((l) =>
+      l.items.filter((i) => i.checked).map((i) => i.id)
+    );
+    const priceMap = await getPurchasePricesByItemId(checkedIds);
+
+    const enrichedLists = lists.map((list) => ({
+      ...list,
+      items: list.items.map((item) => ({
+        ...item,
+        purchasePrice: item.checked ? (priceMap.get(item.id) ?? null) : null,
+      })),
+    }));
+
+    return { success: true, lists: enrichedLists };
   } catch (error) {
     console.error('Error fetching shopping lists:', error);
     return { success: false, error: 'Failed to fetch lists' };

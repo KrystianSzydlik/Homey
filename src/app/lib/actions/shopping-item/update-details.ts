@@ -40,8 +40,9 @@ export async function updateShoppingItemDetails(
     }
 
     const isNewlyChecked = validated.checked === true && !existing.checked;
+    const isAlreadyChecked = existing.checked && validated.checked !== false;
     const priceDecimal =
-      isNewlyChecked && validated.price != null
+      validated.price != null
         ? validatePlnPrice(validated.price, { allowNull: false, autoCorrect: true })
         : null;
 
@@ -65,6 +66,18 @@ export async function updateShoppingItemDetails(
           householdId: session.householdId,
           userId: session.userId,
         });
+      } else if (isAlreadyChecked && priceDecimal !== null) {
+        const latest = await tx.purchaseRecord.findFirst({
+          where: { shoppingItemId: item.id },
+          orderBy: { purchasedAt: 'desc' },
+          select: { id: true },
+        });
+        if (latest) {
+          await tx.purchaseRecord.update({
+            where: { id: latest.id },
+            data: { price: priceDecimal },
+          });
+        }
       }
 
       return item;
