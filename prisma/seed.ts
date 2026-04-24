@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 async function main() {
   const householdName = 'Nasze Gospodarstwo';
 
-  // 1. Create or get Household
   let household = await prisma.household.findFirst({
     where: { name: householdName },
   });
@@ -19,10 +18,7 @@ async function main() {
     console.log(`Household already exists: ${household.name}`);
   }
 
-  // 2. Create Users
-  // Password is 'password' - CHANGE THIS IN PRODUCTION
-  const passwordHash =
-    '$2b$10$MTDORiGbNS28JgfqiOnd1.pRVmcLoUiZF0IchjZHclaeDQyr5hM8m'; // Hash for 'password'
+  const passwordHash = '$2b$10$MTDORiGbNS28JgfqiOnd1.pRVmcLoUiZF0IchjZHclaeDQyr5hM8m';
 
   const users = [
     { email: 'user1@example.com', name: 'User One' },

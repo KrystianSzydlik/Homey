@@ -1,10 +1,3 @@
-// ==========================================================================
-// HOMEY Design System — Mixins
-// ==========================================================================
-
-// Glassmorphism
-// --------------------------------------------------------------------------
-
 @mixin glass($blur: 12px, $bg: rgba(30, 41, 59, 0.6)) {
   background: $bg;
   backdrop-filter: blur($blur);
@@ -20,8 +13,6 @@
   @include glass-border($border);
 }
 
-// Layout
-// --------------------------------------------------------------------------
 
 @mixin phone-frame {
   max-width: var(--frame-max-width);
@@ -29,8 +20,6 @@
   width: 100%;
 }
 
-// Scrolling
-// --------------------------------------------------------------------------
 
 @mixin hide-scrollbar {
   scrollbar-width: none;
@@ -48,8 +37,7 @@
   @include hide-scrollbar;
 }
 
-// Accessibility
-// --------------------------------------------------------------------------
+
 
 @mixin focus-ring($color: var(--rose), $offset: 2px) {
   &:focus-visible {
@@ -63,8 +51,7 @@
   min-width: $min;
 }
 
-// Typography
-// --------------------------------------------------------------------------
+
 
 @mixin section-label {
   font-size: var(--text-xs);
@@ -74,8 +61,6 @@
   color: var(--text-secondary);
 }
 
-// Transitions (respects prefers-reduced-motion globally)
-// --------------------------------------------------------------------------
 
 @mixin transition($properties...) {
   transition-property: $properties;

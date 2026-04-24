@@ -107,7 +107,6 @@ describe('ItemBottomSheet', () => {
     emoji: '🥛',
     quantity: '1',
     unit: 'l',
-    price: 4.5,
     checked: false,
     shoppingListId: 'list-1',
     productId: 'product-1',
@@ -118,11 +117,7 @@ describe('ItemBottomSheet', () => {
     householdId: 'household-1',
     createdById: 'user-1',
     position: 0,
-    purchasedAt: null,
-    currency: 'PLN',
-    purchaseCount: 0,
-    lastPurchasedAt: null,
-    averageDaysBetweenPurchases: null,
+    note: null,
   };
 
   const mockOnClose = vi.fn();
@@ -163,10 +158,10 @@ describe('ItemBottomSheet', () => {
       expect(quantityInput).toHaveValue('1');
     });
 
-    it('should show price input with initial value', () => {
+    it('should show empty price input by default', () => {
       render(<ItemBottomSheet {...defaultProps} />);
       const priceInput = screen.getByPlaceholderText('0,00');
-      expect(priceInput).toHaveValue('4.5');
+      expect(priceInput).toHaveValue('');
     });
 
     it('should show unit-aware price label', () => {
@@ -195,19 +190,6 @@ describe('ItemBottomSheet', () => {
       expect(
         screen.getByText('Ta cena trafi do statystyk.')
       ).toBeInTheDocument();
-    });
-
-    it('should show price input when price exists', () => {
-      render(<ItemBottomSheet {...defaultProps} />);
-      const priceInput = screen.getByPlaceholderText('0,00');
-      expect(priceInput).toHaveValue('4.5');
-    });
-
-    it('should allow clearing price', () => {
-      const itemWithoutPrice = { ...mockItem, price: null };
-      render(<ItemBottomSheet {...defaultProps} item={itemWithoutPrice} />);
-      const priceInput = screen.getByPlaceholderText('0,00');
-      expect(priceInput).toHaveValue('');
     });
   });
 
@@ -293,7 +275,7 @@ describe('ItemBottomSheet', () => {
           itemId: 'item-123',
           quantity: '2',
           unit: 'l',
-          price: 4.5,
+          price: null,
           checked: false,
         });
       });
@@ -378,14 +360,14 @@ describe('ItemBottomSheet', () => {
         <ItemBottomSheet {...defaultProps} isOpen={false} />
       );
 
-      const updatedItem = { ...mockItem, quantity: '5', price: 10.0 };
+      const updatedItem = { ...mockItem, quantity: '5' };
       rerender(<ItemBottomSheet {...defaultProps} item={updatedItem} />);
 
       const quantityInput = screen.getByPlaceholderText('1');
       const priceInput = screen.getByPlaceholderText('0,00');
 
       expect(quantityInput).toHaveValue('5');
-      expect(priceInput).toHaveValue('10');
+      expect(priceInput).toHaveValue('');
     });
   });
 });

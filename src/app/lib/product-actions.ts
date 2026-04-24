@@ -7,4 +7,6 @@ export {
   getAllProducts,
   getProductSuggestions,
   incrementProductUsage,
+  getSmartReminders,
 } from './actions/product';
+export type { SmartReminder } from './actions/product';

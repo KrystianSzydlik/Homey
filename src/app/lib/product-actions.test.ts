@@ -10,10 +10,7 @@ import {
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { ShoppingCategory } from '@prisma/client';
-import {
-  createMockProduct,
-  createMockShoppingItemRecord,
-} from '@/test/factories';
+import { createMockProduct } from '@/test/factories';
 
 const { mockPrisma, mockAuth } = vi.hoisted(() => {
   const mockAuth = vi.fn();
@@ -48,7 +45,7 @@ describe('Product Actions', () => {
   const mockHouseholdId = 'household-123';
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     mockAuth.mockResolvedValue({
       user: {
         id: mockUserId,
@@ -396,22 +393,22 @@ describe('Product Actions', () => {
 
     it('should return history suggestions', async () => {
       const query = 'bread';
-      const mockRecentItems = [
-        createMockShoppingItemRecord({
-          id: 'item-1',
+      const mockRecentProducts = [
+        createMockProduct({
+          id: 'product-1',
           name: 'Bread',
           emoji: '🍞',
-          category: ShoppingCategory.BAKERY,
-          unit: 'piece',
+          defaultCategory: ShoppingCategory.BAKERY,
+          defaultUnit: 'piece',
           purchaseCount: 5,
           lastPurchasedAt: new Date(),
           averageDaysBetweenPurchases: null,
         }),
       ];
 
-      vi.mocked(prisma.product.findMany).mockResolvedValue([]);
-      vi.mocked(prisma.shoppingItem.findMany)
-        .mockResolvedValueOnce(mockRecentItems)
+      vi.mocked(prisma.product.findMany)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce(mockRecentProducts)
         .mockResolvedValueOnce([]);
 
       const result = await getProductSuggestions(query);
@@ -420,37 +417,6 @@ describe('Product Actions', () => {
       const historySuggestion = result.find((s) => s.source === 'history');
       expect(historySuggestion).toBeDefined();
       expect(historySuggestion?.name).toBe('Bread');
-    });
-
-    it('should return smart suggestions based on purchase patterns', async () => {
-      const query = 'eggs';
-      const now = new Date();
-      const tenDaysAgo = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000);
-
-      const mockSmartItems = [
-        createMockShoppingItemRecord({
-          id: 'item-1',
-          name: 'Eggs',
-          emoji: '🥚',
-          category: ShoppingCategory.DAIRY,
-          unit: 'dozen',
-          purchaseCount: 3,
-          lastPurchasedAt: tenDaysAgo,
-          averageDaysBetweenPurchases: 7,
-        }),
-      ];
-
-      vi.mocked(prisma.product.findMany).mockResolvedValue([]);
-      vi.mocked(prisma.shoppingItem.findMany)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce(mockSmartItems);
-
-      const result = await getProductSuggestions(query);
-
-      expect(result.length).toBeGreaterThan(0);
-      const smartSuggestion = result.find((s) => s.source === 'smart');
-      expect(smartSuggestion).toBeDefined();
-      expect(smartSuggestion?.name).toBe('Eggs');
     });
 
     it('should deduplicate suggestions by name and keep highest score', async () => {
@@ -465,23 +431,22 @@ describe('Product Actions', () => {
           householdId: mockHouseholdId,
         }),
       ];
-      const mockRecentItems = [
-        createMockShoppingItemRecord({
-          id: 'item-1',
+      const mockRecentProducts = [
+        createMockProduct({
+          id: 'product-2',
           name: 'Milk',
           emoji: '🥛',
-          category: ShoppingCategory.DAIRY,
-          unit: 'liter',
+          defaultCategory: ShoppingCategory.DAIRY,
+          defaultUnit: 'liter',
           purchaseCount: 2,
           lastPurchasedAt: new Date(),
           averageDaysBetweenPurchases: null,
         }),
       ];
 
-      vi.mocked(prisma.product.findMany).mockResolvedValue(mockCatalogProducts);
-      vi.mocked(prisma.shoppingItem.findMany)
-        .mockResolvedValueOnce(mockRecentItems)
-        .mockResolvedValueOnce([]);
+      vi.mocked(prisma.product.findMany)
+        .mockResolvedValueOnce(mockCatalogProducts)
+        .mockResolvedValueOnce(mockRecentProducts);
 
       const result = await getProductSuggestions(query);
 

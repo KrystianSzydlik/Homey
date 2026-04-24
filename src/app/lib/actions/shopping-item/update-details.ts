@@ -3,12 +3,10 @@
 import { z } from 'zod';
 import { getSessionData } from '@/app/lib/auth-utils';
 import { prisma } from '@/lib/prisma';
-import { serializeDecimals } from '@/lib/serializers';
 import { PLN_MAX_VALUE } from '@/lib/pln-validation';
 import { validatePlnPrice } from '@/lib/pln-validation.server';
-import { Decimal } from '@prisma/client/runtime/library';
 import { ShoppingItem } from '@prisma/client';
-import { SerializedShoppingItem } from '@/types/shopping';
+import { recordPurchase } from './record-purchase';
 
 const updateItemSchema = z.object({
   itemId: z.string().cuid(),
@@ -19,7 +17,7 @@ const updateItemSchema = z.object({
 });
 
 type UpdateItemResult =
-  | { success: true; data: SerializedShoppingItem }
+  | { success: true; data: ShoppingItem }
   | { success: false; error: string };
 
 export async function updateShoppingItemDetails(
@@ -29,55 +27,50 @@ export async function updateShoppingItemDetails(
     const session = await getSessionData();
     const validated = updateItemSchema.parse(data);
 
-    const item = await prisma.shoppingItem.findUnique({
+    const existing = await prisma.shoppingItem.findUnique({
       where: { id: validated.itemId },
       select: { householdId: true, checked: true },
     });
 
-    if (!item) {
+    if (!existing) {
       return { success: false, error: 'Item not found' };
     }
-    if (item.householdId !== session.householdId) {
+    if (existing.householdId !== session.householdId) {
       return { success: false, error: 'Unauthorized' };
     }
 
-    let priceDecimal: Decimal | null | undefined;
-    if (validated.price !== undefined) {
-      priceDecimal = validated.price !== null
+    const isNewlyChecked = validated.checked === true && !existing.checked;
+    const priceDecimal =
+      isNewlyChecked && validated.price != null
         ? validatePlnPrice(validated.price, { allowNull: false, autoCorrect: true })
         : null;
-    }
 
-    const updateData: {
-      quantity?: string;
-      unit?: string;
-      price?: Decimal | null;
-      checked?: boolean;
-      purchasedAt?: Date | null;
-    } = {
-      quantity: validated.quantity,
-      unit: validated.unit,
-      checked: validated.checked,
-    };
+    const updated = await prisma.$transaction(async (tx) => {
+      const item = await tx.shoppingItem.update({
+        where: { id: validated.itemId },
+        data: {
+          quantity: validated.quantity,
+          unit: validated.unit,
+          checked: validated.checked,
+        },
+      });
 
-    if (priceDecimal !== undefined) {
-      updateData.price = priceDecimal;
-    }
+      if (isNewlyChecked) {
+        await recordPurchase(tx, {
+          productId: item.productId,
+          shoppingItemId: item.id,
+          quantity: parseFloat(item.quantity) || 1,
+          unit: item.unit,
+          price: priceDecimal,
+          householdId: session.householdId,
+          userId: session.userId,
+        });
+      }
 
-    if (validated.checked && !item.checked) {
-      updateData.purchasedAt = new Date();
-    }
-
-    if (validated.checked === false && item.checked) {
-      updateData.purchasedAt = null;
-    }
-
-    const updated: ShoppingItem = await prisma.shoppingItem.update({
-      where: { id: validated.itemId },
-      data: updateData,
+      return item;
     });
 
-    return { success: true, data: serializeDecimals(updated) };
+    return { success: true, data: updated };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {

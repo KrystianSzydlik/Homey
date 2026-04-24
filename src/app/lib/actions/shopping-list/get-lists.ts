@@ -1,7 +1,6 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { serializeDecimals } from '@/lib/serializers';
 import { ShoppingListWithItems } from '@/types/shopping';
 import { getHouseholdId } from '@/app/lib/auth-utils';
 
@@ -42,7 +41,7 @@ export async function getShoppingLists(): Promise<GetShoppingListsResult> {
       },
     });
 
-    return { success: true, lists: serializeDecimals(lists) };
+    return { success: true, lists };
   } catch (error) {
     console.error('Error fetching shopping lists:', error);
     return { success: false, error: 'Failed to fetch lists' };
