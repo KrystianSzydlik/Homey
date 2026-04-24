@@ -244,7 +244,10 @@ export function useOptimisticShoppingList(
           }),
         (result) => {
           if (result.item)
-            baseState.updateItem(itemId, result.item as ShoppingItemWithCreator);
+            baseState.updateItem(itemId, {
+              ...(result.item as ShoppingItemWithCreator),
+              purchasePrice: updatedItem.purchasePrice,
+            });
         },
         'Failed to update item',
         showToast

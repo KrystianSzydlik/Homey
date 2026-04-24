@@ -6,7 +6,7 @@ import { ShoppingItemWithCreator } from '@/types/shopping';
 import { Dropdown } from '@/components/shared/Dropdown';
 import { getUnitGroups } from '@/lib/constants/shopping-units';
 import { updateShoppingItemDetails } from '@/lib/actions/shopping/update-item';
-import { parsePlnPrice } from '@/lib/pln-validation';
+import { formatPlnPrice, parsePlnPrice } from '@/lib/pln-validation';
 import { t, Keys } from '@/config/i18n';
 import styles from './ItemBottomSheet.module.scss';
 
@@ -34,7 +34,11 @@ export default function ItemBottomSheet({
     if (isOpen) {
       setQuantity(item.quantity);
       setUnit(item.unit || '');
-      setPrice('');
+      setPrice(
+        item.purchasePrice != null
+          ? formatPlnPrice(item.purchasePrice, { includeCurrency: false })
+          : ''
+      );
       setChecked(item.checked);
       setError(null);
     }
@@ -65,6 +69,7 @@ export default function ItemBottomSheet({
         quantity: result.data.quantity,
         unit: result.data.unit,
         checked: result.data.checked,
+        purchasePrice: priceNum ?? item.purchasePrice,
       });
       onClose();
     } catch (e) {
