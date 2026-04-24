@@ -151,6 +151,17 @@
       }
     }
   }
+
+  .purchasePrice {
+    color: var(--text-secondary);
+    cursor: pointer;
+
+    @include v.hover-capable {
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
 }
 
 .listBadge {

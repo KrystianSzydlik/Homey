@@ -132,6 +132,7 @@ export default function ShoppingItem({
             quantity={item.quantity}
             unit={item.unit}
             checked={item.checked}
+            purchasePrice={item.purchasePrice}
           />
         </div>
 
